@@ -16,6 +16,8 @@ import { ReactNode, useState } from 'react';
 import foLabsLogo from '@/public/fo-labs.svg';
 import pokeballIcon from '@/public/pokeball.svg';
 
+import { signOut } from '../actions';
+
 const UpperMenuItems: MenuProps['items'] = [
   {
     label: 'Teams',
@@ -39,6 +41,7 @@ const LowerMenuItems: MenuProps['items'] = [
     label: 'Sign out',
     key: 'signout',
     icon: <LogoutOutlined />,
+    onClick: () => void signOut(),
   },
 ];
 
