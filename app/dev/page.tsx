@@ -1,5 +1,13 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+
+import { testTeamsRepository } from './actions';
+
 const Page = () => {
-  return <h1>Hello dev</h1>;
+  return (
+    <button onClick={testTeamsRepository}>
+      Click me to test teamRepository
+    </button>
+  );
 };
 
 export default Page;
