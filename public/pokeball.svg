@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="512" height="512" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+  <!-- Fondo transparente (no rect) -->
+  <!-- Borde exterior -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="#FFFFFF" stroke-width="8" />
+  <!-- Banda horizontal (grosor) -->
+  <line x1="10" y1="100" x2="80" y2="100" stroke="#FFFFFF" stroke-width="10" stroke-linecap="butt" />
+  <line x1="120" y1="100" x2="190" y2="100" stroke="#FFFFFF" stroke-width="10" stroke-linecap="butt" />
+  <!-- Círculo central (anillo) -->
+  <circle cx="100" cy="100" r="20" fill="none" stroke="#FFFFFF" stroke-width="8" />
+  <!-- Círculo interior pequeño (detalle) -->
+  <circle cx="100" cy="100" r="8" fill="#FFFF" stroke="#FFFFFF" stroke-width="4" />
+</svg>

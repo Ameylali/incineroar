@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Page renders homepage unchanged 1`] = `
+<div>
+  <div
+    class="ant-layout css-dev-only-do-not-override-kk2c0l"
+  >
+    <main
+      class="ant-layout-content h-dvh css-dev-only-do-not-override-kk2c0l"
+    >
+      <div
+        class="h-full ant-flex css-dev-only-do-not-override-kk2c0l ant-flex-align-center ant-flex-justify-center ant-flex-vertical"
+      >
+        <img
+          alt="fakeout labs"
+          data-nimg="1"
+          decoding="async"
+          height="300"
+          loading="lazy"
+          src="/_next/image?url=%2Fimg.jpg&w=640&q=75"
+          srcset="/_next/image?url=%2Fimg.jpg&w=384&q=75 1x, /_next/image?url=%2Fimg.jpg&w=640&q=75 2x"
+          style="color: transparent;"
+          width="300"
+        />
+        <h1
+          class="ant-typography css-dev-only-do-not-override-kk2c0l"
+        >
+          FakeOut Labs
+        </h1>
+        <article
+          class="ant-typography css-dev-only-do-not-override-kk2c0l"
+        >
+          Tools for pokemon battling
+        </article>
+      </div>
+    </main>
+  </div>
+</div>
+`;

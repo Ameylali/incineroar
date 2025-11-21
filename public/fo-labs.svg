@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="512" height="512" viewBox="0 0 200 200"
+     fill="none" stroke="#FFFFFF" stroke-width="8"
+     stroke-linecap="round" stroke-linejoin="round">
+
+  <!-- Círculo exterior -->
+  <circle cx="100" cy="100" r="80"/>
+
+  <!-- Línea horizontal de la pokeball -->
+  <line x1="25" y1="100" x2="175" y2="100" stroke-width="15"/>
+
+  <!-- Círculo central -->
+  <circle cx="100" cy="100" r="25" fill="#ffffff"/>
+
+  <!-- Línea de crecimiento integrada -->
+  <polyline points="30,180 60,120 95,150 140,70"/>
+
+  <!-- Flecha hacia arriba -->
+
+  <polyline points="132,69 145,75 145,60 132,69"/>
+</svg>
