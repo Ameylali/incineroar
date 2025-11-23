@@ -11,11 +11,12 @@ const TeamPreview = ({ team }: TeamPreviewProps) => {
   return (
     <Flex>
       {team.map((pokemon, index) => (
-        <PokemonSprite
-          key={index}
-          pokemon={pokemon.species}
-          imageProps={{ width: 30, height: 30 }}
-        />
+        <div key={index} className="relative h-10 w-10">
+          <PokemonSprite
+            pokemon={pokemon?.species}
+            imageProps={{ fill: true, style: { objectFit: 'contain' } }}
+          />
+        </div>
       ))}
     </Flex>
   );

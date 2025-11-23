@@ -24,7 +24,7 @@ const INITIAL_STATE: SignInActionState = {
 };
 
 const SignInForm = ({ onSignUp, hasCreatedAccount }: SignInFormProps) => {
-  const { state, form, onFinish, isPending } = useFormAction(
+  const { state, form, onFinish, isPending } = useFormAction<SignInData>(
     INITIAL_STATE,
     signIn,
   );

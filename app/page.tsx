@@ -7,7 +7,7 @@ const Home = () => {
   return (
     <Layout>
       <Content className="h-dvh">
-        <Welcome />
+        <Welcome showEnter />
       </Content>
     </Layout>
   );

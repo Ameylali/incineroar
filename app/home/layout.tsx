@@ -6,7 +6,7 @@ import {
   FileDoneOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider, Flex, Layout, Menu, MenuProps, theme } from 'antd';
 import { Content } from 'antd/lib/layout/layout';
 import Sider from 'antd/lib/layout/Sider';
@@ -17,14 +17,13 @@ import { ReactNode, useState } from 'react';
 
 import foLabsLogo from '@/public/fo-labs.svg';
 import pokeballIcon from '@/public/pokeball.svg';
+import { queryClient } from '@/src/utils/query-client';
 
 import { signOut } from '../actions';
 
-const client = new QueryClient();
-
 const ProvidersWrapper = ({ children }: Readonly<{ children: ReactNode }>) => {
   return (
-    <QueryClientProvider client={client}>
+    <QueryClientProvider client={queryClient}>
       <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
         <StyleProvider layer>{children}</StyleProvider>
       </ConfigProvider>
