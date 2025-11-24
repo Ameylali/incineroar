@@ -13,9 +13,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: [
-        ...(process.env.ALLOWED_ORIGINS || '').split(','),
-      ],
+      allowedOrigins: [...(process.env.ALLOWED_ORIGINS || '').split(',')],
     },
   },
 };

@@ -12,6 +12,7 @@ export interface Team {
 }
 
 export type CreateTeamData = Omit<Team, 'id' | 'parsedTeam'>;
+export type UpdateTeamData = Omit<Team, 'parsedTeam'>;
 
 export interface User {
   id: string;

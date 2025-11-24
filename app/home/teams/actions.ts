@@ -4,8 +4,9 @@ import z from 'zod';
 
 import { UnauthorizedError, verifyUserAuth } from '@/src/actions/auth';
 import DBConnection from '@/src/db/DBConnection';
+import TeamRepository, { TeamNotFoundError } from '@/src/db/models/team';
 import UserRepository, { UserNotFoundError } from '@/src/db/models/user';
-import { CreateTeamData } from '@/src/types/api';
+import { CreateTeamData, UpdateTeamData } from '@/src/types/api';
 import { FormActionState } from '@/src/types/form';
 
 export type CreateTeamActionState = FormActionState<CreateTeamData>;
@@ -83,6 +84,78 @@ export const createTeam = async (
         success: false,
         data: validatedFields.data,
         error: 'User not found',
+      };
+    }
+    return {
+      success: false,
+      data: validatedFields.data,
+      error: 'Could not import team. Try again later',
+    };
+  }
+
+  return {
+    success: true,
+  };
+};
+
+export type UpdateTeamActionState = FormActionState<UpdateTeamData>;
+
+const updateTeamDataSchema = createTeamDataSchema.extend({
+  id: z.string().trim().min(1, 'Invalid team ID'),
+});
+
+export const updateTeam = async (
+  _initialState: UpdateTeamActionState,
+  formData: FormData,
+): Promise<UpdateTeamActionState> => {
+  const rawData = {
+    id: formData.get('id') as string,
+    name: formData.get('name') as string,
+    description: (formData.get('description') || '') as string,
+    data: formData.get('data') as string,
+    season: Number(formData.get('season')),
+    regulation: formData.get('regulation') as string,
+    tags: (JSON.parse((formData.get('tags') as string) || '') ||
+      []) as string[],
+  };
+
+  console.debug('Raw update team data:', rawData);
+
+  const validatedFields = updateTeamDataSchema.safeParse(rawData);
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      data: rawData,
+      errors: z.treeifyError(validatedFields.error).properties,
+    };
+  }
+
+  try {
+    await DBConnection.connect();
+    await verifyUserAuth();
+
+    const teamsRepo = new TeamRepository();
+    const { id, ...data } = validatedFields.data;
+    await teamsRepo.updateById(id, data);
+    console.log(`Team ${id} updated succesfully`, data);
+  } catch (error) {
+    console.error('Failed to create user', error);
+    if (
+      error instanceof UserNotFoundError ||
+      error instanceof UnauthorizedError
+    ) {
+      return {
+        success: false,
+        data: validatedFields.data,
+        error: 'User not found',
+      };
+    }
+    if (error instanceof TeamNotFoundError) {
+      return {
+        success: false,
+        data: validatedFields.data,
+        error: 'Team not found',
       };
     }
     return {

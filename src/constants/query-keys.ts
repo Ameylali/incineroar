@@ -1,5 +1,6 @@
 export const UserKeys = {
-  me: () => ['user/me'] as const,
+  me: () => ['me'] as const,
+  team: (id: string) => ['team', id] as const,
 };
 
 export const PokemonKeys = {

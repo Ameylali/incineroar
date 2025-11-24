@@ -3,28 +3,29 @@
 import { MoreOutlined } from '@ant-design/icons';
 import { Button, Col, Dropdown, Row, Table, TableProps } from 'antd';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useDeleteTeamMutation } from '@/src/hooks/team-mutations';
 import useUserQuery from '@/src/hooks/useUserQuery';
 import { Team } from '@/src/types/api';
 
-import { ImportTeamModal } from './components/TeamModals';
+import { EditTeamModal, ImportTeamModal } from './components/TeamModals';
 import TeamPreview from './components/TeamPreview';
 
 const TeamsTable = Table<Team>;
 
 interface ActionsMenuProps {
-  teamId: string;
+  team: Team;
+  onEdit: (team: Team) => void;
 }
 
-const ActionsMenu = ({ teamId }: ActionsMenuProps) => {
-  const { mutate } = useDeleteTeamMutation(teamId);
+const ActionsMenu = ({ team, onEdit }: ActionsMenuProps) => {
+  const { mutate } = useDeleteTeamMutation(team.id);
   return (
     <Dropdown
       menu={{
         items: [
-          { label: 'Edit', key: 'edit' },
+          { label: 'Edit', key: 'edit', onClick: () => onEdit(team) },
           { label: 'Delete', key: 'delete', onClick: () => mutate() },
         ],
       }}
@@ -34,37 +35,48 @@ const ActionsMenu = ({ teamId }: ActionsMenuProps) => {
   );
 };
 
-const COLUMNS: TableProps<Team>['columns'] = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    key: 'name',
-    render: (name, { id }) => <Link href={`/home/teams/${id}`}>{name}</Link>,
-  },
-  {
-    title: 'Season',
-    dataIndex: 'season',
-    key: 'season',
-  },
-  {
-    title: 'Regulation',
-    dataIndex: 'regulation',
-    key: 'regulation',
-  },
-  {
-    title: 'Preview',
-    dataIndex: 'parsedTeam',
-    key: 'preview',
-    render: (team: Team['parsedTeam']) => <TeamPreview team={team} />,
-  },
-  {
-    title: 'Actions',
-    key: 'acions',
-    render: (_, { id }) => <ActionsMenu teamId={id} />,
-  },
-];
-
 const Page = () => {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTeam, setEditTeam] = useState<Team | null>(null);
+
+  const closeModal = () => {
+    setIsEditModalOpen(false);
+    setEditTeam(null);
+  };
+
+  const onEdit = (team: Team) => {
+    setEditTeam(team);
+    setIsEditModalOpen(true);
+  };
+  const COLUMNS: TableProps<Team>['columns'] = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (name, { id }) => <Link href={`/home/teams/${id}`}>{name}</Link>,
+    },
+    {
+      title: 'Season',
+      dataIndex: 'season',
+      key: 'season',
+    },
+    {
+      title: 'Regulation',
+      dataIndex: 'regulation',
+      key: 'regulation',
+    },
+    {
+      title: 'Preview',
+      dataIndex: 'parsedTeam',
+      key: 'preview',
+      render: (team: Team['parsedTeam']) => <TeamPreview team={team} />,
+    },
+    {
+      title: 'Actions',
+      key: 'acions',
+      render: (_, team) => <ActionsMenu team={team} onEdit={onEdit} />,
+    },
+  ];
   const { isLoading, isError, data } = useUserQuery();
   const teams = useMemo(() => {
     return (data?.teams ?? []).map((team) => {
@@ -96,6 +108,14 @@ const Page = () => {
           />
         </Col>
       </Row>
+      {editTeam && (
+        <EditTeamModal
+          isOpen={isEditModalOpen}
+          closeModal={closeModal}
+          team={editTeam}
+        />
+      )}
+      ;
     </>
   );
 };
