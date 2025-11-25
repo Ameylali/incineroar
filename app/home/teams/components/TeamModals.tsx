@@ -9,7 +9,7 @@ import { UserKeys } from '@/src/constants/query-keys';
 import useFormAction, { getValidateStatus } from '@/src/hooks/useFormAction';
 import { CreateTeamData, Team, UpdateTeamData } from '@/src/types/api';
 import { FormActionState } from '@/src/types/form';
-import { queryClient } from '@/src/utils/query-client';
+import { queryClient } from '@/src/utils/query-clients';
 
 import { createTeam, CreateTeamActionState, updateTeam } from '../actions';
 

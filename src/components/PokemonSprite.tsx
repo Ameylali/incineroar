@@ -11,7 +11,7 @@ interface PokemonSpriteProps {
 const PokemonSprite = ({ pokemon, imageProps = {} }: PokemonSpriteProps) => {
   const { isLoading, isSuccess, data } = usePokemonQuery(pokemon);
   if (isLoading || !isSuccess || !data.sprites.front_default) {
-    return <SkeletonAvatar active size="default" shape="circle" />;
+    return <SkeletonAvatar active={isLoading} size="default" shape="circle" />;
   }
   return (
     <Image

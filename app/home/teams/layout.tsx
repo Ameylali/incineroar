@@ -9,7 +9,7 @@ const Layout = ({ children }: PropsWithChildren) => {
   const breadcrumbs = useBreadcrumbs();
 
   return (
-    <Flex vertical gap={30}>
+    <Flex vertical gap={30} className="h-full">
       <section>
         <Row>
           <Col>
@@ -17,7 +17,7 @@ const Layout = ({ children }: PropsWithChildren) => {
           </Col>
         </Row>
       </section>
-      <section>{children}</section>
+      <section className="overflow-y-auto">{children}</section>
     </Flex>
   );
 };

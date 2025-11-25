@@ -17,7 +17,7 @@ import { ReactNode, useState } from 'react';
 
 import foLabsLogo from '@/public/fo-labs.svg';
 import pokeballIcon from '@/public/pokeball.svg';
-import { queryClient } from '@/src/utils/query-client';
+import { queryClient } from '@/src/utils/query-clients';
 
 import { signOut } from '../actions';
 
@@ -92,7 +92,7 @@ const AppLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
           </Flex>
         </Sider>
         <Layout>
-          <Content className="p-3">{children}</Content>
+          <Content className="h-full p-3">{children}</Content>
         </Layout>
       </Layout>
     </ProvidersWrapper>
