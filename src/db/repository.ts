@@ -1,6 +1,6 @@
-export interface BaseRepository<T> {
+export interface BaseRepository<T, CreatTData = T> {
   getById(id: string): Promise<T>;
-  create(model: T): Promise<T>;
+  create(model: CreatTData): Promise<T>;
 }
 
 export interface CRUDRepository<T> extends BaseRepository<T> {

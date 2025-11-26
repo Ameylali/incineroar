@@ -61,9 +61,9 @@ const Page = () => {
       key: 'season',
     },
     {
-      title: 'Regulation',
-      dataIndex: 'regulation',
-      key: 'regulation',
+      title: 'Format',
+      dataIndex: 'format',
+      key: 'format',
     },
     {
       title: 'Preview',

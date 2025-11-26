@@ -26,6 +26,7 @@ const UserSchema = new Schema<User>(
     id: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
+    timestamps: true,
   },
 );
 

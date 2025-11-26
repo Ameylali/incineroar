@@ -6,6 +6,7 @@ import { User } from '../types/api';
 
 const getUser = async (): Promise<User> => {
   const result = await axios.get<{ user: User }>('/api/user/me');
+  result.data.user.teams.reverse();
   return result.data.user;
 };
 

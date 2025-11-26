@@ -31,7 +31,7 @@ export const actionToOnFinishAdapter = <T extends { [key: string]: FormValue }>(
   Object.keys(values).forEach((key) => {
     const value = values[key as keyof T];
     if (Array.isArray(value)) {
-      formData.append(key, JSON.stringify(value));
+      value.forEach((v) => formData.append(key, v));
       return;
     }
     if (typeof value === 'number') {

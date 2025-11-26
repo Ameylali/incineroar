@@ -3,8 +3,9 @@
 import { verifyUserAuth } from '@/src/actions/auth';
 import DBConnection from '@/src/db/DBConnection';
 import TeamRepository from '@/src/db/models/team';
+import TournamentRepository from '@/src/db/models/tournament';
 import UserRepository from '@/src/db/models/user';
-import { CreateTeamData } from '@/src/types/api';
+import { CreateTeamData, CreateTournamentData } from '@/src/types/api';
 
 const sampleTeam = `Mimikyu @ Focus Sash  
 Ability: Disguise  
@@ -47,7 +48,7 @@ export const testTeamsRepository = async () => {
     tags: ['tag 1', 'tag 2'],
     name: `team created on ${new Date().toLocaleString()}`,
     description: 'My description',
-    regulation: 'reg h',
+    format: 'reg h',
     season: 2025,
   };
 
@@ -80,4 +81,46 @@ export const testTeamsRepository = async () => {
   }
 
   console.log('Done');
+};
+
+export const testCreateTournament = async () => {
+  const tournament: CreateTournamentData = {
+    name: `Tournament on ${new Date().toLocaleString()}`,
+    season: new Date().getFullYear(),
+    format: 'Reg h',
+    teams: [
+      {
+        player: 'Player 1',
+        data: sampleTeam,
+      },
+      {
+        player: 'Player 2',
+        data: sampleTeam,
+      },
+      {
+        player: 'Player 3',
+        data: sampleTeam,
+      },
+    ],
+  };
+  console.log('Creating tournament', tournament);
+  await DBConnection.connect();
+  const repo = new TournamentRepository();
+  const createdT = await repo.create(tournament);
+  console.log('Tournament created', createdT);
+  const foundT = await repo.getById(createdT.id);
+  console.log('Found tournament', foundT);
+};
+
+export const testDeleteTournament = async (formData: FormData) => {
+  const id = formData.get('id');
+  await DBConnection.connect();
+  const repo = new TournamentRepository();
+  console.log('Deleting team', id);
+  await repo.deleteById(id);
+  try {
+    await repo.getById(id);
+  } catch (err) {
+    console.log('Not found deleted team', err);
+  }
 };

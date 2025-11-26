@@ -21,7 +21,7 @@ const INITIAL_STATE: CreateTeamActionState = {
     name: '',
     description: '',
     season: new Date().getFullYear(),
-    regulation: '',
+    format: '',
     tags: [],
     data: '',
   },
@@ -73,10 +73,10 @@ const TeamForm = <T extends CreateTeamData | UpdateTeamData>(
           <TextArea autoSize />
         </TeamFormItem>
         <TeamFormItem
-          name="regulation"
-          label="Regulation"
-          rules={[{ required: true, message: 'Please enter the regulation' }]}
-          validateStatus={getValidateStatus(state, 'regulation', isPending)}
+          name="format"
+          label="Format"
+          rules={[{ required: true, message: 'Please enter the format' }]}
+          validateStatus={getValidateStatus(state, 'format', isPending)}
         >
           <Compact block>
             <TeamFormItem name="season" noStyle>

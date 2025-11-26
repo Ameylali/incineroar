@@ -16,10 +16,10 @@ const createTeamDataSchema = z.object({
     .string()
     .trim()
     .min(1, 'Name must be at least 1 characters')
-    .max(20, 'Name must be at most 20 characters'),
+    .max(40, 'Name must be at most 40 characters'),
   description: z
     .string()
-    .max(100, 'Description must be at most 100 characters'),
+    .max(500, 'Description must be at most 500 characters'),
   data: z
     .string()
     .min(1, 'Data must be at least 1 characters')
@@ -28,10 +28,10 @@ const createTeamDataSchema = z.object({
     .number()
     .min(2008)
     .max(new Date().getFullYear() + 1),
-  regulation: z
+  format: z
     .string()
-    .min(1, 'Regulation must be at least 1 characters')
-    .max(20, 'Regulation must be at most 20 characters'),
+    .min(1, 'Format must be at least 1 characters')
+    .max(50, 'Format must be at most 50 characters'),
   tags: z
     .array(
       z
@@ -52,9 +52,8 @@ export const createTeam = async (
     description: (formData.get('description') || '') as string,
     data: formData.get('data') as string,
     season: Number(formData.get('season')),
-    regulation: formData.get('regulation') as string,
-    tags: (JSON.parse((formData.get('tags') as string) || '') ||
-      []) as string[],
+    format: formData.get('format') as string,
+    tags: (formData.getAll('tags') || []) as string[],
   };
 
   const validatedFields = createTeamDataSchema.safeParse(rawData);
@@ -114,9 +113,8 @@ export const updateTeam = async (
     description: (formData.get('description') || '') as string,
     data: formData.get('data') as string,
     season: Number(formData.get('season')),
-    regulation: formData.get('regulation') as string,
-    tags: (JSON.parse((formData.get('tags') as string) || '') ||
-      []) as string[],
+    format: formData.get('format') as string,
+    tags: (formData.getAll('tags') || []) as string[],
   };
 
   console.debug('Raw update team data:', rawData);

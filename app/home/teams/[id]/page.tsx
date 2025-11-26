@@ -25,7 +25,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     <Flex vertical>
       <Title level={2}>{data.name}</Title>
       <Flex justify="space-between">
-        <Text>{`${data.season} - ${data.regulation}`}</Text>
+        <Text>{`${data.season} - ${data.format}`}</Text>
         <Flex>
           {data.tags.map((tag) => (
             <Tag key={tag}>{tag}</Tag>

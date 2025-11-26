@@ -12,7 +12,7 @@ export const TeamSchema = new Schema<Team>(
   {
     data: { type: String, required: true },
     season: { type: Number, required: true },
-    regulation: { type: String, required: true },
+    format: { type: String, required: true },
     tags: [{ type: String, required: true }],
     name: { type: String, required: true },
     description: { type: String },
@@ -21,6 +21,7 @@ export const TeamSchema = new Schema<Team>(
     id: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
+    timestamps: true,
     virtuals: {
       parsedTeam: {
         get: function () {
