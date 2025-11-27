@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Bruno secrets files (e.g., if you use a separate file for secrets)
 **/.env
+
+# Generated mocks
+__mocks__/antd/es/*

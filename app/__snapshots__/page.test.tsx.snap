@@ -32,6 +32,11 @@ exports[`Page renders homepage unchanged 1`] = `
         >
           Tools for pokemon battling
         </article>
+        <a
+          href="/auth"
+        >
+          Enter
+        </a>
       </div>
     </main>
   </div>
