@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
 import {
+  testAnalyzeTournament,
   testCreateTournament,
   testDeleteTournament,
   testTeamsRepository,
@@ -19,6 +20,9 @@ const Page = () => {
         <input id="delete-t-input" name="id" />
         <button type="submit">Click me to test deleteTournament</button>
       </form>
+      <button onClick={testAnalyzeTournament}>
+        Click me to test analyze tournament
+      </button>
     </div>
   );
 };

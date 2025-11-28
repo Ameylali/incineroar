@@ -5,36 +5,17 @@ import DBConnection from '@/src/db/DBConnection';
 import TeamRepository from '@/src/db/models/team';
 import TournamentRepository from '@/src/db/models/tournament';
 import UserRepository from '@/src/db/models/user';
-import { CreateTeamData, CreateTournamentData } from '@/src/types/api';
-
-const sampleTeam = `Mimikyu @ Focus Sash  
-Ability: Disguise  
-Tera Type: Ghost  
-
-Vikavolt  
-Ability: Levitate  
-Tera Type: Bug  
-IVs: 0 Atk  
-
-Mudsdale  
-Ability: Stamina  
-Tera Type: Ground  
-IVs: 0 Atk  
-
-Toxapex  
-Ability: Regenerator  
-Tera Type: Poison  
-IVs: 0 Atk  
-
-Celesteela  
-Ability: Beast Boost  
-Tera Type: Steel  
-
-Arcanine  
-Ability: Intimidate  
-Tera Type: Fire`;
+import AnalyticsService from '@/src/services/pokemon/analytics';
+import TeamService from '@/src/services/pokemon/team';
+import {
+  CreateTeamData,
+  CreateTournamentData,
+  TournamentTeam,
+} from '@/src/types/api';
+import { sampleTeams } from '@/src/utils/test-utils';
 
 export const testTeamsRepository = async () => {
+  const sampleTeam = sampleTeams[0];
   console.log('Starting script...');
 
   await DBConnection.connect();
@@ -84,6 +65,7 @@ export const testTeamsRepository = async () => {
 };
 
 export const testCreateTournament = async () => {
+  const sampleTeam = sampleTeams[0];
   const tournament: CreateTournamentData = {
     name: `Tournament on ${new Date().toLocaleString()}`,
     season: new Date().getFullYear(),
@@ -113,7 +95,7 @@ export const testCreateTournament = async () => {
 };
 
 export const testDeleteTournament = async (formData: FormData) => {
-  const id = formData.get('id');
+  const id = formData.get('id') as string;
   await DBConnection.connect();
   const repo = new TournamentRepository();
   console.log('Deleting team', id);
@@ -123,4 +105,36 @@ export const testDeleteTournament = async (formData: FormData) => {
   } catch (err) {
     console.log('Not found deleted team', err);
   }
+};
+
+export const testAnalyzeTournament = async () => {
+  console.log(new Map().entries() instanceof Iterator);
+  const teamService = new TeamService();
+  const tournamentTeams: TournamentTeam[] = [
+    {
+      player: 'player 1',
+      data: '',
+      team: teamService.parseTeam(sampleTeams[0]),
+    },
+    {
+      player: 'player 2',
+      data: '',
+      team: teamService.parseTeam(sampleTeams[1]),
+    },
+    {
+      player: 'player 3',
+      data: '',
+      team: teamService.parseTeam(sampleTeams[2]),
+    },
+    {
+      player: 'player 4',
+      data: '',
+      team: teamService.parseTeam(sampleTeams[3]),
+    },
+  ];
+  console.log('Analyzing tournament', tournamentTeams);
+  const service = new AnalyticsService();
+  const result = await service.getAnalytics(tournamentTeams);
+  console.log('Done');
+  console.log(result);
 };

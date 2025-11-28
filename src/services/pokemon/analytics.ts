@@ -1,3 +1,5 @@
+import 'core-js/es/iterator';
+
 import { createHash } from 'crypto';
 
 import { type PokemonSet } from '@/src/services/pokemon';
