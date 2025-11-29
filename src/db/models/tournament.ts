@@ -23,9 +23,9 @@ const TournamentTeamSchema = new Schema<TournamentTeam>(
     toObject: { virtuals: true },
     virtuals: {
       team: {
-        get: function () {
+        get: function (this: TournamentTeam) {
           const teamsService = new TeamService();
-          return teamsService.parseTeam(this.data as string);
+          return teamsService.parseTeam(this.data);
         },
       },
     },

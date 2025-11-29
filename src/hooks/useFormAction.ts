@@ -69,6 +69,7 @@ const useFormAction = <T extends { [key: string]: FormValue }>(
         value: state.data[key as keyof T],
         errors: state.errors?.[key as keyof T]?.errors,
       }));
+      // @ts-expect-error missing FieldData type
       form.setFields(formFields);
     }
   }, [form, state]);

@@ -24,7 +24,7 @@ const Login = () => {
           <SignUpForm
             onSignIn={(hasCreatedAccount) => {
               setFormType('signin');
-              setHasCreatedAccount(hasCreatedAccount);
+              setHasCreatedAccount(!!hasCreatedAccount);
             }}
           />
         )}

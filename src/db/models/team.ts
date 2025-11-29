@@ -24,9 +24,9 @@ export const TeamSchema = new Schema<Team>(
     timestamps: true,
     virtuals: {
       parsedTeam: {
-        get: function () {
+        get: function (this: Team) {
           const teamsService = new TeamService();
-          return teamsService.parseTeam(this.data as string);
+          return teamsService.parseTeam(this.data);
         },
       },
     },
