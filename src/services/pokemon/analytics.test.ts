@@ -1,4 +1,3 @@
-// test analytics service class using jest
 import { PokemonSet } from '@/src/services/pokemon';
 import { TournamentTeam } from '@/src/types/api';
 import { sampleTeams } from '@/src/utils/test-utils';
@@ -9,8 +8,6 @@ import AnalyticsService, {
   UsageAnalysis,
 } from './analytics';
 import TeamService from './team';
-
-jest.mock('../pokemon');
 
 describe('AnalyticsService', () => {
   beforeEach(() => {});
