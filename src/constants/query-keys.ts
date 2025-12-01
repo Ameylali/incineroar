@@ -7,3 +7,7 @@ export const PokemonKeys = {
   pokemon: (name?: string) => ['pokemon', name] as const,
   item: (item?: string) => ['item', item] as const,
 };
+
+export const MetagameKeys = {
+  tournaments: () => ['tournaments'] as const,
+};

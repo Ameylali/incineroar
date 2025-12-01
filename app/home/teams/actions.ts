@@ -3,6 +3,7 @@
 import z from 'zod';
 
 import { UnauthorizedError, verifyUserAuth } from '@/src/actions/auth';
+import { baseFormActionErrorHandler } from '@/src/actions/error-handlers';
 import DBConnection from '@/src/db/DBConnection';
 import TeamRepository, { TeamNotFoundError } from '@/src/db/models/team';
 import UserRepository, { UserNotFoundError } from '@/src/db/models/user';
@@ -75,21 +76,11 @@ export const createTeam = async (
     console.log('Team created successfully', team);
   } catch (error) {
     console.error('Failed to create user', error);
-    if (
-      error instanceof UserNotFoundError ||
-      error instanceof UnauthorizedError
-    ) {
-      return {
-        success: false,
-        data: validatedFields.data,
-        error: 'User not found',
-      };
-    }
-    return {
-      success: false,
-      data: validatedFields.data,
-      error: 'Could not import team. Try again later',
-    };
+    return baseFormActionErrorHandler(
+      error,
+      validatedFields.data,
+      'Could not import team. Try again later',
+    );
   }
 
   return {

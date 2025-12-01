@@ -10,6 +10,7 @@ import {
 import { FormActionState } from '../types/form';
 
 type FormValue = string | Blob | string[] | number;
+type FormDataObject = { [key: string]: FormValue };
 
 export const getValidateStatus = <T>(
   state: FormActionState<T>,
@@ -22,7 +23,7 @@ export const getValidateStatus = <T>(
   return '';
 };
 
-export const actionToOnFinishAdapter = <T extends { [key: string]: FormValue }>(
+export const actionToOnFinishAdapter = <T extends FormDataObject>(
   values: T,
   formAction: (payload: FormData) => void,
   startTransition: TransitionStartFunction,
@@ -45,7 +46,7 @@ export const actionToOnFinishAdapter = <T extends { [key: string]: FormValue }>(
   });
 };
 
-const useFormAction = <T extends { [key: string]: FormValue }>(
+const useFormAction = <T extends FormDataObject>(
   initial: FormActionState<T>,
   action: (
     state: Awaited<FormActionState<T>>,

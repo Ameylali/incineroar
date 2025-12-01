@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { UserNotFoundError } from '../db/models/user';
 import { ErrorResponse } from '../types/api';
 import { MissingDBConnectionError } from '../utils/errors';
 import { UnauthenticatedError, UnauthorizedError } from './auth';
@@ -38,4 +39,26 @@ export const baseErrorHandler = (
       status: 500,
     },
   );
+};
+
+export const baseFormActionErrorHandler = <T>(
+  error: unknown,
+  data: T,
+  defaultErrorMessage: string,
+) => {
+  if (
+    error instanceof UserNotFoundError ||
+    error instanceof UnauthorizedError
+  ) {
+    return {
+      success: false,
+      data: data,
+      error: 'User not found',
+    };
+  }
+  return {
+    success: false,
+    data: data,
+    error: defaultErrorMessage,
+  };
 };

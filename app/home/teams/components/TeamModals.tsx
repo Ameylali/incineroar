@@ -202,6 +202,7 @@ export const EditTeamModal = ({
   team,
 }: EditTeamModalProps) => {
   const EditModal = TeamFormModal<UpdateTeamData>;
+  if (!isOpen) return null;
   return (
     <EditModal
       isOpen={isOpen}
@@ -225,11 +226,13 @@ export const ImportTeamModal = () => {
       >
         Import team
       </Button>
-      <EditModal
-        isOpen={isModalOpen}
-        closeModal={() => setIsModalOpen(false)}
-        action={createTeam}
-      />
+      {isModalOpen && (
+        <EditModal
+          isOpen={isModalOpen}
+          closeModal={() => setIsModalOpen(false)}
+          action={createTeam}
+        />
+      )}
     </>
   );
 };

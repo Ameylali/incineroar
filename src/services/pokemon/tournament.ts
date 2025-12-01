@@ -2,6 +2,7 @@ import { PokemonClient } from 'pokenode-ts';
 
 import { type PokemonSet } from '@/src/services/pokemon';
 import { CreateTournamentData, TournamentTeam } from '@/src/types/api';
+import { TournamentDataSource } from '@/src/types/form';
 
 import TeamService from './team';
 
@@ -9,7 +10,8 @@ type TournamentMetadata = Pick<
   CreateTournamentData,
   'name' | 'season' | 'format'
 >;
-export type ParserType = 'pokedata';
+type DataFormats = PokedataRawData;
+export type ParserType = TournamentDataSource;
 
 export interface TournamentParser<T = unknown> {
   parserType: ParserType;
@@ -101,7 +103,7 @@ export class PokedataTournamentParser
 }
 
 export default class TournamentParserFactory {
-  static parsers: Record<ParserType, TournamentParser> = {
+  static parsers: Record<ParserType, TournamentParser<DataFormats[]>> = {
     pokedata: new PokedataTournamentParser(),
   };
   static getParser(parserType: ParserType) {

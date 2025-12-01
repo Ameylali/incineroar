@@ -1,5 +1,17 @@
+import { Col, Row } from 'antd';
+
+import AddTournament from './components/AddTournament';
+
 const Page = () => {
-  return <h1>hello</h1>;
+  return (
+    <>
+      <Row>
+        <Col>
+          <AddTournament />
+        </Col>
+      </Row>
+    </>
+  );
 };
 
 export default Page;
