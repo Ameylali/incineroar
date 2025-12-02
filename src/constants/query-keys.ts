@@ -10,4 +10,5 @@ export const PokemonKeys = {
 
 export const MetagameKeys = {
   tournaments: () => ['tournaments'] as const,
+  tournament: (id: string) => ['tournament', id] as const,
 };

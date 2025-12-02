@@ -5,7 +5,7 @@ import { Button, Col, Dropdown, Row, Table, TableProps } from 'antd';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
-import { useDeleteTeamMutation } from '@/src/hooks/team-mutations';
+import { useDeleteTeamMutation } from '@/src/hooks/team-queries';
 import useUserQuery from '@/src/hooks/useUserQuery';
 import { Team } from '@/src/types/api';
 

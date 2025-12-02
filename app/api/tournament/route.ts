@@ -3,22 +3,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyUserAuth } from '@/src/actions/auth';
 import { baseErrorHandler } from '@/src/actions/error-handlers';
 import DBConnection from '@/src/db/DBConnection';
-import UserRepository from '@/src/db/models/user';
+import TournamentRepository from '@/src/db/models/tournament';
 import { ErrorResponse } from '@/src/types/api';
-import { GET_ME } from '@/src/types/endpoints';
+import { GET_TOURNAMENTS } from '@/src/types/endpoints';
 
 export const GET = async (
   req: NextRequest,
-): Promise<NextResponse<GET_ME | ErrorResponse>> => {
+): Promise<NextResponse<GET_TOURNAMENTS | ErrorResponse>> => {
   try {
     await DBConnection.connect();
-    const userRepo = new UserRepository();
+    await verifyUserAuth();
 
-    const { id } = await verifyUserAuth();
-    const { password: _, ...user } = await userRepo.getById(id);
-    return NextResponse.json({ user });
+    const tournamentRepo = new TournamentRepository();
+    const tournaments = await tournamentRepo.getAll();
+
+    return NextResponse.json({ tournaments });
   } catch (error) {
-    console.error('Failed to get user', error);
+    console.error('Failed to get tournaments', error);
     return baseErrorHandler(error, req);
   }
 };

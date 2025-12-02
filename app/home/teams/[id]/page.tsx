@@ -7,7 +7,7 @@ import Title from 'antd/es/typography/Title';
 import { use } from 'react';
 
 import PokemonSet from '@/src/components/PokemonSet';
-import useTeamQuery from '@/src/hooks/useTeamQuery';
+import { useTeamQuery } from '@/src/hooks/team-queries';
 
 const Page = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);

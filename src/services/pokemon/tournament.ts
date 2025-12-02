@@ -16,7 +16,7 @@ export type ParserType = TournamentDataSource;
 export interface TournamentParser<T = unknown> {
   parserType: ParserType;
   parse(
-    tournamet: TournamentMetadata,
+    tournament: TournamentMetadata,
     rawData: T,
   ): Promise<CreateTournamentData>;
 }
@@ -57,13 +57,13 @@ export class PokedataTournamentParser
         result.reason instanceof Error ? result.reason.message : result.reason;
       console.warn('Failed to parse team due to:', reason);
     });
-    const tournamet: CreateTournamentData = {
+    const tournament: CreateTournamentData = {
       ...metadata,
       teams: promises
         .filter((result) => result.status === 'fulfilled')
         .map(({ value }) => value),
     };
-    return tournamet;
+    return tournament;
   }
 
   async parseTeam(data: PokedataRawData): Promise<TournamentTeam> {

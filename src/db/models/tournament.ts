@@ -73,6 +73,11 @@ export default class TournamentRepository
   async deleteById(id: string) {
     await this.model.findByIdAndDelete(id);
   }
+
+  async getAll(): Promise<Tournament[]> {
+    const tournaments = await this.model.find();
+    return tournaments.map((t) => t.toObject()).reverse();
+  }
 }
 
 export class TournamentNotFoundError extends Error {
