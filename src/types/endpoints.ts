@@ -1,4 +1,10 @@
-import { AnalyticsResponse, ExposedUser, Team, Tournament } from './api';
+import {
+  AnalyticsResponse,
+  ExposedUser,
+  Team,
+  Tournament,
+  Training,
+} from './api';
 
 export interface GET_TOURNAMENT {
   tournament: Tournament;
@@ -22,5 +28,13 @@ export interface GET_TEAM {
 }
 
 export interface DELETE_TEAM {
+  success: true;
+}
+
+export interface GET_TRAININGS {
+  trainings: Training[];
+}
+
+export interface DELETE_TRAINING {
   success: true;
 }

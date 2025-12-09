@@ -682,7 +682,9 @@ export const createRandomTraining = (): CreateTrainingData => {
   return training;
 };
 
-export const createRandomBattle = (): CreateBattleData => {
+export const createRandomBattle = (
+  overrides: Partial<CreateBattleData> = {},
+): CreateBattleData => {
   const battle: CreateBattleData = {
     name: `Battle ${new Date().toISOString()}`,
     notes: '',
@@ -719,6 +721,7 @@ export const createRandomBattle = (): CreateBattleData => {
         ],
       },
     ],
+    ...overrides,
   };
   return battle;
 };

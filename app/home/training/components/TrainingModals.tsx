@@ -10,14 +10,19 @@ import { useEffect, useState } from 'react';
 import { TrainingKeys } from '@/src/constants/query-keys';
 import useFormAction, { getValidateStatus } from '@/src/hooks/useFormAction';
 import useUserQuery from '@/src/hooks/useUserQuery';
-import { Team } from '@/src/types/api';
-import { AddTrainingFormData } from '@/src/types/form';
+import { Team, Training } from '@/src/types/api';
+import { AddTrainingFormData, EditTrainingFormData } from '@/src/types/form';
 import { queryClient } from '@/src/utils/query-clients';
 
-import { AddTrainingActionState, createTraining } from '../actions';
+import {
+  AddTrainingActionState,
+  createTraining,
+  editTraining,
+  EditTrainingActionState,
+} from '../actions';
 
-const TrainingForm = Form<AddTrainingFormData>;
-const TrainingFormItem = FormItem<AddTrainingFormData>;
+const TrainingForm = Form<AddTrainingFormData | EditTrainingFormData>;
+const TrainingFormItem = FormItem<AddTrainingFormData | EditTrainingFormData>;
 
 const INITIAL_STATE: AddTrainingActionState = {
   success: false,
@@ -30,21 +35,34 @@ const INITIAL_STATE: AddTrainingActionState = {
   },
 };
 
-interface AddTrainingModalProps {
+interface AddOrEditTrainingModalProps {
   isOpen: boolean;
   closeModal: () => void;
   teams: Team[];
   isLoading?: boolean;
+  training?: Training;
 }
 
-const AddTrainingModal = ({
-  isOpen,
-  closeModal,
-  teams,
-  isLoading,
-}: AddTrainingModalProps) => {
-  const { state, form, onFinish, isPending } =
-    useFormAction<AddTrainingFormData>(INITIAL_STATE, createTraining);
+type AddOrEditTrainingAction = (
+  _: AddTrainingActionState | EditTrainingActionState,
+  form: FormData,
+) => Promise<AddTrainingActionState | EditTrainingActionState>;
+
+const AddOrEditTrainingModal = (props: AddOrEditTrainingModalProps) => {
+  const { teams, closeModal, isLoading, isOpen } = props;
+  const isEdit = !!props.training;
+  const initialState = props.training
+    ? {
+        success: false,
+        data: { teamId: props.training.team?.id, ...props.training },
+      }
+    : INITIAL_STATE;
+  const { state, form, onFinish, isPending } = useFormAction<
+    AddTrainingFormData | EditTrainingFormData
+  >(
+    initialState,
+    (isEdit ? editTraining : createTraining) as AddOrEditTrainingAction,
+  );
   const yearValues = Array.from(
     { length: new Date().getFullYear() - 2008 + 2 },
     (_, i) => 2008 + i,
@@ -55,20 +73,35 @@ const AddTrainingModal = ({
     label: name,
     value: id,
   }));
+  const intertecptOnFinish = (
+    data: AddTrainingFormData | EditTrainingFormData,
+  ) => {
+    const newData = data;
+    if (isEdit && 'data' in state && 'id' in state.data) {
+      (newData as EditTrainingFormData).id = state.data.id;
+    }
+    onFinish(newData);
+  };
 
   useEffect(() => {
     if (state.success) {
       closeModal();
       form.resetFields();
-      queryClient
-        .invalidateQueries({ queryKey: TrainingKeys.trainings() })
-        .catch((reason) => console.warn('Failed to invalidate query', reason));
+      const trainingId = props.training?.id;
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: TrainingKeys.trainings() }),
+        trainingId
+          ? queryClient.invalidateQueries({
+              queryKey: TrainingKeys.training(trainingId),
+            })
+          : Promise.resolve(),
+      ]).catch((reason) => console.warn('Failed to invalidate query', reason));
     }
-  }, [state.success, closeModal, form]);
+  }, [state.success, closeModal, form, props.training, isEdit]);
 
   return (
     <Modal
-      title="Add training"
+      title={`${isEdit ? 'Edit' : 'Add'} training`}
       open={isOpen}
       onCancel={closeModal}
       loading={isLoading}
@@ -77,16 +110,16 @@ const AddTrainingModal = ({
           Cancel
         </Button>,
         <Button key="submit" type="primary" onClick={() => form.submit()}>
-          Submit
+          {isEdit ? 'Update' : 'Submit'}
         </Button>,
       ]}
     >
       <TrainingForm
-        name="createTraining"
+        name={`${isEdit ? 'edit' : 'create'}Training`}
         form={form}
-        initialValues={state.success ? INITIAL_STATE : state.data}
+        initialValues={initialState}
         labelCol={{ span: 4 }}
-        onFinish={onFinish}
+        onFinish={intertecptOnFinish}
       >
         {'error' in state && (
           <FormItem>
@@ -128,6 +161,28 @@ const AddTrainingModal = ({
   );
 };
 
+interface EditTrainingModalProps {
+  closeModal: () => void;
+  training?: Training | null;
+}
+
+export const EditTrainingModal = ({
+  closeModal,
+  training,
+}: EditTrainingModalProps) => {
+  const { isLoading, data } = useUserQuery();
+  if (!training) return null;
+  return (
+    <AddOrEditTrainingModal
+      isOpen={true}
+      isLoading={isLoading}
+      teams={data?.teams ?? []}
+      closeModal={closeModal}
+      training={training}
+    />
+  );
+};
+
 const AddTraining = () => {
   const { isLoading, data } = useUserQuery();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -142,8 +197,8 @@ const AddTraining = () => {
         Add training
       </Button>
       {isModalOpen && (
-        <AddTrainingModal
-          teams={data?.teams || []}
+        <AddOrEditTrainingModal
+          teams={data?.teams ?? []}
           isLoading={isLoading}
           isOpen={isModalOpen}
           closeModal={() => setIsModalOpen(false)}

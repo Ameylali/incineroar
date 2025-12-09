@@ -70,17 +70,22 @@ export default class UserRepository implements BaseRepository<User> {
       throw new UserAlreadyExistsError(user);
     }
     user.password = await hash(user.password, UserRepository.HASH_SALTS);
-    const defaultTraining: CreateTrainingData & { isDefault: boolean } = {
+    const defaultTraining: CreateTrainingData = {
       name: 'Default',
       description: '',
-      isDefault: true,
     };
     const createdUser = await this.model.create({
       ...user,
       teams: [],
       trainings: [],
     });
-    await this.addNewTraining(createdUser.id as string, defaultTraining);
+    const training = await this.addNewTraining(
+      createdUser.id as string,
+      defaultTraining,
+    );
+    await this.updateTraining(createdUser.id as string, training.id, {
+      isDefault: true,
+    });
     return this.getById(createdUser.id as string);
   }
 
@@ -159,7 +164,15 @@ export default class UserRepository implements BaseRepository<User> {
   async getTrainings(userId: string): Promise<Training[]> {
     const user = await this.model.findById(userId);
     if (!user) throw new UserNotFoundError(userId);
-    await user.populate('trainings');
+    await user.populate({
+      path: 'trainings',
+      populate: [
+        {
+          path: 'battles',
+        },
+        { path: 'team' },
+      ],
+    });
     return user.toObject().trainings;
   }
 

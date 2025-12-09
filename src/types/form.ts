@@ -26,3 +26,5 @@ export type AddTournamentFormData = Pick<
 export type AddTrainingFormData = Omit<CreateTrainingData, 'team'> & {
   teamId?: string;
 };
+
+export type EditTrainingFormData = AddTrainingFormData & { id: string };

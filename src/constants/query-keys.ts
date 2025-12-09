@@ -15,4 +15,5 @@ export const MetagameKeys = {
 
 export const TrainingKeys = {
   trainings: () => ['trainings'] as const,
+  training: (id: string) => ['training', id] as const,
 };
