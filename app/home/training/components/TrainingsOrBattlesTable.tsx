@@ -60,10 +60,7 @@ const TrainingsOrBattlesTable = ({
     if (!('turns' in trainingOrBattle)) {
       return `/home/training/${trainingOrBattle.id}` as Route;
     }
-    if (training) {
-      return `/home/training/${training.id}/battle/${trainingOrBattle.id}` as Route;
-    }
-    return `/home/training/quick-battle/${trainingOrBattle.id}` as Route;
+    return `/home/training/${training?.id}/${trainingOrBattle.id}` as Route;
   };
 
   const COLUMNS: TableProps<Training | Battle>['columns'] = [

@@ -8,7 +8,7 @@ import { use } from 'react';
 import TeamPreview from '@/src/components/TeamPreview';
 import { useBattleQuery } from '@/src/hooks/training-queries';
 
-import Turn from '../../../components/Turn';
+import Turn from '../../components/Turn';
 
 const Page = ({
   params,

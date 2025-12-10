@@ -14,9 +14,10 @@ const Page = () => {
     null,
   );
   const { isLoading, isError, data } = useTrainigsQuery();
+  const defaultTraining = data?.trainings.find(({ isDefault }) => isDefault);
   const trainingsAndBattles = useMemo(() => {
     const trainings = data?.trainings ?? [];
-    const battles = trainings.find(({ isDefault }) => isDefault)?.battles ?? [];
+    const battles = defaultTraining?.battles ?? [];
     const trainingsAndBattles = [
       ...battles,
       ...trainings.filter(({ isDefault }) => !isDefault),
@@ -28,7 +29,7 @@ const Page = () => {
       key: t.id,
       ...t,
     }));
-  }, [data]);
+  }, [data, defaultTraining]);
 
   if (isError) {
     return <h1>Error</h1>;
@@ -45,6 +46,7 @@ const Page = () => {
             isLoading={isLoading}
             trainingsAndBattles={trainingsAndBattles}
             onEditTraining={setSelectedTraining}
+            training={defaultTraining}
           />
         </Col>
       </Row>
