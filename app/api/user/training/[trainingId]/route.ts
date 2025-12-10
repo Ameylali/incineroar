@@ -18,12 +18,7 @@ export const GET = async (
 
     const { id: userId } = await verifyUserAuth();
     const { trainingId } = await ctx.params;
-    const training = (await userRepo.getTrainings(userId)).find(
-      ({ id }) => id === trainingId,
-    );
-    if (!training) {
-      throw new TrainingNotFoundError(trainingId);
-    }
+    const training = await userRepo.getTrainingById(userId, trainingId);
     return NextResponse.json({ training });
   } catch (error) {
     console.error('Failed to get training', error);

@@ -1,5 +1,6 @@
 import {
   AnalyticsResponse,
+  Battle,
   ExposedUser,
   Team,
   Tournament,
@@ -41,4 +42,8 @@ export interface GET_TRAINING {
 
 export interface DELETE_TRAINING {
   success: true;
+}
+
+export interface GET_BATTLE {
+  battle: Battle;
 }

@@ -720,6 +720,32 @@ export const createRandomBattle = (
           },
         ],
       },
+      {
+        index: 3,
+        actions: [
+          {
+            index: 1,
+            type: 'switch',
+            user: 'incineroar',
+            targets: ['rillaboom'],
+            name: 'switch',
+          },
+          {
+            index: 2,
+            type: 'ability',
+            user: 'rillaboom',
+            targets: ['pikachu'],
+            name: 'herbgenesis',
+          },
+          {
+            index: 3,
+            type: 'effect',
+            user: 'field',
+            targets: ['pikachu', 'rillaboom'],
+            name: 'grassy terrain',
+          },
+        ],
+      },
     ],
     ...overrides,
   };

@@ -18,6 +18,7 @@ import DBConnection from '../DBConnection';
 import { BaseRepository } from '../repository';
 import TeamRepository, { TeamModelName, TeamNotFoundError } from './team';
 import TrainingRepository, {
+  BattleNotFoundError,
   TrainingModelName,
   TrainingNotFoundError,
 } from './training';
@@ -169,6 +170,7 @@ export default class UserRepository implements BaseRepository<User> {
       populate: [
         {
           path: 'battles',
+          populate: 'team',
         },
         { path: 'team' },
       ],
@@ -233,6 +235,25 @@ export default class UserRepository implements BaseRepository<User> {
       battleId,
       data,
     );
+  }
+
+  async getTrainingById(userId: string, trainingId: string) {
+    const training = (await this.getTrainings(userId)).find(
+      ({ id }) => id === trainingId,
+    );
+    if (!training) {
+      throw new TrainingNotFoundError(trainingId);
+    }
+    return training;
+  }
+
+  async getBattleById(userId: string, trainingId: string, battleId: string) {
+    const training = await this.getTrainingById(userId, trainingId);
+    const battle = training.battles.find(({ id }) => id === battleId);
+    if (!battle) {
+      throw new BattleNotFoundError(battleId);
+    }
+    return battle;
   }
 }
 
