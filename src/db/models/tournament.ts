@@ -41,11 +41,14 @@ export const TournamentSchema = new Schema<Tournament>(
   },
   {
     id: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true },
     timestamps: true,
   },
 );
+
+TournamentSchema.path('createdAt').get((val?: Date) => val?.toISOString?.());
+TournamentSchema.path('updatedAt').get((val?: Date) => val?.toISOString?.());
 
 export default class TournamentRepository
   implements BaseRepository<Tournament, CreateTournamentData>

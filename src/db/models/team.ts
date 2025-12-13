@@ -19,8 +19,8 @@ export const TeamSchema = new Schema<Team>(
   },
   {
     id: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true },
     timestamps: true,
     virtuals: {
       parsedTeam: {
@@ -32,6 +32,9 @@ export const TeamSchema = new Schema<Team>(
     },
   },
 );
+
+TeamSchema.path('createdAt').get((val?: Date) => val?.toISOString?.());
+TeamSchema.path('updatedAt').get((val?: Date) => val?.toISOString?.());
 
 export default class TeamRepository implements CRUDRepository<Team> {
   protected model: Model<Team>;

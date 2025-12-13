@@ -4,7 +4,8 @@ import { EditOutlined } from '@ant-design/icons';
 import { Button, Card, Flex, Skeleton } from 'antd';
 import Text from 'antd/es/typography/Text';
 import Title from 'antd/es/typography/Title';
-import { use, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { use, useEffect, useState } from 'react';
 
 import TeamPreview from '@/src/components/TeamPreview';
 import { useBattleQuery } from '@/src/hooks/training-queries';
@@ -22,6 +23,15 @@ const Page = ({
   const [isEdit, setIsEdit] = useState(edit === 'true');
   const { isError, isLoading, data } = useBattleQuery(trainingId, battleId);
   const { isLoading: isUserLoading, data: userData } = useUserQuery();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams([['edit', isEdit ? 'true' : 'false']]);
+    router.replace(
+      `/home/training/${trainingId}/${battleId}?${params.toString()}`,
+    );
+  }, [isEdit, pathname, router, trainingId, battleId]);
 
   if (isLoading || isUserLoading) {
     return <Skeleton active />;

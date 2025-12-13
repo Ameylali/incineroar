@@ -299,3 +299,22 @@ export const editBattle = async (
 
   return { success: true };
 };
+
+export const createBattle = async (trainingId: string) => {
+  try {
+    await DBConnection.connect();
+
+    const userRepo = new UserRepository();
+    const { id: userId } = await verifyUserAuth();
+    const battle = await userRepo.addNewBattle(userId, trainingId, {
+      name: `Battle on ${new Date().toLocaleDateString()}`,
+      notes: '',
+      turns: [],
+    });
+    console.log(`Successfully created battle`, battle);
+    return battle;
+  } catch (error) {
+    console.error('Error creating battle', error);
+    return null;
+  }
+};

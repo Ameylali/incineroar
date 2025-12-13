@@ -67,11 +67,14 @@ export const BattleSchema = new Schema<Battle>(
   },
   {
     id: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true },
     timestamps: true,
   },
 );
+
+BattleSchema.path('createdAt').get((val?: Date) => val?.toISOString?.());
+BattleSchema.path('updatedAt').get((val?: Date) => val?.toISOString?.());
 
 export const TrainingSchema = new Schema<Training>(
   {
@@ -83,11 +86,14 @@ export const TrainingSchema = new Schema<Training>(
   },
   {
     id: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true },
     timestamps: true,
   },
 );
+
+TrainingSchema.path('createdAt').get((val?: Date) => val?.toISOString?.());
+TrainingSchema.path('updatedAt').get((val?: Date) => val?.toISOString?.());
 
 export class BattleRepository implements CRUDRepository<Battle> {
   protected model: Model<Battle>;
@@ -121,7 +127,9 @@ export class BattleRepository implements CRUDRepository<Battle> {
   }
 
   async create(battle: CreateBattleData): Promise<Battle> {
-    return (await this.model.create({ ...battle })).toObject();
+    const createdBattle = await this.model.create({ ...battle });
+    await createdBattle.populate('team');
+    return createdBattle.toObject();
   }
 }
 
@@ -172,9 +180,13 @@ export default class TrainingRepository implements CRUDRepository<Training> {
   }
 
   async create(model: CreateTrainingData): Promise<Training> {
-    return (
-      await this.model.create({ ...model, battles: [], isDefault: false })
-    ).toObject();
+    const training = await this.model.create({
+      ...model,
+      battles: [],
+      isDefault: false,
+    });
+    await training.populate('team');
+    return training.toObject();
   }
 
   async addNewBattle(

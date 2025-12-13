@@ -29,7 +29,7 @@ const Action = ({ action }: ActionProps) => {
   return (
     <Row>
       <Col span={1}>
-        <Text>{`${action.index}.`}</Text>
+        <Text>{`${action.index + 1}.`}</Text>
       </Col>
       <Col span={7}>
         <Text>{getUserLabel()}</Text>

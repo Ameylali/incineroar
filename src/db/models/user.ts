@@ -34,11 +34,14 @@ const UserSchema = new Schema<User>(
   },
   {
     id: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true },
     timestamps: true,
   },
 );
+
+UserSchema.path('createdAt').get((val?: Date) => val?.toISOString?.());
+UserSchema.path('updatedAt').get((val?: Date) => val?.toISOString?.());
 
 export default class UserRepository implements BaseRepository<User> {
   static HASH_SALTS = 5;
@@ -72,7 +75,7 @@ export default class UserRepository implements BaseRepository<User> {
     }
     user.password = await hash(user.password, UserRepository.HASH_SALTS);
     const defaultTraining: CreateTrainingData = {
-      name: 'Default',
+      name: 'Quick battles',
       description: '',
     };
     const createdUser = await this.model.create({
