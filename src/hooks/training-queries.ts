@@ -2,7 +2,12 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { TrainingKeys } from '../constants/query-keys';
-import { GET_BATTLE, GET_TRAINING, GET_TRAININGS } from '../types/endpoints';
+import {
+  DELETE_BATTLE,
+  GET_BATTLE,
+  GET_TRAINING,
+  GET_TRAININGS,
+} from '../types/endpoints';
 import { queryClient } from '../utils/query-clients';
 
 const getAllTrainings = async () => {
@@ -24,6 +29,32 @@ const getBattle = async (trainingId: string, battleId: string) => {
     `/api/user/training/${trainingId}/battle/${battleId}`,
   );
   return result.data;
+};
+
+const deleteBattle = async (trainingId: string, battleId: string) => {
+  return await axios.delete<DELETE_BATTLE>(
+    `/api/user/training/${trainingId}/battle/${battleId}`,
+  );
+};
+
+export const useDeleteBattleMutation = (
+  trainingId: string,
+  battleId: string,
+) => {
+  return useMutation({
+    mutationFn: () => deleteBattle(trainingId, battleId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: TrainingKeys.trainings(),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: TrainingKeys.training(trainingId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: TrainingKeys.battle(trainingId, battleId),
+      });
+    },
+  });
 };
 
 export const useBattleQuery = (trainingId: string, battleId: string) => {

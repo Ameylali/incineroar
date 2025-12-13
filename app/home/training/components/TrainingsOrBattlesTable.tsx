@@ -2,28 +2,30 @@ import { MoreOutlined } from '@ant-design/icons';
 import { Button, Dropdown, MenuProps, Table, TableProps } from 'antd';
 import { Route } from 'next';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-import { useDeleteTrainingMutation } from '@/src/hooks/training-queries';
+import {
+  useDeleteBattleMutation,
+  useDeleteTrainingMutation,
+} from '@/src/hooks/training-queries';
 import { Battle, Training } from '@/src/types/api';
 
 const TableComponent = Table<Training | Battle>;
 
-interface ActionsMenuProps {
-  trainingOrBattle: Training | Battle;
-  onEditTraining: (training: Training) => void;
+interface BattleActionsMenuProps {
+  training: Training;
+  battle: Battle;
 }
 
-const ActionsMenu = ({
-  trainingOrBattle,
-  onEditTraining,
-}: ActionsMenuProps) => {
-  const { mutate } = useDeleteTrainingMutation(trainingOrBattle.id);
-  const TRAINING_ITEMS: MenuProps['items'] = [
+const BattleActionsMenu = ({ training, battle }: BattleActionsMenuProps) => {
+  const { mutate } = useDeleteBattleMutation(training.id, battle.id);
+  const router = useRouter();
+  const ITEMS: MenuProps['items'] = [
     {
       label: 'Edit',
       key: 'edit',
       onClick: () =>
-        !('turns' in trainingOrBattle) && onEditTraining(trainingOrBattle),
+        router.push(`/home/training/${training.id}/${battle.id}?edit=true`),
     },
     {
       label: 'Delete',
@@ -31,11 +33,39 @@ const ActionsMenu = ({
       onClick: () => mutate(),
     },
   ];
-  const BATTLE_ITEMS: MenuProps['items'] = [];
-  const isBattle = 'turns' in trainingOrBattle;
 
   return (
-    <Dropdown menu={{ items: isBattle ? BATTLE_ITEMS : TRAINING_ITEMS }}>
+    <Dropdown menu={{ items: ITEMS }}>
+      <Button shape="circle" icon={<MoreOutlined />} />
+    </Dropdown>
+  );
+};
+
+interface TrainingActionsMenuProps {
+  training: Training;
+  onEditTraining: (training: Training) => void;
+}
+
+const TrainingActionsMenu = ({
+  training,
+  onEditTraining,
+}: TrainingActionsMenuProps) => {
+  const { mutate } = useDeleteTrainingMutation(training.id);
+  const ITEMS: MenuProps['items'] = [
+    {
+      label: 'Edit',
+      key: 'edit',
+      onClick: () => onEditTraining(training),
+    },
+    {
+      label: 'Delete',
+      key: 'delete',
+      onClick: () => mutate(),
+    },
+  ];
+
+  return (
+    <Dropdown menu={{ items: ITEMS }}>
       <Button shape="circle" icon={<MoreOutlined />} />
     </Dropdown>
   );
@@ -45,7 +75,7 @@ interface TrainingsOrBattlesTableProps {
   onEditTraining: (trainings: Training) => void;
   trainingsAndBattles: (Training | Battle)[];
   isLoading?: boolean;
-  training?: Training;
+  training: Training;
 }
 
 const TrainingsOrBattlesTable = ({
@@ -91,12 +121,15 @@ const TrainingsOrBattlesTable = ({
     {
       title: 'Actions',
       key: 'acions',
-      render: (_, trainingOrBattle) => (
-        <ActionsMenu
-          onEditTraining={onEditTraining}
-          trainingOrBattle={trainingOrBattle}
-        />
-      ),
+      render: (_, trainingOrBattle) =>
+        'turns' in trainingOrBattle ? (
+          <BattleActionsMenu training={training} battle={trainingOrBattle} />
+        ) : (
+          <TrainingActionsMenu
+            onEditTraining={onEditTraining}
+            training={trainingOrBattle}
+          />
+        ),
     },
   ];
 

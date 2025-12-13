@@ -47,3 +47,7 @@ export interface DELETE_TRAINING {
 export interface GET_BATTLE {
   battle: Battle;
 }
+
+export interface DELETE_BATTLE {
+  success: true;
+}
