@@ -59,7 +59,7 @@ type FromArg = AbilityName | MoveName | EffectName;
 export class ShowdownSimProtocolParser implements BattleParser<string[]> {
   parserType = 'showdown-sim-protocol' as const;
 
-  commandHandlers: Record<string, CommandHandler> = {
+  protected commandHandlers: Record<string, CommandHandler> = {
     turn: (lineData, ctx) => {
       const { args } = this.parseLineData<'|turn|'>(lineData);
       const [_, rawTurnIndex] = args;
@@ -435,7 +435,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     return battle;
   }
 
-  parseTurns(data: string[]) {
+  protected parseTurns(data: string[]) {
     const ctx: SSPPContext = {
       currTurnIndex: 0,
       turns: [],
@@ -465,7 +465,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     return { turns: ctx.turns, result: ctx.result };
   }
 
-  parseLineData<command extends BattleArgName>(
+  protected parseLineData<command extends BattleArgName>(
     lineData: (string | undefined)[],
   ) {
     const { args, kwArgs } = Protocol.parseBattleLine(
@@ -477,7 +477,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     return { args, kwArgs };
   }
 
-  pushTurn(ctx: SSPPContext) {
+  protected pushTurn(ctx: SSPPContext) {
     ctx.turns.push({
       index: ctx.currTurnIndex,
       actions: ctx.currActions,
@@ -485,7 +485,10 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     ctx.currActions = [];
   }
 
-  pushAction(action: Omit<ActionWithContext, 'index'>, ctx: SSPPContext) {
+  protected pushAction(
+    action: Omit<ActionWithContext, 'index'>,
+    ctx: SSPPContext,
+  ) {
     const index = ctx.currActions.length;
     ctx.currActions.push({
       index,
@@ -493,7 +496,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     });
   }
 
-  findLastMoveAction(ctx: SSPPContext) {
+  protected findLastMoveAction(ctx: SSPPContext) {
     for (let index = 0; index < ctx.currActions.length; index++) {
       if (ctx.currActions.at(-(index + 1))?.type === 'move') {
         return ctx.currActions.at(-(index + 1));
@@ -502,7 +505,10 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     return undefined;
   }
 
-  parsePokemon(rawPokemon: PokemonIdent | '' | undefined, ctx: SSPPContext) {
+  protected parsePokemon(
+    rawPokemon: PokemonIdent | '' | undefined,
+    ctx: SSPPContext,
+  ) {
     if (!rawPokemon) {
       return {
         player: undefined,
@@ -521,7 +527,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     return { player, pokemon, taggedPokemon: `${player}:${pokemon}`, position };
   }
 
-  parseFrom(from: FromArg | undefined) {
+  protected parseFrom(from: FromArg | undefined) {
     const result: FromData = {
       inferredActionType: 'effect',
       from: undefined,
@@ -543,7 +549,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     return result;
   }
 
-  registerPokemon<
+  protected registerPokemon<
     command extends
       | '|switch|'
       | '|drag|'
@@ -583,7 +589,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     }
   }
 
-  registerFormChange<command extends '|detailschange|' | '|replace|'>(
+  protected registerFormChange<command extends '|detailschange|' | '|replace|'>(
     _command: command,
     reason: string,
     lineData: (string | undefined)[],
@@ -622,7 +628,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     this.registerPokemon<command>(_command, lineData, ctx);
   }
 
-  boostChange<command extends '|-boost|' | '|-unboost|' | '|-setboost|'>(
+  protected boostChange<
+    command extends '|-boost|' | '|-unboost|' | '|-setboost|',
+  >(
     _command: command,
     label: string,
     lineData: (string | undefined)[],
@@ -647,7 +655,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     );
   }
 
-  volatileEffect<command extends '|-start|' | '|-end|'>(
+  protected volatileEffect<command extends '|-start|' | '|-end|'>(
     _command: command,
     label: string,
     lineData: (string | undefined)[],
@@ -673,7 +681,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     );
   }
 
-  field<command extends '|-fieldstart|' | '|-fieldend|'>(
+  protected field<command extends '|-fieldstart|' | '|-fieldend|'>(
     _command: command,
     label: string,
     lineData: (string | undefined)[],
@@ -695,7 +703,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     );
   }
 
-  side<command extends '|-sidestart|' | '|-sideend|'>(
+  protected side<command extends '|-sidestart|' | '|-sideend|'>(
     _command: command,
     label: string,
     lineData: (string | undefined)[],
@@ -714,12 +722,12 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     );
   }
 
-  getTypeFrom(data: FromData): Action['type'] {
+  protected getTypeFrom(data: FromData): Action['type'] {
     return data.from?.type === 'ability' ? 'ability' : 'effect';
   }
 }
 
-class CommandHandlerError extends Error {
+export class CommandHandlerError extends Error {
   lineData?: (string | undefined)[];
   ctx?: SSPPContext;
 

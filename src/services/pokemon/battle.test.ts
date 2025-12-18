@@ -207,17 +207,24 @@ describe('BattleParser', () => {
       expect(critAction.targets).toMatchObject(['p1:PokemonA']);
     });
 
-    it.todo('should log z-move');
+    // TODO: High priority
     it.todo('should log heal from item');
     it.todo('should log heal from ability');
     it.todo('should log teratype');
     it.todo('should log pokemon switch');
     it.todo('should log ability change');
     it.todo('should log megaevolution from |-mega| command');
-    it.todo('should log dynamax');
+    it.todo('should log primal');
+
+    // TODO: Medium priority
     it.todo('should log heal cure team');
+    it.todo('should log item');
+    it.todo('should log enditem');
+
+    // TODO: Low priority
+    it.todo('should log z-move');
+    it.todo('should log dynamax');
     it.todo('should log inverboost');
-    it.todo('should log setboost');
     it.todo('should log swapboost');
     it.todo('should log clearboost');
     it.todo('should log clearallboost');
@@ -225,11 +232,8 @@ describe('BattleParser', () => {
     it.todo('should log clearnegativeboost');
     it.todo('should log copyboost');
     it.todo('should log swapsideconditions');
-    it.todo('should log item');
-    it.todo('should log enditem');
     it.todo('should log endability');
     it.todo('should log transform');
-    it.todo('should log primal');
     it.todo('should log burst');
   });
 });
