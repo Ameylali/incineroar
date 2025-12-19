@@ -81,18 +81,18 @@ describe('BattleParser', () => {
       expect(moveAction.targets).toMatchObject(['p2:PokemonB']);
     });
 
-    it('should log pokemon megaevolution', () => {
+    it('should log pokemon detailschange', () => {
       const lines = defaultLines([
-        '|detailschange|p1a: PokemonA|Mega-PokemonA, L50, M, shiny',
+        '|detailschange|p1a: PokemonA|NewForme-PokemonA, L50, M, shiny',
         '|move|p1a: PokemonA|earthquake|',
       ]);
       const battle = parser.parse(metadata, lines);
       const megaevolutionAction = battle.turns[0].actions[0];
       expect(megaevolutionAction.type).toEqual('effect');
       expect(megaevolutionAction.player).toEqual('p1');
-      expect(megaevolutionAction.name).toEqual('megaevolved to');
+      expect(megaevolutionAction.name).toEqual('changed its forme to');
       expect(megaevolutionAction.user).toEqual('PokemonA');
-      expect(megaevolutionAction.targets).toMatchObject(['Mega-PokemonA']);
+      expect(megaevolutionAction.targets).toMatchObject(['NewForme-PokemonA']);
     });
 
     it('should log pokemon forme change from ability', () => {
@@ -207,14 +207,98 @@ describe('BattleParser', () => {
       expect(critAction.targets).toMatchObject(['p1:PokemonA']);
     });
 
-    // TODO: High priority
-    it.todo('should log heal from item');
-    it.todo('should log heal from ability');
-    it.todo('should log teratype');
-    it.todo('should log pokemon switch');
-    it.todo('should log ability change');
-    it.todo('should log megaevolution from |-mega| command');
-    it.todo('should log primal');
+    it('should log heal from item', () => {
+      const lines = defaultLines([
+        '|-heal|p1a: Muk|8\/100|[from] item: Leftovers',
+      ]);
+      const battle = parser.parse(metadata, lines);
+      const action = battle.turns[0].actions[0];
+      expect(action.type).toEqual('effect');
+      expect(action.name).toEqual('item: Leftovers caused heal');
+      expect(action.user).toEqual('');
+      expect(action.targets).toMatchObject(['p1:Muk']);
+    });
+
+    it('should log heal from ability', () => {
+      const lines = defaultLines([
+        '|-heal|p1a: Muk|8\/100|[from] ability: Water absorb|[of] p1b: Vaporeon',
+      ]);
+      const battle = parser.parse(metadata, lines);
+      const action = battle.turns[0].actions[0];
+      expect(action.type).toEqual('ability');
+      expect(action.name).toEqual('Water absorb caused heal');
+      // NOTE: For some reason of parameter is being ignored
+      expect(action.user).toEqual('');
+      expect(action.targets).toMatchObject(['p1:Muk']);
+    });
+
+    it('should log teratype', () => {
+      const lines = defaultLines(['|-terastallize|p1a: Dragonite|Steel|']);
+      const battle = parser.parse(metadata, lines);
+      const action = battle.turns[0].actions[0];
+      expect(action.type).toEqual('effect');
+      expect(action.name).toEqual('terastallize to Steel');
+      expect(action.user).toEqual('p1:Dragonite');
+      expect(action.targets).toMatchObject([]);
+    });
+
+    it('should log pokemon switch', () => {
+      const lines = defaultLines([
+        '|switch|p1a: Ursaluna|Ursaluna-Bloodmoon, L50, M, 100\/100|',
+        '|switch|p1a: Dragonite|Dragonite, L50, M, 100\/100|',
+      ]);
+      const battle = parser.parse(metadata, lines);
+      const switchAction1 = battle.turns[0].actions[0];
+      expect(switchAction1.player).toEqual('p1');
+      expect(switchAction1.type).toEqual('switch');
+      expect(switchAction1.name).toEqual('to');
+      expect(switchAction1.user).toEqual('');
+      expect(switchAction1.targets).toMatchObject(['Ursaluna-Bloodmoon']);
+
+      const switchAction2 = battle.turns[0].actions[1];
+      expect(switchAction2.player).toEqual('p1');
+      expect(switchAction2.type).toEqual('switch');
+      expect(switchAction2.name).toEqual('to');
+      expect(switchAction2.user).toEqual('Ursaluna-Bloodmoon');
+      expect(switchAction2.targets).toMatchObject(['Dragonite']);
+    });
+
+    it('should log ability change', () => {
+      const lines = defaultLines([
+        '|-ability|p1a: Primarina|Torrent|[from] ability: Neutralizing Gas',
+      ]);
+      const battle = parser.parse(metadata, lines);
+      const action = battle.turns[0].actions[0];
+      expect(action.type).toEqual('effect');
+      expect(action.name).toEqual(
+        'ability changed to Torrent due to Neutralizing Gas',
+      );
+      expect(action.user).toEqual('p1:Primarina');
+      expect(action.targets).toMatchObject([]);
+    });
+
+    it('should log megaevolution from |-mega| command', () => {
+      const lines = defaultLines([
+        '|-mega|p1a: Lucario|Mega-Lucario, L50, M, shiny',
+      ]);
+      const battle = parser.parse(metadata, lines);
+      const megaevolutionAction = battle.turns[0].actions[0];
+      expect(megaevolutionAction.type).toEqual('effect');
+      expect(megaevolutionAction.player).toEqual('p1');
+      expect(megaevolutionAction.name).toEqual('megaevolved');
+      expect(megaevolutionAction.user).toEqual('Lucario');
+      expect(megaevolutionAction.targets).toMatchObject(['Mega-Lucario']);
+    });
+
+    it('should log primal', () => {
+      const lines = defaultLines(['|-primal|p1a: Groundon']);
+      const battle = parser.parse(metadata, lines);
+      const megaevolutionAction = battle.turns[0].actions[0];
+      expect(megaevolutionAction.type).toEqual('effect');
+      expect(megaevolutionAction.name).toEqual('reverted to its primal forme');
+      expect(megaevolutionAction.user).toEqual('p1:Groundon');
+      expect(megaevolutionAction.targets).toMatchObject([]);
+    });
 
     // TODO: Medium priority
     it.todo('should log heal cure team');

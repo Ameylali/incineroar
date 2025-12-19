@@ -6,6 +6,7 @@ import {
   KWArgs,
   MoveName,
   PokemonIdent,
+  PositionLetter,
   Protocol,
 } from '@pkmn/protocol';
 
@@ -25,17 +26,19 @@ export interface BattleParser<T> {
   parse(battle: BattleMetadata, rawData: T): CreateBattleData;
 }
 
+type Side = Exclude<Action['player'], undefined>;
+
 interface SSPPContext {
   currTurnIndex: number;
   turns: Turn[];
   currActions: ActionWithContext[];
-  usernameToPlayerMap: { [key: string]: 'p1' | 'p2' | 'p3' | 'p4' | undefined };
+  usernameToPlayerMap: { [key: string]: Side | undefined };
   result?: Battle['result'];
   nicknameToPokemonMap: {
-    p1: { [nickname: string]: string | undefined };
-    p2: { [nickname: string]: string | undefined };
-    p3: { [nickname: string]: string | undefined };
-    p4: { [nickname: string]: string | undefined };
+    [position in Side]: { [nickname: string]: string | undefined };
+  };
+  pokemonInPositionMap: {
+    [position in Side]: { [position in PositionLetter]?: string };
   };
 }
 
@@ -148,12 +151,18 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         }
       }
     },
-    switch: (lineData, ctx) => this.registerPokemon('|switch|', lineData, ctx),
-    drag: (lineData, ctx) => this.registerPokemon('|drag|', lineData, ctx),
+    switch: (lineData, ctx) => {
+      this.registerPokemon('|switch|', lineData, ctx);
+      this.pokemonSwitch('|switch|', lineData, ctx);
+    },
+    drag: (lineData, ctx) => {
+      this.registerPokemon('|drag|', lineData, ctx);
+      this.pokemonSwitch('|drag|', lineData, ctx);
+    },
     detailschange: (lineData, ctx) =>
-      this.registerFormChange(
+      this.registerFormeChange(
         '|detailschange|',
-        'megaevolved to',
+        'changed its forme to',
         lineData,
         ctx,
         {
@@ -178,7 +187,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.registerPokemon('|-formechange|', lineData, ctx);
     },
     replace: (lineData, ctx) =>
-      this.registerFormChange('|replace|', 'illusion ended', lineData, ctx),
+      this.registerFormeChange('|replace|', 'illusion ended', lineData, ctx),
     cant: (lineData, ctx) => {
       const { args } = this.parseLineData<'|cant|'>(lineData);
       const [_, rawPokemon, rawReason, move] = args;
@@ -361,12 +370,21 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     },
     '-ability': (lineData, ctx) => {
       const { args, kwArgs } = this.parseLineData<'|-ability|'>(lineData);
-      const [_, rawPokemon, rawAbility, rawOldAbility] = args;
+      const [_, rawPokemon, rawAbility] = args;
       const ability = Protocol.parseEffect(rawAbility);
       const { taggedPokemon } = this.parsePokemon(rawPokemon, ctx);
 
-      if (kwArgs.of || rawOldAbility) {
-        console.warn('[-ability] Ability change not implemented');
+      if (kwArgs.from) {
+        const { from } = this.parseFrom(kwArgs.from);
+        this.pushAction(
+          {
+            type: 'effect',
+            name: `ability changed to ${ability.name} due to ${from?.name ?? 'unknown'}`,
+            targets: [],
+            user: taggedPokemon ?? 'unknown',
+          },
+          ctx,
+        );
         return;
       }
 
@@ -423,6 +441,55 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         ctx,
       );
     },
+    '-heal': (lineData, ctx) => {
+      const { args, kwArgs } = this.parseLineData<'|-heal|'>(lineData);
+      const [_, rawPokemon] = args;
+      const { from, inferredActionType: type } = this.parseFrom(kwArgs.from);
+      const fromName = from?.fromName;
+      const { taggedPokemon } = this.parsePokemon(rawPokemon, ctx);
+      const { taggedPokemon: ofPokemon } = this.parsePokemon(kwArgs.of, ctx);
+      this.pushAction(
+        {
+          type,
+          name: (fromName ? `${fromName} caused ` : '') + 'heal',
+          targets: fromName ? [taggedPokemon ?? 'unknown'] : [],
+          user: ofPokemon ?? '',
+        },
+        ctx,
+      );
+    },
+    '-terastallize': (lineData, ctx) => {
+      const { args } = this.parseLineData<'|-terastallize|'>(lineData);
+      const [_, rawPokemon, teraType] = args;
+      const { taggedPokemon } = this.parsePokemon(rawPokemon, ctx);
+      this.pushAction(
+        {
+          type: 'effect',
+          name: `terastallize to ${teraType}`,
+          targets: [],
+          user: taggedPokemon ?? 'unknown',
+        },
+        ctx,
+      );
+    },
+    '-mega': (lineData, ctx) =>
+      this.registerFormeChange('|-mega|', 'megaevolved', lineData, ctx, {
+        shouldIncludePlayer: true,
+      }),
+    '-primal': (lineData, ctx) => {
+      const { args } = this.parseLineData<'|-primal|'>(lineData);
+      const [_, rawPokemon] = args;
+      const { taggedPokemon } = this.parsePokemon(rawPokemon, ctx);
+      this.pushAction(
+        {
+          type: 'effect',
+          name: `reverted to its primal forme`,
+          targets: [],
+          user: taggedPokemon ?? 'unknown',
+        },
+        ctx,
+      );
+    },
   };
 
   parse(metadata: BattleMetadata, data: string[]) {
@@ -442,6 +509,12 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       currActions: [],
       usernameToPlayerMap: {},
       nicknameToPokemonMap: {
+        p1: {},
+        p2: {},
+        p3: {},
+        p4: {},
+      },
+      pokemonInPositionMap: {
         p1: {},
         p2: {},
         p3: {},
@@ -534,7 +607,6 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     };
     if (from) {
       const { type, name } = Protocol.parseEffect(from);
-      console.log({ type, name, from });
       result.from = {
         type,
         name,
@@ -555,7 +627,8 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       | '|drag|'
       | '|-formechange|'
       | '|detailschange|'
-      | '|replace|',
+      | '|replace|'
+      | '|-mega|',
   >(_command: command, lineData: (string | undefined)[], ctx: SSPPContext) {
     const { args } = this.parseLineData<command>(lineData);
     const [_, rawPokemon, detailsOrSpecies] = args;
@@ -589,7 +662,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     }
   }
 
-  protected registerFormChange<command extends '|detailschange|' | '|replace|'>(
+  protected registerFormeChange<
+    command extends '|detailschange|' | '|replace|' | '|-mega|',
+  >(
     _command: command,
     reason: string,
     lineData: (string | undefined)[],
@@ -597,7 +672,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
     options: { shouldIncludePlayer?: boolean } = {},
   ) {
     const { args } = this.parseLineData<command>(lineData);
-    const [_, rawPokemon, rawDetails] = args;
+    const [_, rawPokemon, detailsOrSpecies] = args;
     if (!rawPokemon) {
       throw new CommandHandlerError('pokemon is undefined', lineData, ctx);
     }
@@ -605,14 +680,16 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       rawPokemon,
       ctx,
     );
-    let species = 'unknown';
-    if (rawDetails) {
-      const { speciesForme: newSpecies } = Protocol.parseDetails(
+    let species = undefined;
+    if (detailsOrSpecies.__brand === 'SpeciesName') {
+      species = detailsOrSpecies;
+    } else {
+      const { speciesForme } = Protocol.parseDetails(
         pokemon ?? '',
         rawPokemon,
-        rawDetails,
+        detailsOrSpecies,
       );
-      species = newSpecies;
+      species = speciesForme;
     }
     this.pushAction(
       {
@@ -724,6 +801,33 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
 
   protected getTypeFrom(data: FromData): Action['type'] {
     return data.from?.type === 'ability' ? 'ability' : 'effect';
+  }
+
+  protected pokemonSwitch<command extends '|switch|' | '|drag|'>(
+    _command: command,
+    lineData: (string | undefined)[],
+    ctx: SSPPContext,
+  ) {
+    const { args } = this.parseLineData<command>(lineData);
+    const [_, rawPokemon] = args;
+    const { pokemon, player, position } = this.parsePokemon(rawPokemon, ctx);
+    let prevPokemon: string | undefined = undefined;
+    if (player && position) {
+      prevPokemon = ctx.pokemonInPositionMap[player][position];
+    }
+    this.pushAction(
+      {
+        player,
+        type: 'switch',
+        name: 'to',
+        user: prevPokemon ?? '',
+        targets: [pokemon ?? 'unknown'],
+      },
+      ctx,
+    );
+    if (player && position) {
+      ctx.pokemonInPositionMap[player][position] = pokemon;
+    }
   }
 }
 
