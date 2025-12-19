@@ -26,6 +26,34 @@ export interface BattleParser<T> {
   parse(battle: BattleMetadata, rawData: T): CreateBattleData;
 }
 
+const ActionKeyWords = {
+  DAMAGE: 'damage',
+  FORME: 'forme',
+  CANT: 'cant',
+  FAINTED: 'fainted',
+  FAILED: 'failed',
+  BLOCKED: 'blocked',
+  MISSED: 'missed',
+  AFFECTED: 'affected',
+  CURED: 'cured',
+  BOOST_INCREASED: 'increased',
+  BOOST_DECREASED: 'decreased',
+  BOOST_CHANGED: 'changed',
+  WEATHER: 'weather',
+  STARTED: 'started',
+  ENDED: 'ended',
+  CRIT: 'critical',
+  Z_MOVE: 'Z move',
+  HIT: 'hit',
+  TERA: 'terastallize',
+  MEGA: 'megaevolved',
+  PRIMAL: 'primal',
+  ABILITY_CHANGED: 'ability changed',
+  HEAL: 'heal',
+  ACTIVATED: 'activated',
+  UNKNOWN: 'unknown',
+};
+
 type Side = Exclude<Action['player'], undefined>;
 
 interface SSPPContext {
@@ -113,8 +141,8 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         {
           player,
           type: 'move',
-          name: move ?? 'unknown',
-          user: pokemon ?? 'unknown',
+          name: move ?? ActionKeyWords.UNKNOWN,
+          user: pokemon ?? ActionKeyWords.UNKNOWN,
           targets: target ? [target] : [],
           flags: {
             isMissingTargets: !target,
@@ -134,9 +162,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         this.pushAction(
           {
             type,
-            name: `${fromName ?? 'unknown'} inflicted damage to`,
+            name: `${fromName ?? ActionKeyWords.UNKNOWN} inflicted ${ActionKeyWords.DAMAGE} to`,
             user: ofPokemon ?? '',
-            targets: [taggedPokemon ?? 'unknown'],
+            targets: [taggedPokemon ?? ActionKeyWords.UNKNOWN],
           },
           ctx,
         );
@@ -178,9 +206,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type,
-          name: name ?? 'changed its forme to',
-          targets: [species ?? 'unknown'],
-          user: taggedPokemon ?? 'unknown',
+          name: name ?? `changed its ${ActionKeyWords.FORME} to`,
+          targets: [species ?? ActionKeyWords.UNKNOWN],
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -196,9 +224,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: reason.type === 'ability' ? 'ability' : 'effect',
-          name: `cant not ${move} due to ${reason.name}`,
+          name: `${ActionKeyWords.CANT} not ${move} due to ${reason.name}`,
           targets: [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -210,9 +238,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: 'effect',
-          name: 'fainted',
+          name: ActionKeyWords.FAINTED,
           targets: [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -221,12 +249,12 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       const { args } = this.parseLineData<'|-fail|'>(lineData);
       const [_, rawPokemon, action] = args;
       const { pokemon: target } = this.parsePokemon(rawPokemon, ctx);
-      const { user = 'unknown' } = ctx.currActions.at(-1) ?? {};
+      const { user = ActionKeyWords.UNKNOWN } = ctx.currActions.at(-1) ?? {};
       this.pushAction(
         {
           type: 'effect',
-          name: `failed to ${action} against`,
-          targets: [target ?? 'unknown'],
+          name: `${ActionKeyWords.FAILED} to ${action} against`,
+          targets: [target ?? ActionKeyWords.UNKNOWN],
           user,
         },
         ctx,
@@ -241,9 +269,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: blockerEffect.type === 'ability' ? 'ability' : 'effect',
-          name: `${blockerEffect.name} blocked ${blockedEffect} from`,
+          name: `${blockerEffect.name} ${ActionKeyWords.BLOCKED} ${blockedEffect} from`,
           targets: attacker ? [attacker] : [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -254,16 +282,16 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       const { taggedPokemon } = this.parsePokemon(rawPokemon, ctx);
       const { taggedPokemon: target } = this.parsePokemon(rawTarget, ctx);
       const lastAction = ctx.currActions.at(-1);
-      let move = 'unknown';
+      let move = ActionKeyWords.UNKNOWN;
       if (lastAction && lastAction.type === 'move') {
         move = lastAction.name;
       }
       this.pushAction(
         {
           type: 'effect',
-          name: `missed ${move} against`,
+          name: `${ActionKeyWords.MISSED} ${move} against`,
           targets: target ? [target] : [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -279,9 +307,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         {
           type,
           name: fromName
-            ? `${fromName} inflicted ${status}`
-            : `${status} affected`,
-          targets: [taggedPokemon ?? 'unknown'],
+            ? `${fromName} caused ${status} ${ActionKeyWords.AFFECTED}`
+            : `${status} ${ActionKeyWords.AFFECTED}`,
+          targets: [taggedPokemon ?? ActionKeyWords.UNKNOWN],
           user: user ?? '',
         },
         ctx,
@@ -298,20 +326,37 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         {
           type,
           name: fromName
-            ? `${fromName} cured ${status}`
-            : `recovered from ${status}`,
-          targets: fromName ? [taggedPokemon ?? 'unknown'] : [],
-          user: fromName ? (user ?? '') : (taggedPokemon ?? 'unknown'),
+            ? `${fromName} ${ActionKeyWords.CURED} ${status}`
+            : `${ActionKeyWords.CURED} from ${status}`,
+          targets: fromName ? [taggedPokemon ?? ActionKeyWords.UNKNOWN] : [],
+          user: fromName
+            ? (user ?? '')
+            : (taggedPokemon ?? ActionKeyWords.UNKNOWN),
         },
         ctx,
       );
     },
     '-boost': (lineData, ctx) =>
-      this.boostChange('|-boost|', 'increased by', lineData, ctx),
+      this.boostChange(
+        '|-boost|',
+        `${ActionKeyWords.BOOST_INCREASED} by`,
+        lineData,
+        ctx,
+      ),
     '-unboost': (lineData, ctx) =>
-      this.boostChange('|-unboost|', 'decreased by', lineData, ctx),
+      this.boostChange(
+        '|-unboost|',
+        `${ActionKeyWords.BOOST_DECREASED} by`,
+        lineData,
+        ctx,
+      ),
     '-setboost': (lineData, ctx) =>
-      this.boostChange('|-setboost|', 'changed to', lineData, ctx),
+      this.boostChange(
+        '|-setboost|',
+        `${ActionKeyWords.BOOST_CHANGED} to`,
+        lineData,
+        ctx,
+      ),
     '-weather': (lineData, ctx) => {
       const { args, kwArgs } = this.parseLineData<'|-weather|'>(lineData);
       const [_, weather] = args;
@@ -320,7 +365,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         this.pushAction(
           {
             type: 'effect',
-            name: 'weather ended',
+            name: `${ActionKeyWords.WEATHER} ended`,
             user: '',
             targets: [],
           },
@@ -334,7 +379,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type,
-          name: (fromName ? `${fromName} set ` : '') + `weather ${weather}`,
+          name:
+            (fromName ? `${fromName} set ` : '') +
+            `${ActionKeyWords.WEATHER} ${weather}`,
           user: user ?? '',
           targets: [],
         },
@@ -342,17 +389,17 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       );
     },
     '-fieldstart': (lineData, ctx) =>
-      this.field('|-fieldstart|', 'started', lineData, ctx),
+      this.field('|-fieldstart|', ActionKeyWords.STARTED, lineData, ctx),
     '-fieldend': (lineData, ctx) =>
-      this.field('|-fieldend|', 'ended', lineData, ctx),
+      this.field('|-fieldend|', ActionKeyWords.ENDED, lineData, ctx),
     '-sidestart': (lineData, ctx) =>
-      this.side('|-sidestart|', 'started', lineData, ctx),
+      this.side('|-sidestart|', ActionKeyWords.STARTED, lineData, ctx),
     '-sideend': (lineData, ctx) =>
-      this.side('|-sideend|', 'ended', lineData, ctx),
+      this.side('|-sideend|', ActionKeyWords.ENDED, lineData, ctx),
     '-start': (lineData, ctx) =>
-      this.volatileEffect('|-start|', 'started', lineData, ctx),
+      this.volatileEffect('|-start|', ActionKeyWords.STARTED, lineData, ctx),
     '-end': (lineData, ctx) =>
-      this.volatileEffect('|-end|', 'ended', lineData, ctx),
+      this.volatileEffect('|-end|', ActionKeyWords.ENDED, lineData, ctx),
     '-crit': (lineData, ctx) => {
       const { args } = this.parseLineData<'|-crit|'>(lineData);
       const [_, rawPokemon] = args;
@@ -361,9 +408,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: 'effect',
-          name: 'critical hit',
-          targets: [taggedPokemon ?? 'unknown'],
-          user: lastMove?.user ?? 'unknown',
+          name: `${ActionKeyWords.CRIT} hit`,
+          targets: [taggedPokemon ?? ActionKeyWords.UNKNOWN],
+          user: lastMove?.user ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -379,9 +426,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         this.pushAction(
           {
             type: 'effect',
-            name: `ability changed to ${ability.name} due to ${from?.name ?? 'unknown'}`,
+            name: `${ActionKeyWords.ABILITY_CHANGED} to ${ability.name} due to ${from?.name ?? ActionKeyWords.UNKNOWN}`,
             targets: [],
-            user: taggedPokemon ?? 'unknown',
+            user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
           },
           ctx,
         );
@@ -393,7 +440,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
           type: 'ability',
           name: ability.name,
           targets: [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -405,9 +452,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: 'effect',
-          name: 'used Z move',
+          name: `used ${ActionKeyWords.Z_MOVE}`,
           targets: [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -420,9 +467,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: effect.type === 'ability' ? 'ability' : 'effect',
-          name: `activated ${effect.name}`,
+          name: `${ActionKeyWords.ACTIVATED} ${effect.name}`,
           targets: [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -434,9 +481,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: 'effect',
-          name: `hit ${num} times`,
+          name: `${ActionKeyWords.HIT} ${num} times`,
           targets: [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -451,8 +498,8 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type,
-          name: (fromName ? `${fromName} caused ` : '') + 'heal',
-          targets: fromName ? [taggedPokemon ?? 'unknown'] : [],
+          name: (fromName ? `${fromName} caused ` : '') + ActionKeyWords.HEAL,
+          targets: fromName ? [taggedPokemon ?? ActionKeyWords.UNKNOWN] : [],
           user: ofPokemon ?? '',
         },
         ctx,
@@ -465,15 +512,15 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: 'effect',
-          name: `terastallize to ${teraType}`,
+          name: `${ActionKeyWords.TERA} to ${teraType}`,
           targets: [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
     },
     '-mega': (lineData, ctx) =>
-      this.registerFormeChange('|-mega|', 'megaevolved', lineData, ctx, {
+      this.registerFormeChange('|-mega|', ActionKeyWords.MEGA, lineData, ctx, {
         shouldIncludePlayer: true,
       }),
     '-primal': (lineData, ctx) => {
@@ -483,9 +530,9 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
       this.pushAction(
         {
           type: 'effect',
-          name: `reverted to its primal forme`,
+          name: `reverted to its ${ActionKeyWords.PRIMAL} forme`,
           targets: [],
-          user: taggedPokemon ?? 'unknown',
+          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -698,7 +745,8 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         name: reason,
         targets: [species],
         user:
-          (options.shouldIncludePlayer ? pokemon : taggedPokemon) ?? 'unknown',
+          (options.shouldIncludePlayer ? pokemon : taggedPokemon) ??
+          ActionKeyWords.UNKNOWN,
       },
       ctx,
     );
@@ -725,8 +773,10 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         name: fromName
           ? `${fromName} caused ${stat} ${label} ${amount} to`
           : `${stat} ${label} ${amount}`,
-        targets: fromName ? [taggedPokemon ?? 'unknown'] : [],
-        user: fromName ? (ofPokemon ?? '') : (taggedPokemon ?? 'unknown'),
+        targets: fromName ? [taggedPokemon ?? ActionKeyWords.UNKNOWN] : [],
+        user: fromName
+          ? (ofPokemon ?? '')
+          : (taggedPokemon ?? ActionKeyWords.UNKNOWN),
       },
       ctx,
     );
@@ -751,7 +801,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         name:
           (fromName ? `${fromName} caused ` : '') +
           `${effect.name} ${label} on`,
-        targets: [taggedPokemon ?? 'unknown'],
+        targets: [taggedPokemon ?? ActionKeyWords.UNKNOWN],
         user: ofPokemon ?? '',
       },
       ctx,
@@ -821,7 +871,7 @@ export class ShowdownSimProtocolParser implements BattleParser<string[]> {
         type: 'switch',
         name: 'to',
         user: prevPokemon ?? '',
-        targets: [pokemon ?? 'unknown'],
+        targets: [pokemon ?? ActionKeyWords.UNKNOWN],
       },
       ctx,
     );

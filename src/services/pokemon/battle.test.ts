@@ -134,7 +134,7 @@ describe('BattleParser', () => {
       const battle = parser.parse(metadata, lines);
       const action = battle.turns[0].actions[0];
       expect(action.type).toEqual('ability');
-      expect(action.name).toEqual('Flame body inflicted burn');
+      expect(action.name).toEqual('Flame body caused burn affected');
       expect(action.user).toEqual('p2:Volcarona');
       expect(action.targets).toMatchObject(['p1:Tauros']);
     });
