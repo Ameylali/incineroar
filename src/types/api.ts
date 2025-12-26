@@ -158,7 +158,7 @@ export interface MatchupAnalytics {
     pokemon: string[];
     results: BattleResultAnalytics[];
     encounterCount: number;
-  };
+  }[];
   usageCount: number;
 }
 
@@ -173,6 +173,7 @@ export interface PokemonKoOrFaintAnalytics {
 export interface PerformanceAnalytics {
   ko: PokemonKoOrFaintAnalytics;
   faint: PokemonKoOrFaintAnalytics;
+  // TODO: Implement damage analytics
   damage: unknown;
 }
 
@@ -184,27 +185,32 @@ export interface BattleMovesAnalytics {
 
 export interface BattlePokemonAnalytics {
   pokemon: string;
-  performance: PerformanceAnalytics[];
+  performance: PerformanceAnalytics;
   usageCount: number;
   moves: BattleMovesAnalytics[];
 }
 
 export interface TurnMap {
-  [turn: number]: number;
+  turn: number;
+  count: number;
 }
 
 export interface PokemonKeyActionAnalytics {
-  actionName: string;
-  usage: {
+  name: string;
+  pokemonUsage: {
     pokemon: string;
     count: number;
-  };
+  }[];
+  actionUsage: {
+    action: string;
+    count: number;
+  }[];
 }
 
 export interface KeyActionsAnalytics {
-  kos: TurnMap;
-  faints: TurnMap;
-  switch: TurnMap;
+  kos: TurnMap[];
+  faints: TurnMap[];
+  switches: TurnMap[];
   pokemonKeyActions: {
     byMe: PokemonKeyActionAnalytics[];
     byRival: PokemonKeyActionAnalytics[];

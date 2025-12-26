@@ -1,15 +1,16 @@
 import { PokemonSet } from '@/src/services/pokemon';
 import { TournamentTeam } from '@/src/types/api';
-import { sampleTeams } from '@/src/utils/test-utils';
+import { createSampleTraining, sampleTeams } from '@/src/utils/test-utils';
 
 import AnalyticsService, {
   CoreAnalysis,
   PokemonAnalysis,
+  TrainingAnalyticsService,
   UsageAnalysis,
 } from './analytics';
 import TeamService from './team';
 
-describe('AnalyticsService', () => {
+describe('Analytics', () => {
   beforeEach(() => {});
 
   afterEach(() => {
@@ -187,6 +188,299 @@ describe('AnalyticsService', () => {
         expect.arrayContaining(['2', '3', '4', '5', '6']),
       );
       expect(pokemon).not.toHaveLength(0);
+    });
+  });
+
+  describe('TrainingAnalyticsService', () => {
+    const trainingAnalyticsService = new TrainingAnalyticsService();
+
+    it('should analyze openings', () => {
+      const training = createSampleTraining();
+      const analytics = trainingAnalyticsService.getAnalytics(training);
+      expect(analytics.matchups.openings).toHaveLength(2);
+
+      // check usage counts
+      const openingUsages = analytics.matchups.openings.map(
+        ({ usageCount }) => usageCount,
+      );
+      expect(openingUsages).toEqual(expect.arrayContaining([2, 2]));
+
+      // check pokemon in openings
+      const openingPokemons = analytics.matchups.openings.map(
+        ({ pokemon }) => pokemon,
+      );
+      expect(openingPokemons).toEqual(
+        expect.arrayContaining([
+          expect.arrayContaining(['Blastoise', 'Charizard']),
+          expect.arrayContaining(['Dragonite', 'Charizard']),
+        ]),
+      );
+
+      // check results
+      const openingResults = analytics.matchups.openings.map(
+        ({ results }) => results,
+      );
+      expect(openingResults).toEqual(
+        expect.arrayContaining([
+          [{ result: 'win', count: 2 }],
+          [
+            { result: 'loose', count: 1 },
+            { result: 'unknown', count: 1 },
+          ],
+        ]),
+      );
+
+      // check parings
+      const openingPairings = analytics.matchups.openings.map(
+        ({ pairings }) => pairings,
+      );
+      expect(openingPairings).toEqual(
+        expect.arrayContaining([
+          expect.arrayContaining([
+            {
+              pokemon: expect.arrayContaining([
+                'Venusaur',
+                'Pikachu',
+              ]) as string[],
+              encounterCount: 2,
+              results: [{ result: 'win', count: 2 }],
+            },
+          ]),
+          expect.arrayContaining([
+            {
+              pokemon: expect.arrayContaining([
+                'Venusaur',
+                'Pikachu',
+              ]) as string[],
+              encounterCount: 1,
+              results: [{ result: 'loose', count: 1 }],
+            },
+            {
+              pokemon: expect.arrayContaining([
+                'Venusaur',
+                'Lapras',
+              ]) as string[],
+              encounterCount: 1,
+              results: [{ result: 'unknown', count: 1 }],
+            },
+          ]),
+        ]),
+      );
+    });
+
+    it('should analyze matchups', () => {
+      const training = createSampleTraining();
+      const analytics = trainingAnalyticsService.getAnalytics(training);
+      expect(analytics.matchups.all).toHaveLength(2);
+
+      // check usage counts
+      const openingUsages = analytics.matchups.all.map(
+        ({ usageCount }) => usageCount,
+      );
+      expect(openingUsages).toEqual(expect.arrayContaining([2, 2]));
+
+      // check pokemon in openings
+      const openingPokemons = analytics.matchups.all.map(
+        ({ pokemon }) => pokemon,
+      );
+      expect(openingPokemons).toEqual(
+        expect.arrayContaining([
+          expect.arrayContaining([
+            'Blastoise',
+            'Charizard',
+            'Gengar',
+            'Lapras',
+          ]),
+          expect.arrayContaining([
+            'Dragonite',
+            'Charizard',
+            'Gengar',
+            'Lapras',
+          ]),
+        ]),
+      );
+
+      // check results
+      const openingResults = analytics.matchups.all.map(
+        ({ results }) => results,
+      );
+      expect(openingResults).toEqual(
+        expect.arrayContaining([
+          [{ result: 'win', count: 2 }],
+          [
+            { result: 'loose', count: 1 },
+            { result: 'unknown', count: 1 },
+          ],
+        ]),
+      );
+
+      // check parings
+      const openingPairings = analytics.matchups.all.map(
+        ({ pairings }) => pairings,
+      );
+      expect(openingPairings).toEqual(
+        expect.arrayContaining([
+          expect.arrayContaining([
+            {
+              pokemon: expect.arrayContaining([
+                'Venusaur',
+                'Pikachu',
+                'Jolteon',
+                'Gyarados',
+              ]) as string[],
+              encounterCount: 2,
+              results: [{ result: 'win', count: 2 }],
+            },
+          ]),
+          expect.arrayContaining([
+            {
+              pokemon: expect.arrayContaining([
+                'Venusaur',
+                'Pikachu',
+                'Jolteon',
+                'Gyarados',
+              ]) as string[],
+              encounterCount: 1,
+              results: [{ result: 'loose', count: 1 }],
+            },
+            {
+              pokemon: expect.arrayContaining([
+                'Venusaur',
+                'Lapras',
+                'Jolteon',
+                'Gyarados',
+              ]) as string[],
+              encounterCount: 1,
+              results: [{ result: 'unknown', count: 1 }],
+            },
+          ]),
+        ]),
+      );
+    });
+
+    it('should analyze pokemon', () => {
+      const training = createSampleTraining();
+      const analytics = trainingAnalyticsService.getAnalytics(training);
+      expect(analytics.pokemon).toHaveLength(5);
+
+      const blastoiseAnalysis = analytics.pokemon.find(
+        (p) => p.pokemon === 'Blastoise',
+      );
+      expect(blastoiseAnalysis).toBeDefined();
+      // TODO: re-enable KO count check when KO tracking is implemented
+      // expect(blastoiseAnalysis?.ko.count).toEqual(2);
+      expect(blastoiseAnalysis?.performance.faint.count).toEqual(1);
+      expect(blastoiseAnalysis?.usageCount).toEqual(2);
+      expect(blastoiseAnalysis?.moves).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            move: 'Surf',
+            averageUsage: 0.5,
+            averageUsageByMatch: 1,
+          }),
+          expect.objectContaining({
+            move: 'Ice Beam',
+            averageUsage: 1,
+            averageUsageByMatch: 2,
+          }),
+          expect.objectContaining({
+            move: 'Icy Wind',
+            averageUsage: 0.5,
+            averageUsageByMatch: 1,
+          }),
+        ]),
+      );
+    });
+
+    it('should analyze key actions', () => {
+      const training = createSampleTraining();
+      const { keyActions } = trainingAnalyticsService.getAnalytics(training);
+
+      // check switch tracking
+      expect(keyActions.switches).toHaveLength(3);
+      expect(keyActions.switches).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            turn: 1,
+            count: 8,
+          }),
+          expect.objectContaining({
+            turn: 2,
+            count: 8,
+          }),
+          expect.objectContaining({
+            turn: 3,
+            count: 2,
+          }),
+        ]),
+      );
+
+      // check KO tracking
+      // TODO: re-enable when KO tracking is implemented
+
+      // check faint tracking
+      expect(keyActions.faints).toHaveLength(1);
+      expect(keyActions.faints).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            turn: 6,
+            count: 1,
+          }),
+        ]),
+      );
+
+      // check my pokemon key actions
+      expect(keyActions.pokemonKeyActions.byMe).toHaveLength(2);
+      expect(keyActions.pokemonKeyActions.byMe).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'speed control',
+            pokemonUsage: expect.arrayContaining([
+              expect.objectContaining({ pokemon: 'Dragonite', count: 1 }),
+              expect.objectContaining({ pokemon: 'Blastoise', count: 1 }),
+              expect.objectContaining({ pokemon: 'Gengar', count: 1 }),
+            ]) as unknown[],
+            actionUsage: expect.arrayContaining([
+              expect.objectContaining({ action: 'Tailwind', count: 1 }),
+              expect.objectContaining({ action: 'Icy Wind', count: 2 }),
+            ]) as unknown[],
+          }),
+          expect.objectContaining({
+            name: 'field control',
+            pokemonUsage: expect.arrayContaining([
+              expect.objectContaining({ pokemon: 'Gengar', count: 1 }),
+            ]) as unknown[],
+            actionUsage: expect.arrayContaining([
+              expect.objectContaining({ action: 'Psychic Terrain', count: 1 }),
+            ]) as unknown[],
+          }),
+        ]),
+      );
+
+      // check rival pokemon key actions
+      expect(keyActions.pokemonKeyActions.byRival).toHaveLength(2);
+      expect(keyActions.pokemonKeyActions.byRival).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'weather control',
+            pokemonUsage: expect.arrayContaining([
+              expect.objectContaining({ pokemon: 'Lapras', count: 1 }),
+            ]) as unknown[],
+            actionUsage: expect.arrayContaining([
+              expect.objectContaining({ action: 'Rain', count: 1 }),
+            ]) as unknown[],
+          }),
+          expect.objectContaining({
+            name: 'tera',
+            pokemonUsage: expect.arrayContaining([
+              expect.objectContaining({ pokemon: 'Gyarados', count: 1 }),
+            ]) as unknown[],
+            actionUsage: expect.arrayContaining([
+              expect.objectContaining({ action: 'ground', count: 1 }),
+            ]) as unknown[],
+          }),
+        ]),
+      );
     });
   });
 });

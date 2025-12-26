@@ -1,4 +1,4 @@
-import { CreateBattleData, CreateTrainingData } from '../types/api';
+import { CreateBattleData, CreateTrainingData, Training } from '../types/api';
 
 export const sampleTeams = [
   `Mimikyu @ Focus Sash  
@@ -750,4 +750,491 @@ export const createRandomBattle = (
     ...overrides,
   };
   return battle;
+};
+
+export const createSampleTraining = () => {
+  const training: Training = {
+    id: 'training1',
+    name: 'Training 1',
+    format: 'gen8ou',
+    createdAt: new Date().toISOString(),
+    isDefault: false,
+    description: 'Sample training for testing',
+    battles: [
+      {
+        id: 'battle1',
+        name: 'Battle 1',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        result: 'win',
+        turns: [
+          {
+            index: 1,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Blastoise'],
+              },
+              {
+                index: 2,
+                player: 'p1',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Charizard'],
+              },
+              {
+                index: 3,
+                player: 'p2',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Venusaur'],
+              },
+              {
+                index: 4,
+                player: 'p2',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Pikachu'],
+              },
+            ],
+          },
+          {
+            index: 2,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: 'Blastoise',
+                name: 'switched',
+                targets: ['Gengar'],
+              },
+              {
+                index: 2,
+                player: 'p1',
+                type: 'switch',
+                user: 'Charizard',
+                name: 'switched',
+                targets: ['Lapras'],
+              },
+              {
+                index: 3,
+                player: 'p2',
+                type: 'switch',
+                user: 'Venusaur',
+                name: 'switched',
+                targets: ['Jolteon'],
+              },
+              {
+                index: 4,
+                player: 'p2',
+                type: 'switch',
+                user: 'Pikachu',
+                name: 'switched',
+                targets: ['Gyarados'],
+              },
+            ],
+          },
+          {
+            index: 3,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: 'Gengar',
+                name: 'switched',
+                targets: ['Blastoise'],
+              },
+              {
+                index: 2,
+                type: 'move',
+                user: 'p1:Blastoise',
+                name: 'Surf',
+                targets: ['Jolteon'],
+              },
+            ],
+          },
+          {
+            index: 4,
+            actions: [
+              {
+                index: 1,
+                type: 'move',
+                user: 'p1:Blastoise',
+                name: 'Ice Beam',
+                targets: ['Jolteon'],
+              },
+            ],
+          },
+          {
+            index: 5,
+            actions: [
+              {
+                index: 1,
+                type: 'move',
+                user: 'p1:Blastoise',
+                name: 'Ice Beam',
+                targets: ['Jolteon'],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'battle2',
+        name: 'Battle 2',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        result: 'win',
+        turns: [
+          {
+            index: 1,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Blastoise'],
+              },
+              {
+                index: 2,
+                player: 'p1',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Charizard'],
+              },
+              {
+                index: 3,
+                player: 'p2',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Venusaur'],
+              },
+              {
+                index: 4,
+                player: 'p2',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Pikachu'],
+              },
+            ],
+          },
+          {
+            index: 2,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: 'Blastoise',
+                name: 'switched',
+                targets: ['Gengar'],
+              },
+              {
+                index: 2,
+                player: 'p1',
+                type: 'switch',
+                user: 'Charizard',
+                name: 'switched',
+                targets: ['Lapras'],
+              },
+              {
+                index: 3,
+                player: 'p2',
+                type: 'switch',
+                user: 'Venusaur',
+                name: 'switched',
+                targets: ['Jolteon'],
+              },
+              {
+                index: 4,
+                player: 'p2',
+                type: 'switch',
+                user: 'Pikachu',
+                name: 'switched',
+                targets: ['Gyarados'],
+              },
+              {
+                index: 5,
+                type: 'move',
+                user: 'p1:Gengar',
+                name: 'Icy Wind',
+                targets: [],
+              },
+            ],
+          },
+          {
+            index: 3,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: 'Gengar',
+                name: 'switched',
+                targets: ['Blastoise'],
+              },
+            ],
+          },
+          {
+            index: 4,
+            actions: [
+              {
+                index: 1,
+                type: 'move',
+                user: 'p1:Blastoise',
+                name: 'Ice Beam',
+                targets: ['Jolteon'],
+              },
+            ],
+          },
+          {
+            index: 5,
+            actions: [
+              {
+                index: 1,
+                type: 'move',
+                user: 'p1:Blastoise',
+                name: 'Icy Wind',
+                targets: ['Jolteon'],
+              },
+            ],
+          },
+          {
+            index: 6,
+            actions: [
+              {
+                index: 1,
+                type: 'move',
+                user: 'p1:Blastoise',
+                name: 'Ice Beam',
+                targets: ['Jolteon'],
+              },
+              {
+                index: 2,
+                type: 'effect',
+                user: 'p1:Blastoise',
+                name: 'fainted',
+                targets: [],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'battle3',
+        name: 'Battle 3',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        result: 'loose',
+        turns: [
+          {
+            index: 1,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Dragonite'],
+              },
+              {
+                index: 2,
+                player: 'p1',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Charizard'],
+              },
+              {
+                index: 3,
+                player: 'p2',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Venusaur'],
+              },
+              {
+                index: 4,
+                player: 'p2',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Pikachu'],
+              },
+              {
+                index: 5,
+                type: 'move',
+                user: 'p1:Dragonite',
+                name: 'Tailwind',
+                targets: [],
+              },
+            ],
+          },
+          {
+            index: 2,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: 'Dragonite',
+                name: 'switched',
+                targets: ['Gengar'],
+              },
+              {
+                index: 2,
+                player: 'p1',
+                type: 'switch',
+                user: 'Charizard',
+                name: 'switched',
+                targets: ['Lapras'],
+              },
+              {
+                index: 3,
+                player: 'p2',
+                type: 'switch',
+                user: 'Venusaur',
+                name: 'switched',
+                targets: ['Jolteon'],
+              },
+              {
+                index: 4,
+                player: 'p2',
+                type: 'switch',
+                user: 'Pikachu',
+                name: 'switched',
+                targets: ['Gyarados'],
+              },
+              {
+                index: 5,
+                type: 'move',
+                user: 'p1:Gengar',
+                name: 'Psychic Terrain',
+                targets: [],
+              },
+              {
+                index: 6,
+                type: 'effect',
+                user: 'p1:Gengar',
+                name: 'Psychic Terrain caused Psychic Terrain started',
+                targets: [],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'battle4',
+        name: 'Battle 4',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        turns: [
+          {
+            index: 1,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Dragonite'],
+              },
+              {
+                index: 2,
+                player: 'p1',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Charizard'],
+              },
+              {
+                index: 3,
+                player: 'p2',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Venusaur'],
+              },
+              {
+                index: 4,
+                player: 'p2',
+                type: 'switch',
+                user: '',
+                name: 'switched',
+                targets: ['Lapras'],
+              },
+              {
+                index: 5,
+                type: 'ability',
+                user: 'p2:Lapras',
+                name: 'Drizzle set weather Rain',
+                targets: [],
+              },
+            ],
+          },
+          {
+            index: 2,
+            actions: [
+              {
+                index: 1,
+                player: 'p1',
+                type: 'switch',
+                user: 'Dragonite',
+                name: 'switched',
+                targets: ['Gengar'],
+              },
+              {
+                index: 2,
+                player: 'p1',
+                type: 'switch',
+                user: 'Charizard',
+                name: 'switched',
+                targets: ['Lapras'],
+              },
+              {
+                index: 3,
+                player: 'p2',
+                type: 'switch',
+                user: 'Venusaur',
+                name: 'switched',
+                targets: ['Jolteon'],
+              },
+              {
+                index: 4,
+                player: 'p2',
+                type: 'switch',
+                user: 'Pikachu',
+                name: 'switched',
+                targets: ['Gyarados'],
+              },
+              {
+                index: 5,
+                type: 'effect',
+                user: 'p2:Gyarados',
+                name: 'terastallize to ground',
+                targets: [],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+  return training;
 };

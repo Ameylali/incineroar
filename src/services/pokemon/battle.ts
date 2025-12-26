@@ -27,7 +27,7 @@ export interface BattleParser<T> {
   parse(battle: BattleMetadata, rawData: T): CreateBattleData;
 }
 
-const ActionKeyWords = {
+export const ActionKeyWords = {
   DAMAGE: 'damage',
   FORME: 'forme',
   CANT: 'cant',
@@ -205,13 +205,14 @@ export class ShowdownSimProtocolParser
       const [_, rawPokemon, species] = args;
       const { from, inferredActionType: type } = this.parseFrom(kwArgs.from);
       const name = from?.fromName;
-      const { taggedPokemon } = this.parsePokemon(rawPokemon, ctx);
+      const { pokemon, player } = this.parsePokemon(rawPokemon, ctx);
       this.pushAction(
         {
+          player,
           type,
           name: name ?? `changed its ${ActionKeyWords.FORME} to`,
           targets: [species ?? ActionKeyWords.UNKNOWN],
-          user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
+          user: pokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
       );
@@ -251,7 +252,7 @@ export class ShowdownSimProtocolParser
     '-fail': (lineData, ctx) => {
       const { args } = this.parseLineData<'|-fail|'>(lineData);
       const [_, rawPokemon, action] = args;
-      const { pokemon: target } = this.parsePokemon(rawPokemon, ctx);
+      const { taggedPokemon: target } = this.parsePokemon(rawPokemon, ctx);
       const { user = ActionKeyWords.UNKNOWN } = ctx.currActions.at(-1) ?? {};
       this.pushAction(
         {
@@ -368,7 +369,7 @@ export class ShowdownSimProtocolParser
         this.pushAction(
           {
             type: 'effect',
-            name: `${ActionKeyWords.WEATHER} ended`,
+            name: `${ActionKeyWords.WEATHER} ${ActionKeyWords.ENDED}`,
             user: '',
             targets: [],
           },

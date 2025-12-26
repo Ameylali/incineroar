@@ -4,13 +4,28 @@ import { createHash } from 'crypto';
 
 import { type PokemonSet } from '@/src/services/pokemon';
 import {
+  Action,
   AnalyticsResponse,
+  Battle,
+  BattleMovesAnalytics,
+  BattlePokemonAnalytics,
+  BattleResultAnalytics,
   EvUsage,
+  KeyActionsAnalytics,
+  MatchupAnalytics,
   PokemonAnalytics,
+  PokemonKeyActionAnalytics,
+  PokemonKoOrFaintAnalytics,
   TeamAnalytics,
   TournamentTeam,
+  Training,
+  TrainingAnalytics,
+  TurnMap,
   Usage,
 } from '@/src/types/api';
+
+import { TrainingAnalyticsConfig } from './analytics.config';
+import { ActionKeyWords } from './battle';
 
 type StringSetProperty = 'ability' | 'item' | 'moves' | 'teraType';
 type Stat = keyof PokemonSet['evs'];
@@ -274,5 +289,576 @@ export default class AnalyticsService {
     await this.analyzeCores(team, core, index + 1, ctx);
 
     return Promise.resolve();
+  }
+}
+
+type BattleResult = Exclude<Battle['result'], undefined> | 'unknown';
+
+class MatchupTracker {
+  pokemon: string[];
+  results: Map<BattleResult, number>;
+  count: number;
+  pairingsTracker: Map<string, MatchupTracker>;
+
+  constructor(pokemon: string[]) {
+    this.pokemon = pokemon;
+    this.results = new Map();
+    this.count = 0;
+    this.pairingsTracker = new Map();
+  }
+
+  static getHash(pokemon: string[]) {
+    const hash = createHash('sha256');
+    hash.update(pokemon.sort().join('|'));
+    return hash.digest('hex');
+  }
+
+  track(result: BattleResult, pairing?: string[]) {
+    this.count += 1;
+    if (!this.results.has(result)) {
+      this.results.set(result, 0);
+    }
+    const currCount = this.results.get(result)!;
+    this.results.set(result, currCount + 1);
+
+    if (!pairing || pairing.length === 0) return;
+
+    const pairingHash = MatchupTracker.getHash(pairing);
+    if (!this.pairingsTracker.has(pairingHash)) {
+      this.pairingsTracker.set(pairingHash, new MatchupTracker(pairing));
+    }
+    this.pairingsTracker.get(pairingHash)!.track(result);
+  }
+
+  getAnalysisResult(): MatchupAnalytics {
+    const results: BattleResultAnalytics[] = [];
+    this.results.forEach((count, result) => {
+      results.push({ result, count });
+    });
+
+    const pairings: {
+      pokemon: string[];
+      results: BattleResultAnalytics[];
+      encounterCount: number;
+    }[] = [];
+    this.pairingsTracker.forEach((tracker) => {
+      pairings.push({
+        pokemon: tracker.pokemon,
+        results: tracker.getAnalysisResult().results,
+        encounterCount: tracker.count,
+      });
+    });
+
+    return {
+      pokemon: this.pokemon,
+      results,
+      pairings,
+      usageCount: this.count,
+    };
+  }
+}
+
+class PokemonTracker {
+  pokemon: string;
+  koCount: number;
+  kos: Map<string, number>;
+  faintCount: number;
+  faints: Map<string, number>;
+  usageCount: number;
+  moves: Map<string, number>;
+  movesBattleAverage: Map<string, Map<number, number>>;
+
+  constructor(pokemon: string) {
+    this.pokemon = pokemon;
+    this.koCount = 0;
+    this.kos = new Map();
+    this.faintCount = 0;
+    this.faints = new Map();
+    this.usageCount = 0;
+    this.moves = new Map();
+    this.movesBattleAverage = new Map();
+  }
+
+  track() {
+    this.usageCount += 1;
+  }
+
+  trackKo(koedPokemon: string) {
+    this.koCount += 1;
+    if (!this.kos.has(koedPokemon)) {
+      this.kos.set(koedPokemon, 0);
+    }
+    const currCount = this.kos.get(koedPokemon)!;
+    this.kos.set(koedPokemon, currCount + 1);
+  }
+
+  trackFaint(faintedByPokemon: string) {
+    this.faintCount += 1;
+    if (!this.faints.has(faintedByPokemon)) {
+      this.faints.set(faintedByPokemon, 0);
+    }
+    const currCount = this.faints.get(faintedByPokemon)!;
+    this.faints.set(faintedByPokemon, currCount + 1);
+  }
+
+  trackMoveUsage(move: string, battleId: number) {
+    if (!this.moves.has(move)) {
+      this.moves.set(move, 0);
+      this.movesBattleAverage.set(move, new Map());
+    }
+
+    const battleMap = this.movesBattleAverage.get(move)!;
+    if (!battleMap.has(battleId)) {
+      battleMap.set(battleId, 0);
+      const currCount = this.moves.get(move)!;
+      this.moves.set(move, currCount + 1);
+    }
+    const currBattleCount = battleMap.get(battleId)!;
+    battleMap.set(battleId, currBattleCount + 1);
+  }
+
+  getAnalysisResult(): BattlePokemonAnalytics {
+    const kos: PokemonKoOrFaintAnalytics['matchups'] = [];
+    this.kos.forEach((count, pokemon) => {
+      kos.push({ pokemon, count });
+    });
+
+    const faints: PokemonKoOrFaintAnalytics['matchups'] = [];
+    this.faints.forEach((count, pokemon) => {
+      faints.push({ pokemon, count });
+    });
+
+    const moves: BattleMovesAnalytics[] = [];
+    this.moves.forEach((count, move) => {
+      const battleMap = this.movesBattleAverage.get(move)!;
+      let totalBattles = 0;
+      let totalUsage = 0;
+      battleMap.forEach((usage) => {
+        totalBattles += 1;
+        totalUsage += usage;
+      });
+      const averageUsageByMatch = totalUsage / totalBattles;
+      moves.push({
+        move,
+        averageUsage: count / this.usageCount,
+        averageUsageByMatch,
+      });
+    });
+
+    return {
+      pokemon: this.pokemon,
+      performance: {
+        ko: {
+          matchups: kos,
+          count: this.koCount,
+        },
+        faint: {
+          matchups: faints,
+          count: this.faintCount,
+        },
+        damage: {},
+      },
+      usageCount: this.usageCount,
+      moves,
+    };
+  }
+}
+
+class PokemonKeyActionsTracker {
+  actionName: string;
+  pokemonUsage: Map<string, number>;
+  actionUsage: Map<string, number>;
+
+  constructor(actionName: string) {
+    this.actionName = actionName;
+    this.pokemonUsage = new Map();
+    this.actionUsage = new Map();
+  }
+
+  track(pokemon: string, action: string) {
+    if (!this.pokemonUsage.has(pokemon)) {
+      this.pokemonUsage.set(pokemon, 0);
+    }
+    const currCount = this.pokemonUsage.get(pokemon)!;
+    this.pokemonUsage.set(pokemon, currCount + 1);
+
+    if (!this.actionUsage.has(action)) {
+      this.actionUsage.set(action, 0);
+    }
+    const currActionCount = this.actionUsage.get(action)!;
+    this.actionUsage.set(action, currActionCount + 1);
+  }
+
+  getAnalysisResult(): PokemonKeyActionAnalytics {
+    const pokemonUsage: PokemonKeyActionAnalytics['pokemonUsage'] = [];
+    this.pokemonUsage.forEach((count, pokemon) => {
+      pokemonUsage.push({ pokemon, count });
+    });
+
+    const actionUsage: PokemonKeyActionAnalytics['actionUsage'] = [];
+    this.actionUsage.forEach((count, action) => {
+      actionUsage.push({ action, count });
+    });
+
+    return {
+      name: this.actionName,
+      pokemonUsage,
+      actionUsage,
+    };
+  }
+}
+
+type KeyAction = 'speed control' | 'weather control' | 'field control' | 'tera';
+
+class KeyActionsTracker {
+  kos: Map<number, number>;
+  faints: Map<number, number>;
+  switches: Map<number, number>;
+  myActions: Map<KeyAction, PokemonKeyActionsTracker>;
+  rivalActions: Map<KeyAction, PokemonKeyActionsTracker>;
+
+  constructor() {
+    this.kos = new Map();
+    this.faints = new Map();
+    this.switches = new Map();
+    this.myActions = new Map();
+    this.rivalActions = new Map();
+  }
+
+  trackKo(turn: number) {
+    if (!this.kos.has(turn)) {
+      this.kos.set(turn, 0);
+    }
+    const currCount = this.kos.get(turn)!;
+    this.kos.set(turn, currCount + 1);
+  }
+
+  trackFaint(turn: number) {
+    if (!this.faints.has(turn)) {
+      this.faints.set(turn, 0);
+    }
+    const currCount = this.faints.get(turn)!;
+    this.faints.set(turn, currCount + 1);
+  }
+
+  trackSwitch(turn: number) {
+    if (!this.switches.has(turn)) {
+      this.switches.set(turn, 0);
+    }
+    const currCount = this.switches.get(turn)!;
+    this.switches.set(turn, currCount + 1);
+  }
+
+  trackPokemonAction(
+    actionName: KeyAction,
+    pokemon: string,
+    move: string,
+    isRival?: boolean,
+  ) {
+    const actionsMap = isRival ? this.rivalActions : this.myActions;
+    if (!actionsMap.has(actionName)) {
+      actionsMap.set(actionName, new PokemonKeyActionsTracker(actionName));
+    }
+    actionsMap.get(actionName)!.track(pokemon, move);
+  }
+
+  getAnalysisResult(): KeyActionsAnalytics {
+    const kos: TurnMap[] = [];
+    this.kos.forEach((count, turn) => {
+      kos.push({ turn, count });
+    });
+
+    const faints: TurnMap[] = [];
+    this.faints.forEach((count, turn) => {
+      faints.push({ turn, count });
+    });
+
+    const switches: TurnMap[] = [];
+    this.switches.forEach((count, turn) => {
+      switches.push({ turn, count });
+    });
+
+    return {
+      kos,
+      faints,
+      switches,
+      pokemonKeyActions: {
+        byMe: Array.from(this.myActions.values()).map((tracker) =>
+          tracker.getAnalysisResult(),
+        ),
+        byRival: Array.from(this.rivalActions.values()).map((tracker) =>
+          tracker.getAnalysisResult(),
+        ),
+      },
+    };
+  }
+}
+
+interface TrainingAnalyticsContext {
+  matchups: Map<string, MatchupTracker>;
+  openings: Map<string, MatchupTracker>;
+  pokemon: Map<string, PokemonTracker>;
+  keyActions: KeyActionsTracker;
+}
+
+type EventTracker = (
+  battle: number,
+  turn: number,
+  action: Action,
+  ctx: TrainingAnalyticsContext,
+) => void;
+
+export class TrainingAnalyticsService {
+  private eventTrackers: EventTracker[] = [
+    // track faints
+    (_battle, turn, action, ctx) => {
+      if (action.name.includes(ActionKeyWords.FAINTED)) {
+        ctx.keyActions.trackFaint(turn);
+
+        const { pokemon, player } = this.parsePokemon(
+          action.user,
+          action.player,
+        );
+        if (player !== 'p1') return;
+        const tracker = ctx.pokemon.get(pokemon);
+        if (!tracker) {
+          console.warn(
+            `No tracker found for pokemon ${pokemon} when tracking faint.`,
+          );
+          return;
+        }
+        tracker.trackFaint(ActionKeyWords.UNKNOWN);
+      }
+    },
+    // track move usage
+    (battle, _turn, action, ctx) => {
+      if (action.type === 'move') {
+        const { pokemon, player } = this.parsePokemon(
+          action.user,
+          action.player,
+        );
+        if (player !== 'p1') return;
+        const tracker = ctx.pokemon.get(pokemon);
+        if (!tracker) {
+          console.warn(
+            `No tracker found for pokemon ${pokemon} when tracking move usage.`,
+          );
+          return;
+        }
+        tracker.trackMoveUsage(action.name, battle);
+      }
+    },
+    // track switches
+    (_battle, turn, action, ctx) => {
+      if (action.type === 'switch') {
+        if (action.player !== 'p1') return;
+        ctx.keyActions.trackSwitch(turn);
+      }
+    },
+    // track speed control actions
+    (_battle, _turn, { type, user, player: actionPlayer, name }, ctx) => {
+      for (const speedControlAction of TrainingAnalyticsConfig.speedControlMoves) {
+        if (
+          type === 'move' &&
+          name.toLowerCase().includes(speedControlAction.toLowerCase())
+        ) {
+          const { pokemon, player } = this.parsePokemon(user, actionPlayer);
+          const isRival = player !== 'p1';
+          ctx.keyActions.trackPokemonAction(
+            'speed control',
+            pokemon,
+            name,
+            isRival,
+          );
+        }
+      }
+    },
+    // track weather changes
+    (_battle, _turn, action, ctx) => {
+      if (
+        action.name.includes(ActionKeyWords.WEATHER) &&
+        !action.name.includes(ActionKeyWords.ENDED) &&
+        action.user !== ''
+      ) {
+        const { pokemon, player } = this.parsePokemon(
+          action.user,
+          action.player,
+        );
+        const isRival = player !== 'p1';
+        const name = action.name.split(ActionKeyWords.WEATHER)?.at(-1)?.trim();
+        ctx.keyActions.trackPokemonAction(
+          'weather control',
+          pokemon,
+          name ?? ActionKeyWords.UNKNOWN,
+          isRival,
+        );
+      }
+    },
+    // track fields and volatile effects
+    (_battle, _turn, action, ctx) => {
+      if (
+        action.type === 'effect' &&
+        action.name.includes(ActionKeyWords.STARTED) &&
+        action.user !== ''
+      ) {
+        const { pokemon, player } = this.parsePokemon(
+          action.user,
+          action.player,
+        );
+        const isRival = player !== 'p1';
+        let name: string | undefined = action.name.split(
+          ActionKeyWords.STARTED,
+        )?.[0];
+        if (name?.includes('caused')) {
+          name = name.split('caused')?.[1];
+        }
+        name = name?.trim();
+        ctx.keyActions.trackPokemonAction(
+          'field control',
+          pokemon,
+          name ?? ActionKeyWords.UNKNOWN,
+          isRival,
+        );
+      }
+    },
+    // track tera type changes
+    (_battle, _turn, action, ctx) => {
+      if (
+        action.type === 'effect' &&
+        action.name.includes(ActionKeyWords.TERA) &&
+        action.user !== ''
+      ) {
+        const { pokemon, player } = this.parsePokemon(
+          action.user,
+          action.player,
+        );
+        const isRival = player !== 'p1';
+        let name = action.name.split(ActionKeyWords.TERA)?.at(-1);
+        name = name?.replace('to', '');
+        name = name?.trim();
+        ctx.keyActions.trackPokemonAction(
+          'tera',
+          pokemon,
+          name ?? ActionKeyWords.UNKNOWN,
+          isRival,
+        );
+      }
+    },
+  ];
+
+  getAnalytics(training: Training): TrainingAnalytics {
+    const matchups = new Map<string, MatchupTracker>();
+    const openings = new Map<string, MatchupTracker>();
+    const pokemon = new Map<string, PokemonTracker>();
+    const keyActions = new KeyActionsTracker();
+    const context: TrainingAnalyticsContext = {
+      matchups,
+      openings,
+      pokemon,
+      keyActions,
+    };
+
+    training.battles.forEach((battle, battleIndex) => {
+      const result = battle.result ?? 'unknown';
+      const { core, rivalCore } = this.getCores(battle);
+      const { core: openingCore, rivalCore: openingRivalCore } = this.getCores(
+        battle,
+        true,
+      );
+
+      const coreHash = MatchupTracker.getHash(core);
+      if (!matchups.has(coreHash)) {
+        matchups.set(coreHash, new MatchupTracker(core));
+      }
+      matchups.get(coreHash)!.track(result, rivalCore);
+
+      const openingCoreHash = MatchupTracker.getHash(openingCore);
+      if (!openings.has(openingCoreHash)) {
+        openings.set(openingCoreHash, new MatchupTracker(openingCore));
+      }
+      openings.get(openingCoreHash)!.track(result, openingRivalCore);
+
+      core.forEach((species) => {
+        if (!pokemon.has(species)) {
+          pokemon.set(species, new PokemonTracker(species));
+        }
+        const tracker = pokemon.get(species)!;
+        tracker.track();
+      });
+
+      battle.turns.forEach((turn, index) => {
+        turn.actions.forEach((action) => {
+          this.eventTrackers.forEach((tracker) => {
+            tracker(battleIndex, index + 1, action, context);
+          });
+        });
+      });
+    });
+
+    return {
+      matchups: {
+        all: Array.from(matchups.values()).map((tracker) =>
+          tracker.getAnalysisResult(),
+        ),
+        openings: Array.from(openings.values()).map((tracker) =>
+          tracker.getAnalysisResult(),
+        ),
+      },
+      pokemon: Array.from(pokemon.values()).map((tracker) =>
+        tracker.getAnalysisResult(),
+      ),
+      keyActions: keyActions.getAnalysisResult(),
+    };
+  }
+
+  private parsePokemon(rawPokemon: string, actionPlayer?: string) {
+    const [playerOrPokemon, pokemonName] = rawPokemon.split(':');
+    const player =
+      (playerOrPokemon.startsWith('p1')
+        ? 'p1'
+        : playerOrPokemon.startsWith('p2')
+          ? 'p2'
+          : undefined) ?? actionPlayer;
+    let pokemon = pokemonName;
+    if (pokemon === undefined) {
+      pokemon = playerOrPokemon;
+    }
+    return { player, pokemon };
+  }
+
+  private getCores(battle: Battle, onlyOpening?: boolean) {
+    const core = new Set<string>();
+    const rivalCore = new Set<string>();
+
+    battle.turns.forEach((turn, index) => {
+      if (onlyOpening && index > 0) {
+        return;
+      }
+
+      turn.actions.forEach(({ user, player, targets, type }) => {
+        if (onlyOpening && (type !== 'switch' || user !== '')) {
+          return;
+        }
+        const pokemonList = [...targets, user];
+        pokemonList.forEach((rawPokemon) => {
+          if (rawPokemon !== '') {
+            const { player: side, pokemon } = this.parsePokemon(
+              rawPokemon,
+              player,
+            );
+            if (side === 'p1') {
+              core.add(pokemon);
+            }
+            if (side === 'p2') {
+              rivalCore.add(pokemon);
+            }
+          }
+        });
+      });
+    });
+    return {
+      core: Array.from(core),
+      rivalCore: Array.from(rivalCore),
+    };
   }
 }

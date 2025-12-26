@@ -101,9 +101,10 @@ describe('BattleParser', () => {
       ]);
       const battle = parser.parse(metadata, lines);
       const abilityAction = battle.turns[0].actions[0];
+      expect(abilityAction.player).toEqual('p1');
       expect(abilityAction.type).toEqual('ability');
       expect(abilityAction.name).toEqual('Shields Down');
-      expect(abilityAction.user).toEqual('p1:Minior');
+      expect(abilityAction.user).toEqual('Minior');
       expect(abilityAction.targets).toMatchObject(['Minior-Meteor']);
     });
 
