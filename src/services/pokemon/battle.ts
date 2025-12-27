@@ -239,11 +239,26 @@ export class ShowdownSimProtocolParser
       const { args } = this.parseLineData<'|faint|'>(lineData);
       const [_, rawPokemon] = args;
       const { taggedPokemon } = this.parsePokemon(rawPokemon, ctx);
+      const lastMove = this.findLastMoveAction(ctx);
+      let faintedBy = undefined;
+      if (
+        lastMove &&
+        taggedPokemon &&
+        lastMove.targets.includes(taggedPokemon)
+      ) {
+        if (lastMove.user.includes(':')) {
+          faintedBy = lastMove.user;
+        } else if (lastMove.player) {
+          faintedBy = `${lastMove.player}:${lastMove.user}`;
+        } else {
+          faintedBy = lastMove.user;
+        }
+      }
       this.pushAction(
         {
           type: 'effect',
-          name: ActionKeyWords.FAINTED,
-          targets: [],
+          name: `${ActionKeyWords.FAINTED} by`,
+          targets: faintedBy ? [faintedBy] : [],
           user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,

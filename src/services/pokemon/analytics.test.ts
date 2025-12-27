@@ -367,9 +367,24 @@ describe('Analytics', () => {
         (p) => p.pokemon === 'Blastoise',
       );
       expect(blastoiseAnalysis).toBeDefined();
-      // TODO: re-enable KO count check when KO tracking is implemented
-      // expect(blastoiseAnalysis?.ko.count).toEqual(2);
+      expect(blastoiseAnalysis?.performance.ko.count).toEqual(1);
+      expect(blastoiseAnalysis?.performance.ko.matchups).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            pokemon: 'Jolteon',
+            count: 1,
+          }),
+        ]),
+      );
       expect(blastoiseAnalysis?.performance.faint.count).toEqual(1);
+      expect(blastoiseAnalysis?.performance.faint.matchups).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            pokemon: 'Jolteon',
+            count: 1,
+          }),
+        ]),
+      );
       expect(blastoiseAnalysis?.usageCount).toEqual(2);
       expect(blastoiseAnalysis?.moves).toEqual(
         expect.arrayContaining([
@@ -416,7 +431,15 @@ describe('Analytics', () => {
       );
 
       // check KO tracking
-      // TODO: re-enable when KO tracking is implemented
+      expect(keyActions.kos).toHaveLength(1);
+      expect(keyActions.kos).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            turn: 5,
+            count: 1,
+          }),
+        ]),
+      );
 
       // check faint tracking
       expect(keyActions.faints).toHaveLength(1);

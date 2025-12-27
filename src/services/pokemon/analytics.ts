@@ -609,21 +609,37 @@ export class TrainingAnalyticsService {
     // track faints
     (_battle, turn, action, ctx) => {
       if (action.name.includes(ActionKeyWords.FAINTED)) {
-        ctx.keyActions.trackFaint(turn);
-
         const { pokemon, player } = this.parsePokemon(
           action.user,
           action.player,
         );
-        if (player !== 'p1') return;
-        const tracker = ctx.pokemon.get(pokemon);
-        if (!tracker) {
-          console.warn(
-            `No tracker found for pokemon ${pokemon} when tracking faint.`,
-          );
-          return;
+        let faintedByPokemon = ActionKeyWords.UNKNOWN;
+        if (action.targets.length > 0) {
+          const { pokemon: faintedBy } = this.parsePokemon(action.targets[0]);
+          faintedByPokemon = faintedBy;
         }
-        tracker.trackFaint(ActionKeyWords.UNKNOWN);
+        let tracker: PokemonTracker | undefined;
+        if (player === 'p1') {
+          ctx.keyActions.trackFaint(turn);
+          tracker = ctx.pokemon.get(pokemon);
+          if (!tracker) {
+            console.warn(
+              `No tracker found for pokemon ${pokemon} when tracking faint.`,
+            );
+            return;
+          }
+          tracker.trackFaint(faintedByPokemon);
+        } else {
+          ctx.keyActions.trackKo(turn);
+          tracker = ctx.pokemon.get(faintedByPokemon);
+          if (!tracker) {
+            console.warn(
+              `No tracker found for pokemon ${faintedByPokemon} when tracking ko.`,
+            );
+            return;
+          }
+          tracker.trackKo(pokemon);
+        }
       }
     },
     // track move usage

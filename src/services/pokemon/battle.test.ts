@@ -109,13 +109,16 @@ describe('BattleParser', () => {
     });
 
     it('should log fainted pokemon', () => {
-      const lines = defaultLines(['|faint|p2a: Pikachu']);
+      const lines = defaultLines([
+        '|move|p1a: Bulbasaur|Mafic Leaf|p2a: Pikachu',
+        '|faint|p2a: Pikachu',
+      ]);
       const battle = parser.parse(metadata, lines);
-      const abilityAction = battle.turns[0].actions[0];
+      const abilityAction = battle.turns[0].actions[1];
       expect(abilityAction.type).toEqual('effect');
-      expect(abilityAction.name).toEqual('fainted');
+      expect(abilityAction.name).toEqual('fainted by');
       expect(abilityAction.user).toEqual('p2:Pikachu');
-      expect(abilityAction.targets).toMatchObject([]);
+      expect(abilityAction.targets).toMatchObject(['p1:Bulbasaur']);
     });
 
     it('should log inflicted status', () => {
