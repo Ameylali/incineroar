@@ -2,10 +2,10 @@
 
 import { PlusCircleOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, Input, Modal, Select } from 'antd';
-import { Rule } from 'antd/es/form';
+import { useWatch } from 'antd/es/form/Form';
 import FormItem from 'antd/es/form/FormItem';
 import TextArea from 'antd/es/input/TextArea';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { MetagameKeys } from '@/src/constants/query-keys';
 import useFormAction, { getValidateStatus } from '@/src/hooks/useFormAction';
@@ -40,26 +40,21 @@ const AddTournamentModal = ({
 }: AddTournamentModalProps) => {
   const { state, form, onFinish, isPending } =
     useFormAction<AddTournamentFormData>(INITIAL_STATE, createTournament);
-  const sources = [{ value: 'pokedata' }];
-  const intertecptOnFinish = (fields: AddTournamentFormData) => {
-    const { data, ...otherData } = fields;
-    const minified = JSON.stringify(JSON.parse(data));
-    const newFields = { ...otherData, data: minified };
-    return onFinish(newFields);
-  };
-
-  const validateJson: Rule = {
-    message: 'Invalid JSON data',
-    validator: (_, val: string) => {
-      try {
-        JSON.parse(val);
-        return Promise.resolve();
-      } catch (err) {
-        return Promise.reject(err instanceof Error ? err : new Error());
-      }
-    },
-    validateTrigger: 'onSubmit',
-  };
+  const sources = [
+    { value: 'pokedata', label: 'Pokedata' },
+    { value: 'pokedata_url', label: 'Pokedata URL' },
+  ];
+  const source = useWatch('source', form);
+  const dataPlaceholder = useMemo(() => {
+    switch (source) {
+      case 'pokedata':
+        return 'Paste pokedata JSON here...';
+      case 'pokedata_url':
+        return 'Enter URL to pokedata JSON...';
+      default:
+        return '';
+    }
+  }, [source]);
 
   useEffect(() => {
     if (state.success) {
@@ -88,7 +83,7 @@ const AddTournamentModal = ({
       <TournamentForm
         name="createTournament"
         form={form}
-        onFinish={intertecptOnFinish}
+        onFinish={onFinish}
         initialValues={state.success ? INITIAL_STATE : state.data}
         labelCol={{ span: 4 }}
       >
@@ -121,11 +116,13 @@ const AddTournamentModal = ({
           label="Data"
           rules={[
             { required: true, message: 'Please enter the tournament data' },
-            validateJson,
           ]}
           validateStatus={getValidateStatus(state, 'data', isPending)}
         >
-          <TextArea autoSize={{ minRows: 4, maxRows: 12 }} />
+          <TextArea
+            autoSize={{ minRows: 4, maxRows: 12 }}
+            placeholder={dataPlaceholder}
+          />
         </TournamentFormItem>
       </TournamentForm>
     </Modal>

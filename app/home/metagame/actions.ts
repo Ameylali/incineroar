@@ -1,5 +1,6 @@
 'use server';
 
+import axios from 'axios';
 import z from 'zod';
 
 import { verifyUserAuth } from '@/src/actions/auth';
@@ -20,7 +21,10 @@ const addTournamentFormDataSchema = z.object({
     .trim()
     .min(1, 'Name must be at least 1 characters')
     .max(40, 'Name must be at most 40 characters'),
-  source: z.union([z.literal('pokedata')], 'Invalid data source'),
+  source: z.union(
+    [z.literal('pokedata'), z.literal('pokedata_url')],
+    'Invalid data source',
+  ),
   data: z.string().min(1, 'Data must be at least 1 characters'),
   season: z
     .number()
@@ -59,6 +63,19 @@ export const createTournament = async (
     await verifyUserAuth();
 
     const tournamentRepo = new TournamentRepository();
+    if (validatedFields.data.source === 'pokedata_url') {
+      // Fetch pokedata from URL
+      const response = await axios.get<unknown[]>(validatedFields.data.data);
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch pokedata from URL');
+      }
+      validatedFields.data.data = JSON.stringify(response.data);
+      validatedFields.data.source = 'pokedata';
+      console.log(
+        'Fetched pokedata from URL successfully',
+        validatedFields.data.data.slice(0, 100),
+      );
+    }
     const parser = TournamentParserFactory.getParser(
       validatedFields.data.source,
     );
