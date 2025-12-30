@@ -9,6 +9,7 @@ import {
   useDeleteTrainingMutation,
 } from '@/src/hooks/training-queries';
 import { Battle, Training } from '@/src/types/api';
+import { withKeys } from '@/src/utils/antd-adapters';
 
 const TableComponent = Table<Training | Battle>;
 
@@ -137,7 +138,7 @@ const TrainingsOrBattlesTable = ({
     <TableComponent
       loading={isLoading}
       columns={COLUMNS}
-      dataSource={trainingsAndBattles}
+      dataSource={withKeys(trainingsAndBattles)}
     />
   );
 };
