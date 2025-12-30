@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Button, Col, Flex, Row, Skeleton } from 'antd';
+import { Alert, Button, Col, Flex, Row } from 'antd';
 import { useRouter } from 'next/navigation';
 import { use, useState } from 'react';
 
@@ -12,20 +12,12 @@ import TrainingsOrBattlesTable from '../components/TrainingsOrBattlesTable';
 
 const Page = ({ params }: { params: Promise<{ trainingId: string }> }) => {
   const { trainingId } = use(params);
-  const { isLoading, isError, data } = useTrainingQuery(trainingId);
+  const { isLoading, data } = useTrainingQuery(trainingId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
   const goToAnalyze = () => {
     router.push(`/home/training/${trainingId}/analyze`);
   };
-
-  if (isError || !data) {
-    return <h1>Error</h1>;
-  }
-
-  if (isLoading) {
-    return <Skeleton active />;
-  }
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { UserKeys } from '../constants/query-keys';
@@ -11,7 +11,7 @@ const getUser = async (): Promise<User> => {
 };
 
 const useUserQuery = () => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: UserKeys.me(),
     queryFn: getUser,
     staleTime: 1000 * 60 * 60, // 1 hour

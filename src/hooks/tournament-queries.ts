@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { MetagameKeys } from '../constants/query-keys';
@@ -20,7 +20,7 @@ const getTournament = async (id: string) => {
 };
 
 export const useTournamentQuery = (id: string) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: MetagameKeys.tournament(id),
     queryFn: () => getTournament(id),
     staleTime: Infinity,
@@ -42,7 +42,7 @@ export const useDeleteTournamentMutation = (id: string) => {
 };
 
 export const useTournamentsQuery = () => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: MetagameKeys.tournaments(),
     queryFn: getAllTournaments,
   });

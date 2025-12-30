@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { UserKeys } from '../constants/query-keys';
@@ -25,7 +25,7 @@ export const useDeleteTeamMutation = (teamId: string) => {
 };
 
 export const useTeamQuery = (id: string) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: UserKeys.team(id),
     queryFn: () => getTeam(id),
     staleTime: 1000 * 60 * 60, // 1 hour

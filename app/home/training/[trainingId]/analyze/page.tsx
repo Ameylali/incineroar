@@ -1,6 +1,6 @@
 'use client';
 
-import { Skeleton, Tabs, TabsProps } from 'antd';
+import { Tabs, TabsProps } from 'antd';
 import { use } from 'react';
 
 import { useTrainingAnalysisQuery } from '@/src/hooks/training-queries';
@@ -136,15 +136,7 @@ const KeyActionsTab = ({ keyActions }: KeyActionsTabProps) => {
 
 const Page = ({ params }: PageProps<'/home/training/[trainingId]/analyze'>) => {
   const { trainingId } = use(params);
-  const { isLoading, isError, data } = useTrainingAnalysisQuery(trainingId);
-
-  if (isLoading) {
-    return <Skeleton active />;
-  }
-
-  if (isError || !data) {
-    return <h1>Error</h1>;
-  }
+  const { data } = useTrainingAnalysisQuery(trainingId);
 
   const items: TabsProps['items'] = [
     {

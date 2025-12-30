@@ -1,16 +1,7 @@
 'use client';
 
 import { ExpandAltOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Flex,
-  Modal,
-  Skeleton,
-  Table,
-  TableProps,
-  Tabs,
-  TabsProps,
-} from 'antd';
+import { Button, Flex, Modal, Table, TableProps, Tabs, TabsProps } from 'antd';
 import Text from 'antd/es/typography/Text';
 import Title from 'antd/es/typography/Title';
 import { use, useState } from 'react';
@@ -202,15 +193,7 @@ const AnalyticsTab = ({ analysis }: AnalyticsTabProps) => {
 
 const Page = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
-  const { data, isError, isLoading } = useTournamentQuery(id);
-
-  if (isLoading) {
-    return <Skeleton active />;
-  }
-
-  if (isError || !data) {
-    return <h2>Error loading tournament</h2>;
-  }
+  const { data } = useTournamentQuery(id);
 
   const { tournament, analysis } = data;
 
@@ -226,8 +209,6 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
       children: <AnalyticsTab analysis={analysis} />,
     },
   ];
-
-  console.log(data);
 
   return (
     <Flex vertical>

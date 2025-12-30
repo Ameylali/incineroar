@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { TrainingKeys } from '../constants/query-keys';
@@ -46,7 +46,7 @@ const getTrainingAnalysis = async (trainingId: string) => {
 };
 
 export const useTrainingAnalysisQuery = (trainingId: string) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: TrainingKeys.trainingAnalysis(trainingId),
     queryFn: () => getTrainingAnalysis(trainingId),
     staleTime: Infinity,
@@ -74,7 +74,7 @@ export const useDeleteBattleMutation = (
 };
 
 export const useBattleQuery = (trainingId: string, battleId: string) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: TrainingKeys.battle(trainingId, battleId),
     queryFn: () => getBattle(trainingId, battleId),
     staleTime: Infinity,
@@ -82,7 +82,7 @@ export const useBattleQuery = (trainingId: string, battleId: string) => {
 };
 
 export const useTrainingQuery = (id: string) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: TrainingKeys.training(id),
     queryFn: () => getTraining(id),
     staleTime: Infinity,
@@ -104,7 +104,7 @@ export const useDeleteTrainingMutation = (id: string) => {
 };
 
 export const useTrainigsQuery = () => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: TrainingKeys.trainings(),
     queryFn: getAllTrainings,
     staleTime: Infinity,

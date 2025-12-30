@@ -1,7 +1,7 @@
 'use client';
 
 import { EditOutlined } from '@ant-design/icons';
-import { Button, Card, Flex, Skeleton } from 'antd';
+import { Button, Card, Flex } from 'antd';
 import Text from 'antd/es/typography/Text';
 import Title from 'antd/es/typography/Title';
 import { usePathname, useRouter } from 'next/navigation';
@@ -21,10 +21,11 @@ const Page = ({
   const { trainingId, battleId } = use(params);
   const { edit } = use(searchParams);
   const [isEdit, setIsEdit] = useState(edit === 'true');
-  const { isError, isLoading, data } = useBattleQuery(trainingId, battleId);
-  const { isLoading: isUserLoading, data: userData } = useUserQuery();
+  const { data } = useBattleQuery(trainingId, battleId);
+  const { data: userData } = useUserQuery();
   const pathname = usePathname();
   const router = useRouter();
+  const { battle } = data;
 
   useEffect(() => {
     const params = new URLSearchParams([['edit', isEdit ? 'true' : 'false']]);
@@ -33,22 +34,12 @@ const Page = ({
     );
   }, [isEdit, pathname, router, trainingId, battleId]);
 
-  if (isLoading || isUserLoading) {
-    return <Skeleton active />;
-  }
-
-  if (isError || !data) {
-    return <h1>Error</h1>;
-  }
-
-  const { battle } = data;
-
   if (isEdit) {
     return (
       <EditBattle
         trainingId={trainingId}
         battle={battle}
-        teams={userData?.teams ?? []}
+        teams={userData.teams}
         onCancel={() => setIsEdit(false)}
         onSuccess={() => setIsEdit(false)}
       />

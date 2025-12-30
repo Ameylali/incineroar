@@ -3,12 +3,13 @@
 import { MoreOutlined } from '@ant-design/icons';
 import { Button, Col, Dropdown, Row, Table, TableProps } from 'antd';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import TeamPreview from '@/src/components/TeamPreview';
 import { useDeleteTeamMutation } from '@/src/hooks/team-queries';
 import useUserQuery from '@/src/hooks/useUserQuery';
 import { Team } from '@/src/types/api';
+import { withKeys } from '@/src/utils/antd-adapters';
 
 import { EditTeamModal, ImportTeamModal } from './components/TeamModals';
 
@@ -36,6 +37,7 @@ const ActionsMenu = ({ team, onEdit }: ActionsMenuProps) => {
 };
 
 const Page = () => {
+  const { isLoading, data } = useUserQuery();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTeam, setEditTeam] = useState<Team | null>(null);
 
@@ -77,20 +79,6 @@ const Page = () => {
       render: (_, team) => <ActionsMenu team={team} onEdit={onEdit} />,
     },
   ];
-  const { isLoading, isError, data } = useUserQuery();
-  const teams = useMemo(() => {
-    return (data?.teams ?? []).map((team) => {
-      const parsedTeam = {
-        key: team.id,
-        ...team,
-      };
-      return parsedTeam;
-    });
-  }, [data]);
-
-  if (isError) {
-    return <h1>Error</h1>;
-  }
 
   return (
     <>
@@ -104,7 +92,7 @@ const Page = () => {
           <TeamsTable
             loading={isLoading}
             columns={COLUMNS}
-            dataSource={teams}
+            dataSource={withKeys(data.teams)}
           />
         </Col>
       </Row>

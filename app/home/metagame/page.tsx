@@ -3,13 +3,13 @@
 import { DeleteOutlined } from '@ant-design/icons';
 import { Button, Col, Row, Table, TableProps } from 'antd';
 import Link from 'next/link';
-import { useMemo } from 'react';
 
 import {
   useDeleteTournamentMutation,
   useTournamentsQuery,
 } from '@/src/hooks/tournament-queries';
 import { Tournament } from '@/src/types/api';
+import { withKeys } from '@/src/utils/antd-adapters';
 
 import AddTournament from './components/AddTournament';
 
@@ -51,17 +51,7 @@ const COLUMNS: TableProps<Tournament>['columns'] = [
 ];
 
 const Page = () => {
-  const { isLoading, isError, data } = useTournamentsQuery();
-  const tournaments = useMemo(() => {
-    return (data?.tournaments ?? []).map((t) => ({
-      key: t.id,
-      ...t,
-    }));
-  }, [data]);
-
-  if (isError) {
-    return <h1>Error</h1>;
-  }
+  const { isLoading, data } = useTournamentsQuery();
 
   return (
     <>
@@ -75,7 +65,7 @@ const Page = () => {
           <TournamentsTable
             loading={isLoading}
             columns={COLUMNS}
-            dataSource={tournaments}
+            dataSource={withKeys(data.tournaments)}
           />
         </Col>
       </Row>

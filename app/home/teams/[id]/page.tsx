@@ -1,6 +1,6 @@
 'use client';
 
-import { Flex, Skeleton, Tag } from 'antd';
+import { Flex, Tag } from 'antd';
 import Paragraph from 'antd/es/typography/Paragraph';
 import Text from 'antd/es/typography/Text';
 import Title from 'antd/es/typography/Title';
@@ -11,15 +11,7 @@ import { useTeamQuery } from '@/src/hooks/team-queries';
 
 const Page = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
-  const { data, isError, isLoading } = useTeamQuery(id);
-
-  if (isLoading) {
-    return <Skeleton active />;
-  }
-
-  if (isError || !data) {
-    return <h2>Error loading team</h2>;
-  }
+  const { data } = useTeamQuery(id);
 
   return (
     <Flex vertical>
