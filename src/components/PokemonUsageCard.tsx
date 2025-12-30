@@ -76,10 +76,7 @@ const PokemonUsageCard = ({ pokemon }: PokemonUsageCardProps) => {
     <>
       <Row>
         <Col span={6} className="min-h-50">
-          <PokemonSprite
-            pokemon={pokemon.species}
-            imageProps={{ fill: true, style: { objectFit: 'contain' } }}
-          />
+          <PokemonSprite pokemon={pokemon.species} width="100%" height="100%" />
         </Col>
         <Col span={18}>
           <List>

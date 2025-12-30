@@ -14,7 +14,8 @@ const TeamPreview = ({ team }: TeamPreviewProps) => {
         <div key={index} className="relative h-10 w-10">
           <PokemonSprite
             pokemon={pokemon?.species}
-            imageProps={{ fill: true, style: { objectFit: 'contain' } }}
+            width="100%"
+            height="100%"
           />
         </div>
       ))}

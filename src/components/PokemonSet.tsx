@@ -51,14 +51,18 @@ const PokemonSet = ({ pokemon }: PokemonSetProps) => {
     <div className="p-3">
       <Row>
         <Col span={6}>
-          <PokemonSprite
-            pokemon={pokemon.species}
-            imageProps={{ fill: true, style: { objectFit: 'contain' } }}
-          />
-          <ItemSprite
-            item={pokemon.item}
-            imageProps={{ width: 30, height: 30 }}
-          />
+          <ItemSprite item={pokemon.item} width={30} height={30} />
+          <Flex
+            justify="center"
+            align="center"
+            style={{ width: '100%', height: '100%' }}
+          >
+            <PokemonSprite
+              pokemon={pokemon.species}
+              width="100%"
+              height="100%"
+            />
+          </Flex>
         </Col>
         <Col span={18}>
           <Title level={3}>{pokemon.species}</Title>

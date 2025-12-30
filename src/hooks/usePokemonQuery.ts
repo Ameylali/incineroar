@@ -50,6 +50,7 @@ const usePokemonQuery = (name?: string) => {
     queryKey: PokemonKeys.pokemon(name),
     queryFn: () => getPokemon(name),
     staleTime: Infinity,
+    retry: 3,
   });
 };
 

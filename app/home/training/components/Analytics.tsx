@@ -71,7 +71,7 @@ const POKEMON_BASE_COLUMNS: TableProps<BattlePokemonAnalytics>['columns'] = [
     key: 'icon',
     dataIndex: 'pokemon',
     render: (pokemon: BattlePokemonAnalytics['pokemon']) => (
-      <PokemonSprite pokemon={pokemon} imageProps={{ width: 50, height: 50 }} />
+      <PokemonSprite pokemon={pokemon} width={50} height={50} />
     ),
   },
   {
@@ -175,10 +175,7 @@ const KoAnalyticsTable = ({ kos }: KoOrFaintAnalyticsTableProps) => {
       dataIndex: 'pokemon',
       key: 'icon',
       render: (pokemon: string) => (
-        <PokemonSprite
-          pokemon={pokemon}
-          imageProps={{ width: 50, height: 50 }}
-        />
+        <PokemonSprite pokemon={pokemon} width={50} height={50} />
       ),
     },
     {
@@ -272,10 +269,7 @@ const PokemonOrActionUsageList = ({
       renderItem={(item) => (
         <List.Item>
           {'pokemon' in item ? (
-            <PokemonSprite
-              pokemon={item.pokemon}
-              imageProps={{ width: 30, height: 30 }}
-            />
+            <PokemonSprite pokemon={item.pokemon} width={30} height={30} />
           ) : null}
           <span>
             {'pokemon' in item ? item.pokemon : item.action}: {item.count}

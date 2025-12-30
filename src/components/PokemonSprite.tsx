@@ -1,24 +1,40 @@
-import SkeletonAvatar from 'antd/es/skeleton/Avatar';
-import Image, { ImageProps } from 'next/image';
+import { FileImageOutlined } from '@ant-design/icons';
+import { Tooltip } from 'antd';
+import Image from 'next/image';
 
 import usePokemonQuery from '../hooks/usePokemonQuery';
 
 interface PokemonSpriteProps {
   pokemon?: string;
-  imageProps?: Omit<ImageProps, 'src' | 'alt'>;
+  width?: number | string;
+  height?: number | string;
 }
 
-const PokemonSprite = ({ pokemon, imageProps = {} }: PokemonSpriteProps) => {
+const PokemonSprite = ({
+  pokemon,
+  width = 'auto',
+  height = 'auto',
+}: PokemonSpriteProps) => {
   const { isLoading, isSuccess, data } = usePokemonQuery(pokemon);
+  const title = pokemon || 'unknown';
+
   if (isLoading || !isSuccess || !data.sprites.front_default) {
-    return <SkeletonAvatar active={isLoading} size="default" shape="circle" />;
+    return (
+      <Tooltip title={title}>
+        <FileImageOutlined style={{ fontSize: width }} />
+      </Tooltip>
+    );
   }
   return (
-    <Image
-      src={data.sprites.front_default}
-      alt={pokemon || 'unknown'}
-      {...imageProps}
-    />
+    <div style={{ width, height, position: 'relative' }}>
+      <Image
+        src={data.sprites.front_default}
+        alt={title}
+        title={title}
+        fill
+        style={{ objectFit: 'contain' }}
+      />
+    </div>
   );
 };
 
