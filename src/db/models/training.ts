@@ -25,35 +25,23 @@ const ActionTypeEnumList: Action['type'][] = [
 
 const PlayerEnumList: Action['player'][] = ['p1', 'p2', 'p3', 'p4'];
 
-const ActionSchema = new Schema<Action>(
-  {
-    index: { type: Number, required: true },
-    type: {
-      type: String,
-      requried: true,
-      enum: ActionTypeEnumList,
-    },
-    user: { type: String },
-    player: { type: String, enum: PlayerEnumList },
-    targets: [{ type: String, required: true }],
-    name: { type: String, required: true },
+const ActionSchema = new Schema<Action>({
+  index: { type: Number, required: true },
+  type: {
+    type: String,
+    requried: true,
+    enum: ActionTypeEnumList,
   },
-  {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  },
-);
+  user: { type: String },
+  player: { type: String, enum: PlayerEnumList },
+  targets: [{ type: String, required: true }],
+  name: { type: String, required: true },
+});
 
-const TurnSchema = new Schema<Turn>(
-  {
-    index: { type: Number, required: true },
-    actions: [{ type: ActionSchema, required: true }],
-  },
-  {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  },
-);
+const TurnSchema = new Schema<Turn>({
+  index: { type: Number, required: true },
+  actions: [{ type: ActionSchema, required: true }],
+});
 
 const BattleResultEnumList: Exclude<Battle['result'], undefined>[] = [
   'win',
@@ -81,8 +69,6 @@ export const BattleSchema = new Schema<Battle>(
   },
   {
     id: true,
-    toJSON: { virtuals: true, getters: true },
-    toObject: { virtuals: true, getters: true },
     timestamps: true,
   },
 );
@@ -100,8 +86,6 @@ export const TrainingSchema = new Schema<Training>(
   },
   {
     id: true,
-    toJSON: { virtuals: true, getters: true },
-    toObject: { virtuals: true, getters: true },
     timestamps: true,
   },
 );
@@ -216,8 +200,9 @@ export default class TrainingRepository implements CRUDRepository<Training> {
       ...battle,
     };
     const createdBattle = await this.battleRepository.create(battleData);
-    training.battles.push(createdBattle);
-    await training.save();
+    await this.model.findByIdAndUpdate(trainingId, {
+      $push: { battles: createdBattle.id },
+    });
     return createdBattle;
   }
 

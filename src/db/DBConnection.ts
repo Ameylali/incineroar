@@ -1,6 +1,24 @@
-import { connect, Mongoose } from 'mongoose';
+import mongoose, { connect, Mongoose } from 'mongoose';
 
 import { MissingConfigError, MissingDBConnectionError } from '../utils/errors';
+
+mongoose.set('toObject', {
+  virtuals: true,
+  getters: true,
+  transform: (_doc, ret) => {
+    const { _id, __v, ...rest } = ret;
+    return rest;
+  },
+});
+
+mongoose.set('toJSON', {
+  virtuals: true,
+  getters: true,
+  transform: (_doc, ret) => {
+    const { _id, __v, ...rest } = ret;
+    return rest;
+  },
+});
 
 export default class DBConnection {
   protected static connection?: Mongoose;

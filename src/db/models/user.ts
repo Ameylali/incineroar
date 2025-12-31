@@ -34,8 +34,6 @@ const UserSchema = new Schema<User>(
   },
   {
     id: true,
-    toJSON: { virtuals: true, getters: true },
-    toObject: { virtuals: true, getters: true },
     timestamps: true,
   },
 );
@@ -115,8 +113,9 @@ export default class UserRepository implements BaseRepository<User> {
     const user = await this.model.findById(id);
     if (!user) throw new UserNotFoundError(id);
     const createdTeam = await this.teamRepository.create(team);
-    user.teams.push(createdTeam);
-    await user.save();
+    await this.model.findByIdAndUpdate(id, {
+      $push: { teams: createdTeam.id },
+    });
     return createdTeam;
   }
 
@@ -149,8 +148,9 @@ export default class UserRepository implements BaseRepository<User> {
     const user = await this.model.findById(userId);
     if (!user) throw new UserNotFoundError(userId);
     const createdTraining = await this.trainingRepository.create(training);
-    user.trainings.push(createdTraining);
-    await user.save();
+    await this.model.findByIdAndUpdate(userId, {
+      $push: { trainings: createdTraining.id },
+    });
     return createdTraining;
   }
 

@@ -19,8 +19,6 @@ const TournamentTeamSchema = new Schema<TournamentTeam>(
   },
   {
     id: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
     virtuals: {
       team: {
         get: function (this: TournamentTeam) {
@@ -41,8 +39,6 @@ export const TournamentSchema = new Schema<Tournament>(
   },
   {
     id: true,
-    toJSON: { virtuals: true, getters: true },
-    toObject: { virtuals: true, getters: true },
     timestamps: true,
   },
 );
