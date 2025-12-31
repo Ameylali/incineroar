@@ -153,17 +153,19 @@ const AddOrEditTrainingModal = (props: AddOrEditTrainingModalProps) => {
 interface EditTrainingModalProps {
   closeModal: () => void;
   training?: Training | null;
+  isOpen?: boolean;
 }
 
 export const EditTrainingModal = ({
   closeModal,
   training,
+  isOpen,
 }: EditTrainingModalProps) => {
   const { isLoading, data } = useUserQuery();
   if (!training) return null;
   return (
     <AddOrEditTrainingModal
-      isOpen={true}
+      isOpen={isOpen ?? true}
       isLoading={isLoading}
       teams={data?.teams ?? []}
       closeModal={closeModal}

@@ -120,7 +120,7 @@ const TurnFormFields = ({
           <MinusCircleOutlined onClick={() => remove()} />
         </Flex>
       </Flex>
-      <FormList name={[baseName, 'actions']} initialValue={[defaultTurn]}>
+      <FormList name={[baseName, 'actions']}>
         {(fields, { add, remove, move }) => (
           <>
             {fields.map(({ key, name }, index) => (
@@ -278,7 +278,7 @@ const EditBattle = ({
       >
         <Input.TextArea rows={4} />
       </BattleFormItem>
-      <FormList name="turns" initialValue={[defaultTurn]}>
+      <FormList name="turns">
         {(fields, { add, remove, move }) => (
           <Flex gap={10} vertical>
             {fields.map(({ key, name }, index) => (
@@ -294,7 +294,7 @@ const EditBattle = ({
               <Button
                 type="dashed"
                 block
-                onClick={() => add()}
+                onClick={() => add(defaultTurn)}
                 icon={<PlusOutlined />}
               >
                 Add turn
