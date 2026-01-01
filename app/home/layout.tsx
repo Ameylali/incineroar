@@ -49,6 +49,8 @@ const ContentLayout = ({ children }: PropsWithChildren) => {
   );
 };
 
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
 import useBreadcrumbs from '@/src/hooks/useBreadcrumbs';
 
 import { signOut } from '../actions';
@@ -59,6 +61,7 @@ const ProvidersWrapper = ({ children }: Readonly<{ children: ReactNode }>) => {
       <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
         <StyleProvider layer>{children}</StyleProvider>
       </ConfigProvider>
+      {process.env.NEXT_PUBLIC_ENVIRONMENT === 'dev' && <ReactQueryDevtools />}
     </QueryClientProvider>
   );
 };

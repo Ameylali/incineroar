@@ -33,7 +33,7 @@ const PokemonUsageModal = ({
 }: PokemonUsageModalProps) => {
   return (
     <Modal open={isOpen} onCancel={closeModal} title={pokemon.species}>
-      <div className="max-h-[70vh] overflow-y-auto">
+      <div className="max-h-[70vh] overflow-y-scroll">
         <PokemonUsageCard pokemon={pokemon} />
       </div>
     </Modal>

@@ -35,7 +35,9 @@ const matchesPathname = (asPath: string, pathname: string) => {
   return basePathRegex.test(baseAsPath);
 };
 
-type BreadcrumbBuilder = (pathname: string) => Exclude<BreadcrumbProps['items'], undefined>;
+type BreadcrumbBuilder = (
+  pathname: string,
+) => Exclude<BreadcrumbProps['items'], undefined>;
 type BreadcrumItemOverrideMap = {
   [index: number]: React.FC<CustomBreadcrumbItemProps>;
 };
