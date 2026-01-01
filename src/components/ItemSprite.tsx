@@ -31,6 +31,8 @@ const ItemSprite = ({
         src={data.sprites.default}
         title={title}
         alt={title}
+        sizes={`${width}px`}
+        quality={100}
         fill
         style={{ objectFit: 'contain' }}
       />

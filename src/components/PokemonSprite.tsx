@@ -31,6 +31,8 @@ const PokemonSprite = ({
         src={data.sprites.front_default}
         alt={title}
         title={title}
+        sizes={`${width}px`}
+        quality={100}
         fill
         style={{ objectFit: 'contain' }}
       />
