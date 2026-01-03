@@ -178,9 +178,16 @@ export const editTraining = async (
 export type EditBattleFormActionState = FormActionState<EditBattleFormData>;
 
 const actionTypes: Action['type'][] = ['move', 'switch', 'ability', 'effect'];
+const playerTypes: Action['player'][] = ['p1', 'p2'];
 
 const actionFormDataSchema = z.object({
   index: z.number(),
+  player: z
+    .union(
+      playerTypes.map((val) => z.literal(val)),
+      'Invalid player',
+    )
+    .optional(),
   type: z.union(
     actionTypes.map((val) => z.literal(val)),
     'Invalid action type',

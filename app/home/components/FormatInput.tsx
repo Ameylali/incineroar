@@ -21,9 +21,12 @@ const FormatInput = ({
   return (
     <Compact block>
       <SelectWrapper name="season" noStyle>
-        <Select options={[...(additionalYearOptions ?? []), ...yearValues]} />
+        <Select
+          placeholder="Season"
+          options={[...(additionalYearOptions ?? []), ...yearValues]}
+        />
       </SelectWrapper>
-      <Input {...inputProps} />
+      <Input placeholder="Format" {...inputProps} />
     </Compact>
   );
 };

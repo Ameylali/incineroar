@@ -4,3 +4,9 @@ export const withKeys = <T>(data: T[]): (T & { key: number })[] => {
     key: index,
   }));
 };
+
+export const toOptions = (items: string[]) => {
+  return items.map((item) => ({
+    value: item,
+  }));
+};
