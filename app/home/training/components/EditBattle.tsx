@@ -31,9 +31,15 @@ import {
 } from 'react';
 
 import { TrainingKeys } from '@/src/constants/query-keys';
-import useAllPokemonQuery from '@/src/hooks/useAllPokemonQuery';
+import {
+  useAllAbilitiesQuery,
+  useAllItemsQuery,
+  useAllMovesQuery,
+  useAllPokemonQuery,
+} from '@/src/hooks/pokemon-queries';
 import useFormAction, { getValidateStatus } from '@/src/hooks/useFormAction';
 import AutocompleteService from '@/src/services/autocomplete';
+import { ActionKeyWords } from '@/src/services/pokemon/battle';
 import { Action, Battle, Team, Turn } from '@/src/types/api';
 import { EditBattleFormData } from '@/src/types/form';
 import { toOptions } from '@/src/utils/antd-adapters';
@@ -45,9 +51,19 @@ import { editBattle } from '../actions';
 const BattleForm = Form<EditBattleFormData>;
 const BattleFormItem = FormItem<EditBattleFormData>;
 const ActionFormItem = FormItem<Action[]>;
+const defaultAction: Action = {
+  index: 0,
+  name: '',
+  type: 'move',
+  user: '',
+  targets: [],
+};
 
 interface IEditBattleFormContext {
-  autocompleteService?: AutocompleteService;
+  pokemonAutocomplete?: AutocompleteService;
+  moveAutocomplete?: AutocompleteService;
+  abilityAutocomplete?: AutocompleteService;
+  actionNameAutocomplete?: AutocompleteService;
   form?: FormInstance<EditBattleFormData>;
 }
 
@@ -94,7 +110,7 @@ const usePokemonAutocomplete = (
   value?: string,
   player?: Action['player'] | null | 'all',
 ) => {
-  const { autocompleteService, form } = useContext(EditBattleFormContext);
+  const { pokemonAutocomplete, form } = useContext(EditBattleFormContext);
   const turns = useWatch(['turns'], form);
   const pokemonP1 = useFilteredPokemon(turns, 'p1');
   const pokemonP2 = useFilteredPokemon(turns, 'p2');
@@ -105,9 +121,9 @@ const usePokemonAutocomplete = (
         player,
         pokemonP1,
         pokemonP2,
-        autocompleteService,
+        pokemonAutocomplete,
       }),
-    [value, pokemonP1, pokemonP2, autocompleteService, player],
+    [value, pokemonP1, pokemonP2, pokemonAutocomplete, player],
   );
   const [options, setOptions] = useState<string[]>([]);
   const [, startTransition] = useTransition();
@@ -119,7 +135,7 @@ const usePokemonAutocomplete = (
     options,
     setOptions,
     startTransition,
-    autocompleteService,
+    pokemonAutocomplete,
   };
 };
 
@@ -145,13 +161,13 @@ const getOptions = ({
   player,
   pokemonP1,
   pokemonP2,
-  autocompleteService,
+  pokemonAutocomplete,
 }: {
   searchText: string;
   player?: Action['player'] | null | 'all';
   pokemonP1: string[];
   pokemonP2: string[];
-  autocompleteService?: AutocompleteService;
+  pokemonAutocomplete?: AutocompleteService;
 }) => {
   const list: string[] = [];
   const playerTag = searchText.includes(':')
@@ -161,19 +177,19 @@ const getOptions = ({
   if (playerTag === 'p1' || playerTag === 'all') {
     list.push(
       ...pokemonP1
-        .filter((name) => autocompleteService?.hasWord(name) ?? false)
+        .filter((name) => pokemonAutocomplete?.hasWord(name) ?? false)
         .map((name) => (playerTag === 'all' ? 'p1:' : '') + name),
     );
   }
   if (playerTag === 'p2' || playerTag === 'all') {
     list.push(
       ...pokemonP2
-        .filter((name) => autocompleteService?.hasWord(name) ?? false)
+        .filter((name) => pokemonAutocomplete?.hasWord(name) ?? false)
         .map((name) => (playerTag === 'all' ? 'p2' : '') + name),
     );
   }
-  if (autocompleteService && searchPokemon.length >= 2) {
-    list.push(...(autocompleteService.getSuggestions(searchPokemon) ?? []));
+  if (pokemonAutocomplete && searchPokemon.length >= 2) {
+    list.push(...(pokemonAutocomplete.getSuggestions(searchPokemon) ?? []));
   }
   return Array.from(new Set(list));
 };
@@ -191,7 +207,7 @@ const PokemonMultiSelect = ({ value, onChange }: PokemonMultiSelectProps) => {
     options,
     pokemonP1,
     pokemonP2,
-    autocompleteService,
+    pokemonAutocomplete,
   } = usePokemonAutocomplete('', 'all');
 
   const onSearch: SelectProps['onSearch'] = (searchText) => {
@@ -201,7 +217,7 @@ const PokemonMultiSelect = ({ value, onChange }: PokemonMultiSelectProps) => {
         searchText,
         pokemonP1,
         pokemonP2,
-        autocompleteService,
+        pokemonAutocomplete,
       });
       if (tag) {
         for (let i = 0; i < list.length; i++) {
@@ -233,7 +249,7 @@ const PokemonInput = ({ player, value, onChange }: PokemonInputProps) => {
     options,
     pokemonP1,
     pokemonP2,
-    autocompleteService,
+    pokemonAutocomplete,
   } = usePokemonAutocomplete(value, player);
 
   const onSearch: SelectProps['onSearch'] = (searchText) => {
@@ -243,7 +259,7 @@ const PokemonInput = ({ player, value, onChange }: PokemonInputProps) => {
         player,
         pokemonP1,
         pokemonP2,
-        autocompleteService,
+        pokemonAutocomplete,
       });
       setOptions(list);
     });
@@ -254,6 +270,51 @@ const PokemonInput = ({ player, value, onChange }: PokemonInputProps) => {
       value={value}
       onChange={(val) => withTagOnChange(val, value, onChange)}
       options={toOptions(options.length > 0 ? options : baseOptions)}
+      onSearch={onSearch}
+      className="min-w-[200px]"
+      autoFocus
+    />
+  );
+};
+
+interface ActionNameAutocomplteteProps {
+  value?: string;
+  onChange?: (value: string) => void;
+  type?: Action['type'];
+}
+
+const ActionNameAutocomplete = ({
+  value,
+  onChange,
+  type,
+}: ActionNameAutocomplteteProps) => {
+  const { actionNameAutocomplete, moveAutocomplete, abilityAutocomplete } =
+    useContext(EditBattleFormContext);
+  const [options, setOptions] = useState<string[]>([]);
+
+  const onSearch: SelectProps['onSearch'] = (searchText) => {
+    if (type === 'move' && moveAutocomplete) {
+      const list = moveAutocomplete.getSuggestions(searchText) ?? [];
+      setOptions(list);
+      return;
+    }
+    if (type === 'ability' && abilityAutocomplete) {
+      const list = abilityAutocomplete.getSuggestions(searchText) ?? [];
+      setOptions(list);
+      return;
+    }
+    if (actionNameAutocomplete) {
+      const list = actionNameAutocomplete.getSuggestions(searchText) ?? [];
+      setOptions(list);
+      return;
+    }
+  };
+
+  return (
+    <AutoComplete
+      value={value}
+      onChange={onChange}
+      options={toOptions(options)}
       onSearch={onSearch}
       className="min-w-[200px]"
     />
@@ -268,6 +329,32 @@ interface ActionFormFieldsProps {
   move: (from: number, to: number) => void;
 }
 
+const typeOptions: SelectProps['options'] = [
+  {
+    value: 'move',
+  },
+  {
+    value: 'effect',
+  },
+  {
+    value: 'ability',
+  },
+  {
+    value: 'switch',
+  },
+];
+const playerOptions: SelectProps['options'] = [
+  {
+    value: null,
+  },
+  {
+    value: 'p1',
+  },
+  {
+    value: 'p2',
+  },
+];
+
 const ActionFormFields = ({
   namePrefix,
   name: baseName,
@@ -280,31 +367,10 @@ const ActionFormFields = ({
     [...(namePrefix ?? []), baseName, 'player'],
     form,
   ) as Action['player'];
-  const typeOptions: SelectProps['options'] = [
-    {
-      value: 'move',
-    },
-    {
-      value: 'effect',
-    },
-    {
-      value: 'ability',
-    },
-    {
-      value: 'switch',
-    },
-  ];
-  const playerOptions: SelectProps['options'] = [
-    {
-      value: null,
-    },
-    {
-      value: 'p1',
-    },
-    {
-      value: 'p2',
-    },
-  ];
+  const type = useWatch(
+    [...(namePrefix ?? []), baseName, 'type'],
+    form,
+  ) as Action['type'];
 
   return (
     <Flex justify="space-between">
@@ -318,7 +384,7 @@ const ActionFormFields = ({
         <Select options={typeOptions} />
       </ActionFormItem>
       <ActionFormItem name={[baseName, 'name']} label="Name">
-        <Input />
+        <ActionNameAutocomplete type={type} />
       </ActionFormItem>
       <ActionFormItem name={[baseName, 'targets']} label="Targets">
         <PokemonMultiSelect />
@@ -349,13 +415,6 @@ const TurnFormFields = ({
   remove,
   move,
 }: TurnFormFieldsProps) => {
-  const defaultTurn: Action = {
-    index: 0,
-    name: '',
-    type: 'move',
-    user: '',
-    targets: [],
-  };
   return (
     <Card>
       <Flex className="mb-3" justify="space-between">
@@ -383,7 +442,7 @@ const TurnFormFields = ({
               <Button
                 type="dashed"
                 block
-                onClick={() => add(defaultTurn)}
+                onClick={() => add(defaultAction)}
                 icon={<PlusOutlined />}
               >
                 Add action
@@ -404,6 +463,118 @@ interface EditBattleProps {
   onSuccess?: () => void;
 }
 
+const resultOptions = [
+  {
+    value: null,
+  },
+  {
+    value: 'win',
+  },
+  {
+    value: 'loose',
+  },
+  {
+    value: 'tie',
+  },
+];
+
+const defaultTurn: Turn = {
+  index: 0,
+  actions: [defaultAction],
+};
+
+const useActionNameAutocomplete = (): AutocompleteService => {
+  const { data: allItems } = useAllItemsQuery();
+
+  const actionNameAutocomplete = useMemo(() => {
+    const data: string[] = [];
+    if (allItems) {
+      data.push(...allItems.map((item) => `item:${item}`));
+    }
+    const keyWords = [
+      ActionKeyWords.FAINTED,
+      `${ActionKeyWords.WEATHER} ended`,
+      ActionKeyWords.CRIT,
+      ActionKeyWords.Z_MOVE,
+      ActionKeyWords.MEGA,
+      ActionKeyWords.FORME,
+    ];
+    data.push(...keyWords);
+    const STATUSES = ['slp', 'par', 'frz', 'brn', 'psn', 'tox', 'confusion'];
+    STATUSES.forEach((status) => {
+      data.push(`${status} ${ActionKeyWords.AFFECTED}`);
+      data.push(`${ActionKeyWords.CURED} ${status}`);
+    });
+    const WEATHERS = ['sun', 'rain', 'sandstorm', 'hail'];
+    WEATHERS.forEach((weather) => {
+      data.push(`${ActionKeyWords.WEATHER} ${weather}`);
+    });
+    const TYPES = [
+      'normal',
+      'fire',
+      'water',
+      'electric',
+      'grass',
+      'ice',
+      'fighting',
+      'poison',
+      'ground',
+      'flying',
+      'psychic',
+      'bug',
+      'rock',
+      'ghost',
+      'dragon',
+      'dark',
+      'steel',
+      'fairy',
+      'stellar',
+    ];
+    TYPES.forEach((type) => {
+      data.push(`${ActionKeyWords.TERA} ${type}`);
+    });
+    const STATS = ['atk', 'def', 'spa', 'spd', 'spe', 'accuracy', 'evasion'];
+    STATS.forEach((stat) => {
+      [1, 2, 3, 4, 5, 6].forEach((stage) => {
+        data.push(`${stat} ${ActionKeyWords.BOOST_INCREASED} ${stage}`);
+        data.push(`${stat} ${ActionKeyWords.BOOST_CHANGED} ${stage}`);
+        data.push(`${stat} ${ActionKeyWords.BOOST_DECREASED} ${stage}`);
+      });
+    });
+    const EFFECTS = [
+      'gravity',
+      'grassy terrain',
+      'misty terrain',
+      'electric terrain',
+      'psychic terrain',
+      'trick room',
+      'tailwind',
+      'reflect',
+      'light screen',
+      'safeguard',
+      'substitute',
+      'leech seed',
+      'heal block',
+      'perish song',
+      'encore',
+      'disable',
+      'aqua ring',
+      'focus energy',
+      'ingrain',
+      'wish',
+      'nightmare',
+      'curse',
+    ];
+    EFFECTS.forEach((effect) => {
+      data.push(`${effect} ${ActionKeyWords.STARTED}`);
+      data.push(`${effect} ${ActionKeyWords.ENDED}`);
+    });
+    return new AutocompleteService(data);
+  }, [allItems]);
+
+  return actionNameAutocomplete;
+};
+
 const EditBattle = ({
   battle,
   teams,
@@ -422,41 +593,27 @@ const EditBattle = ({
       { success: false, data: initialData },
       editBattle,
     );
-  const { data } = useAllPokemonQuery();
-  const autocompleteService = useMemo(
-    () => new AutocompleteService(data ?? []),
-    [data],
+  const { data: allPokemon } = useAllPokemonQuery();
+  const { data: allMoves } = useAllMovesQuery();
+  const { data: allAbilities } = useAllAbilitiesQuery();
+  const pokemonAutocomplete = useMemo(
+    () => new AutocompleteService(allPokemon ?? []),
+    [allPokemon],
   );
+  const moveAutocomplete = useMemo(
+    () => new AutocompleteService(allMoves ?? []),
+    [allMoves],
+  );
+  const abilityAutocomplete = useMemo(
+    () => new AutocompleteService(allAbilities ?? []),
+    [allAbilities],
+  );
+  const actionNameAutocomplete = useActionNameAutocomplete();
   const teamsItems: SelectProps['options'] = teams.map(({ name, id }) => ({
     label: name,
     value: id,
   }));
-  const defaultTurn: Turn = {
-    index: 0,
-    actions: [
-      {
-        index: 0,
-        name: '',
-        type: 'move',
-        user: '',
-        targets: [],
-      },
-    ],
-  };
-  const resultOptions = [
-    {
-      value: null,
-    },
-    {
-      value: 'win',
-    },
-    {
-      value: 'loose',
-    },
-    {
-      value: 'tie',
-    },
-  ];
+
   const interceptOnFinish = (data: EditBattleFormData) => {
     data.trainingId = trainingId;
     data.id = battle.id;
@@ -488,7 +645,10 @@ const EditBattle = ({
     <EditBattleFormContext.Provider
       value={{
         form,
-        autocompleteService,
+        pokemonAutocomplete,
+        moveAutocomplete,
+        abilityAutocomplete,
+        actionNameAutocomplete,
       }}
     >
       <BattleForm

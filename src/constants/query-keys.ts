@@ -7,6 +7,9 @@ export const PokemonKeys = {
   pokemon: (name?: string) => ['pokemon', name] as const,
   item: (item?: string) => ['item', item] as const,
   allPokemon: () => ['all-pokemon'] as const,
+  allMoves: () => ['all-moves'] as const,
+  allItems: () => ['all-items'] as const,
+  allAbilities: () => ['all-abilities'] as const,
 };
 
 export const MetagameKeys = {
