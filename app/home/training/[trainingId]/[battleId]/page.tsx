@@ -1,7 +1,7 @@
 'use client';
 
 import { EditOutlined } from '@ant-design/icons';
-import { Button, Card, Flex } from 'antd';
+import { Button, Card, Flex, Tag } from 'antd';
 import Text from 'antd/es/typography/Text';
 import Title from 'antd/es/typography/Title';
 import { usePathname, useRouter } from 'next/navigation';
@@ -52,7 +52,12 @@ const Page = ({
         <Title level={2}>{battle.name}</Title>
         <Button icon={<EditOutlined />} onClick={() => setIsEdit(true)} />
       </Flex>
-      {battle.result && <Text>{`Result: ${battle.result}`}</Text>}
+      {battle.result && (
+        <Text className="mb-3 block">
+          {'Result: '}
+          <Tag>{battle.result}</Tag>
+        </Text>
+      )}
       <Flex className="mb-3" justify="space-between">
         {battle.season && battle.format && (
           <Text>{`${battle.season} - ${battle.format}`}</Text>
