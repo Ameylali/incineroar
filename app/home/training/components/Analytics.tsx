@@ -37,6 +37,8 @@ export const TrainingMatchupAnalyticsTable = ({
       title: 'Usage',
       dataIndex: 'usageCount',
       key: 'usage',
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => a.usageCount - b.usageCount,
     },
     {
       title: 'Results',
@@ -94,6 +96,8 @@ export const TrainingPokemonAnalyticsTable = ({
       title: 'Usage',
       dataIndex: 'usageCount',
       key: 'usage',
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => a.usageCount - b.usageCount,
     },
   ];
   return <Table dataSource={withKeys(pokemonAnalytics)} columns={COLUMNS} />;
@@ -114,11 +118,15 @@ const MovesAnalyticsTable = ({ moves }: MovesAnalyticsTableProps) => {
       title: 'Average Usage',
       dataIndex: 'averageUsage',
       key: 'averageUsage',
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => a.averageUsage - b.averageUsage,
     },
     {
       title: 'Average Usage By Match',
       dataIndex: 'averageUsageByMatch',
       key: 'averageUsageByMatch',
+      defaultSortOrder: 'ascend',
+      sorter: (a, b) => a.averageUsageByMatch - b.averageUsageByMatch,
     },
   ];
   return <Table dataSource={withKeys(moves)} columns={COLUMNS} />;
@@ -170,7 +178,10 @@ interface KoOrFaintAnalyticsTableProps {
 }
 
 const KoAnalyticsTable = ({ kos }: KoOrFaintAnalyticsTableProps) => {
-  const COLUMNS: TableProps['columns'] = [
+  const TableC = Table<PokemonKoOrFaintAnalytics['matchups'][0]>;
+  const COLUMNS: TableProps<
+    PokemonKoOrFaintAnalytics['matchups'][0]
+  >['columns'] = [
     {
       dataIndex: 'pokemon',
       key: 'icon',
@@ -187,9 +198,11 @@ const KoAnalyticsTable = ({ kos }: KoOrFaintAnalyticsTableProps) => {
       title: 'Count',
       dataIndex: 'count',
       key: 'count',
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => a.count - b.count,
     },
   ];
-  return <Table dataSource={withKeys(kos)} columns={COLUMNS} />;
+  return <TableC dataSource={withKeys(kos)} columns={COLUMNS} />;
 };
 
 interface TrainingPokemonKoOrFaintAnalyticsTableProps
@@ -208,6 +221,9 @@ export const TrainingPokemonKoOrFaintAnalyticsTable = ({
       title: 'Total ' + columnTitle,
       dataIndex: ['performance', dataIndex, 'count'],
       key: 'total' + columnTitle,
+      defaultSortOrder: 'descend',
+      sorter: (a, b) =>
+        a.performance[dataIndex].count - b.performance[dataIndex].count,
     },
   ];
   return (
@@ -232,16 +248,19 @@ interface TurnMapTableProps {
 }
 
 export const TurnMapTable = ({ turnMap }: TurnMapTableProps) => {
-  const COLUMNS: TableProps['columns'] = [
+  const COLUMNS: TableProps<TurnMap>['columns'] = [
     {
       title: 'Turn',
       dataIndex: 'turn',
       key: 'turn',
+      defaultSortOrder: 'ascend',
+      sorter: (a, b) => a.turn - b.turn,
     },
     {
       title: 'Count',
       dataIndex: 'count',
       key: 'count',
+      sorter: (a, b) => a.count - b.count,
     },
   ];
   return <Table dataSource={withKeys(turnMap)} columns={COLUMNS} />;
@@ -304,7 +323,10 @@ export const TrainingPokemonKeyActionsTable = ({
       dataIndex: 'pokemonUsage',
       key: 'pokemonUsage',
       render: (pokemonUsage: PokemonKeyActionAnalytics['pokemonUsage']) => (
-        <PokemonOrActionUsageList usage={pokemonUsage} label="Pokemon" />
+        <PokemonOrActionUsageList
+          usage={pokemonUsage.sort((a, b) => b.count - a.count)}
+          label="Pokemon"
+        />
       ),
     },
     {
@@ -312,7 +334,10 @@ export const TrainingPokemonKeyActionsTable = ({
       dataIndex: 'actionUsage',
       key: 'actionUsage',
       render: (actionUsage: PokemonKeyActionAnalytics['actionUsage']) => (
-        <PokemonOrActionUsageList usage={actionUsage} label="Actions" />
+        <PokemonOrActionUsageList
+          usage={actionUsage.sort((a, b) => b.count - a.count)}
+          label="Actions"
+        />
       ),
     },
   ];

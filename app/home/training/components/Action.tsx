@@ -74,7 +74,7 @@ const formatText = (text: string) => {
     }
     formatted.push(<span> </span>);
   }
-  
+
   void formatted.pop(); // Remove last space
   return formatted;
 };

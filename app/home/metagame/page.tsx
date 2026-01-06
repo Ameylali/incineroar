@@ -65,7 +65,11 @@ const Page = () => {
           <TournamentsTable
             loading={isLoading}
             columns={COLUMNS}
-            dataSource={withKeys(data.tournaments)}
+            dataSource={withKeys(
+              data.tournaments.sort((a, b) =>
+                b.createdAt.localeCompare(a.createdAt),
+              ),
+            )}
           />
         </Col>
       </Row>

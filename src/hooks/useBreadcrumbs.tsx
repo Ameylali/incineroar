@@ -86,10 +86,10 @@ const PATHS_TO_BUILDER_MAP: { [key: string]: BreadcrumbBuilder } = {
   '/home/training': SimpleBreadcrumbs,
   '/home/training/[trainingId]': (pathname) =>
     SimpleBreadcrumbs(pathname, { 2: TrainingIdItem }),
-  '/home/training/[trainingId]/[battleId]': (pathname) =>
-    SimpleBreadcrumbs(pathname, { 2: TrainingIdItem, 3: BattleIdItem }),
   '/home/training/[trainingId]/analyze': (pathname) =>
     SimpleBreadcrumbs(pathname, { 2: TrainingIdItem }),
+  '/home/training/[trainingId]/[battleId]': (pathname) =>
+    SimpleBreadcrumbs(pathname, { 2: TrainingIdItem, 3: BattleIdItem }),
 };
 const getBreadcrumbs = (pathname: string) => {
   for (const asPath in PATHS_TO_BUILDER_MAP) {

@@ -41,7 +41,9 @@ interface BattlesTabProps {
 const BattlesTab = ({ training }: BattlesTabProps) => {
   return (
     <TrainingsOrBattlesTable
-      trainingsAndBattles={training.battles}
+      trainingsAndBattles={training.battles.sort((a, b) =>
+        b.createdAt.localeCompare(a.createdAt),
+      )}
       onEditTraining={() => {}}
       training={training}
     />

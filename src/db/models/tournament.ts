@@ -75,7 +75,7 @@ export default class TournamentRepository
 
   async getAll(): Promise<Tournament[]> {
     const tournaments = await this.model.find();
-    return tournaments.map((t) => t.toObject()).reverse();
+    return tournaments.map((t) => t.toObject());
   }
 }
 

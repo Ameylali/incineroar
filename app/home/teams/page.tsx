@@ -92,7 +92,9 @@ const Page = () => {
           <TeamsTable
             loading={isLoading}
             columns={COLUMNS}
-            dataSource={withKeys(data.teams)}
+            dataSource={withKeys(
+              data.teams.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+            )}
           />
         </Col>
       </Row>
