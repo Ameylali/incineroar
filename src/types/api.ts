@@ -15,6 +15,8 @@ export interface Team {
 export type CreateTeamData = Omit<Team, 'id' | 'parsedTeam' | 'createdAt'>;
 export type UpdateTeamData = Omit<Team, 'parsedTeam' | 'createdAt'>;
 
+type Role = 'user' | 'admin';
+
 export interface User {
   id: string;
   username: string;
@@ -22,13 +24,14 @@ export interface User {
   teams: Team[];
   trainings: Training[];
   createdAt: string;
+  role: Role;
 }
 
 export type SignUpData = Pick<User, 'username' | 'password'>;
 
 export type SignInData = Pick<SignUpData, 'username' | 'password'>;
 
-export type UnsensitiveUserData = Pick<User, 'username' | 'id'>;
+export type UnsensitiveUserData = Pick<User, 'username' | 'id' | 'role'>;
 
 export type ExposedUser = Omit<User, 'password' | 'trainings'>;
 

@@ -81,6 +81,7 @@ const PATHS_TO_BUILDER_MAP: { [key: string]: BreadcrumbBuilder } = {
   '/home/teams/[id]': (pathname) =>
     SimpleBreadcrumbs(pathname, { 2: TeamIdItem }),
   '/home/metagame': SimpleBreadcrumbs,
+  '/home/metagame/admin': SimpleBreadcrumbs,
   '/home/metagame/[id]': (pathname) =>
     SimpleBreadcrumbs(pathname, { 2: MetagameIdItem }),
   '/home/training': SimpleBreadcrumbs,

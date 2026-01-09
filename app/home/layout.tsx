@@ -1,24 +1,12 @@
 'use client';
 
-import { StyleProvider } from '@ant-design/cssinjs';
 import {
   DotChartOutlined,
   FileDoneOutlined,
   LogoutOutlined,
   ReconciliationOutlined,
 } from '@ant-design/icons';
-import { QueryClientProvider } from '@tanstack/react-query';
-import {
-  Breadcrumb,
-  Col,
-  ConfigProvider,
-  Flex,
-  Layout,
-  Menu,
-  MenuProps,
-  Row,
-  theme,
-} from 'antd';
+import { Breadcrumb, Col, Flex, Layout, Menu, MenuProps, Row } from 'antd';
 import { Content } from 'antd/es/layout/layout';
 import Sider from 'antd/es/layout/Sider';
 import Title from 'antd/es/typography/Title';
@@ -28,7 +16,10 @@ import { PropsWithChildren, ReactNode, useState } from 'react';
 
 import foLabsLogo from '@/public/fo-labs.svg';
 import pokeballIcon from '@/public/pokeball.svg';
-import { queryClient } from '@/src/utils/query-clients';
+import useBreadcrumbs from '@/src/hooks/useBreadcrumbs';
+import useUserQuery from '@/src/hooks/useUserQuery';
+
+import { signOut } from '../actions';
 
 const ContentLayout = ({ children }: PropsWithChildren) => {
   const breadcrumbs = useBreadcrumbs();
@@ -49,26 +40,10 @@ const ContentLayout = ({ children }: PropsWithChildren) => {
   );
 };
 
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-
-import useBreadcrumbs from '@/src/hooks/useBreadcrumbs';
-
-import { signOut } from '../actions';
-
-const ProvidersWrapper = ({ children }: Readonly<{ children: ReactNode }>) => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
-        <StyleProvider layer>{children}</StyleProvider>
-      </ConfigProvider>
-      {process.env.NEXT_PUBLIC_ENVIRONMENT === 'dev' && <ReactQueryDevtools />}
-    </QueryClientProvider>
-  );
-};
-
 const AppLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   const [collapsed, setCollapsed] = useState(false);
   const router = useRouter();
+  const { data: user } = useUserQuery();
 
   const UpperMenuItems: MenuProps['items'] = [
     {
@@ -89,11 +64,20 @@ const AppLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
       icon: <ReconciliationOutlined />,
       onClick: () => router.push('/home/training'),
     },
-    {
-      label: 'Team judge',
-      key: 'team-judge',
-      icon: <FileDoneOutlined />,
-    },
+    user.role === 'admin'
+      ? {
+          label: 'Admin',
+          key: 'team-judge',
+          icon: <FileDoneOutlined />,
+          children: [
+            {
+              label: 'Metagame',
+              key: 'admin-metagame',
+              onClick: () => router.push('/home/metagame/admin'),
+            },
+          ],
+        }
+      : null,
   ];
 
   const LowerMenuItems: MenuProps['items'] = [
@@ -106,40 +90,38 @@ const AppLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   ];
 
   return (
-    <ProvidersWrapper>
-      <Layout className="flex h-dvh flex-row">
-        <Sider
-          width={180}
-          collapsible
-          collapsed={collapsed}
-          onCollapse={(value) => setCollapsed(value)}
-        >
-          <Flex vertical justify="space-between" className="h-full">
-            <Flex vertical className="pt-2">
-              {collapsed ? (
-                <Image
-                  className="self-center"
-                  src={foLabsLogo as string}
-                  alt="fakeout labs"
-                  width={30}
-                />
-              ) : (
-                <Title className="ml-3 text-white">FakeOut Labs</Title>
-              )}
-              <Menu theme="dark" mode="inline" items={UpperMenuItems} />
-            </Flex>
-            <Flex vertical>
-              <Menu theme="dark" mode="inline" items={LowerMenuItems} />
-            </Flex>
+    <Layout className="flex h-dvh flex-row">
+      <Sider
+        width={180}
+        collapsible
+        collapsed={collapsed}
+        onCollapse={(value) => setCollapsed(value)}
+      >
+        <Flex vertical justify="space-between" className="h-full">
+          <Flex vertical className="pt-2">
+            {collapsed ? (
+              <Image
+                className="self-center"
+                src={foLabsLogo as string}
+                alt="fakeout labs"
+                width={30}
+              />
+            ) : (
+              <Title className="ml-3 text-white">FakeOut Labs</Title>
+            )}
+            <Menu theme="dark" mode="inline" items={UpperMenuItems} />
           </Flex>
-        </Sider>
-        <Layout>
-          <Content className="h-full p-3">
-            <ContentLayout>{children}</ContentLayout>
-          </Content>
-        </Layout>
+          <Flex vertical>
+            <Menu theme="dark" mode="inline" items={LowerMenuItems} />
+          </Flex>
+        </Flex>
+      </Sider>
+      <Layout>
+        <Content className="h-full p-3">
+          <ContentLayout>{children}</ContentLayout>
+        </Content>
       </Layout>
-    </ProvidersWrapper>
+    </Layout>
   );
 };
 

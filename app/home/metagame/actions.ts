@@ -60,7 +60,15 @@ export const createTournament = async (
 
   try {
     await DBConnection.connect();
-    await verifyUserAuth();
+    const { role } = await verifyUserAuth();
+
+    if (role !== 'admin') {
+      return {
+        success: false,
+        data: validatedFields.data,
+        error: 'Unauthorized',
+      };
+    }
 
     const tournamentRepo = new TournamentRepository();
     if (validatedFields.data.source === 'pokedata_url') {

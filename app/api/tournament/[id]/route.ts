@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { verifyUserAuth } from '@/src/actions/auth';
+import { UnauthorizedError, verifyUserAuth } from '@/src/actions/auth';
 import { baseErrorHandler } from '@/src/actions/error-handlers';
 import DBConnection from '@/src/db/DBConnection';
 import TournamentRepository, {
@@ -50,7 +50,11 @@ export const DELETE = async (
 ): Promise<NextResponse<DELETE_TOURNAMENT | ErrorResponse>> => {
   try {
     await DBConnection.connect();
-    await verifyUserAuth();
+    const { role } = await verifyUserAuth();
+
+    if (role !== 'admin') {
+      throw new UnauthorizedError();
+    }
 
     const tournamentRepo = new TournamentRepository();
 

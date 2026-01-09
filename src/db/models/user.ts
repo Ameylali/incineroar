@@ -1,6 +1,7 @@
 import { compare, hash } from 'bcrypt';
 import { Model, models, Schema } from 'mongoose';
 
+import { TupleUnion } from '@/src/types';
 import {
   Battle,
   CreateBattleData,
@@ -25,12 +26,15 @@ import TrainingRepository, {
 
 const UserModelName = 'User';
 
+const UserRoleEnumList: TupleUnion<User['role']> = ['user', 'admin'];
+
 const UserSchema = new Schema<User>(
   {
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     teams: [{ type: Schema.Types.ObjectId, ref: TeamModelName }],
     trainings: [{ type: Schema.Types.ObjectId, ref: TrainingModelName }],
+    role: { type: String, required: true, enum: UserRoleEnumList },
   },
   {
     id: true,
@@ -64,7 +68,7 @@ export default class UserRepository implements BaseRepository<User> {
     return user.toObject();
   }
 
-  async create(user: SignUpData) {
+  async create(user: SignUpData, role?: User['role']) {
     const sameUsernameCount = await this.model.countDocuments({
       username: new RegExp(user.username, 'i'),
     });
@@ -77,7 +81,9 @@ export default class UserRepository implements BaseRepository<User> {
       description: '',
     };
     const createdUser = await this.model.create({
-      ...user,
+      username: user.username,
+      password: user.password,
+      role: role ?? 'user',
       teams: [],
       trainings: [],
     });
@@ -106,7 +112,7 @@ export default class UserRepository implements BaseRepository<User> {
       return undefined;
     }
 
-    return { username, id: user.id as string };
+    return { username, id: user.id as string, role: user.role };
   }
 
   async addNewTeam(id: string, team: CreateTeamData): Promise<Team> {

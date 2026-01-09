@@ -37,4 +37,8 @@ export default class DBConnection {
     }
     return DBConnection.connection;
   }
+
+  static async close() {
+    await DBConnection.connection?.connection.close();
+  }
 }

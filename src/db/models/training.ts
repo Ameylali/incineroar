@@ -1,5 +1,6 @@
 import { Model, models, Schema } from 'mongoose';
 
+import { TupleUnion } from '@/src/types';
 import {
   Action,
   Battle,
@@ -16,14 +17,19 @@ import { TeamModelName } from './team';
 export const TrainingModelName = 'Training';
 export const BattleModelName = 'Battle';
 
-const ActionTypeEnumList: Action['type'][] = [
+const ActionTypeEnumList: TupleUnion<Action['type']> = [
   'move',
   'switch',
   'ability',
   'effect',
 ];
 
-const PlayerEnumList: Action['player'][] = ['p1', 'p2', 'p3', 'p4'];
+const PlayerEnumList: TupleUnion<Exclude<Action['player'], undefined>> = [
+  'p1',
+  'p2',
+  'p3',
+  'p4',
+];
 
 const ActionSchema = new Schema<Action>({
   index: { type: Number, required: true },
@@ -43,7 +49,7 @@ const TurnSchema = new Schema<Turn>({
   actions: [{ type: ActionSchema, required: true }],
 });
 
-const BattleResultEnumList: Exclude<Battle['result'], undefined>[] = [
+const BattleResultEnumList: TupleUnion<Exclude<Battle['result'], undefined>> = [
   'win',
   'loose',
   'tie',
