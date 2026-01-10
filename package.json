@@ -13,7 +13,8 @@
     "db:run": "docker start incineroar-db 2>/dev/null || docker run -d -p 27017:27017 --name incineroar-db incineroar-db-image:$(npm pkg get version | tr -d '\"')",
     "genmocks": "tsx ./scripts/gen-antd-mocks.ts",
     "compile": "npx tsc --noEmit",
-    "seed": "tsx --env-file=.env ./scripts/seed.ts"
+    "seed": "tsx --env-file=.env ./scripts/seed.ts",
+    "test:e2e": "cd e2e && uv run pytest"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^1.24.0",

@@ -1,0 +1,22 @@
+[project]
+name = "incineroar-e2e"
+version = "0.1.0"
+description = "E2E testing for incineroar"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pytest>=9.0.2",
+    "pytest-playwright>=0.7.2",
+    "python-dotenv>=1.2.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+lint.select = ["I"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.11",
+]

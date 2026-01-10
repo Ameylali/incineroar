@@ -1,0 +1,24 @@
+# Playwright-specific
+test-results/
+playwright-report/
+blob-report/
+playwright/.auth/
+*.json-report
+
+# Authentication and Secrets
+.env
+auth.json
+
+# Standard Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# IDE and System
+.vscode/
+.idea/
+.DS_Store
