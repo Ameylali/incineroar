@@ -1,0 +1,16 @@
+{
+  "users": [
+  {
+    "username": "arceus",
+    "role": "admin"
+  },
+  {
+    "username": "mew",
+    "role": "admin"
+  },
+  {
+    "username": "mewtwo",
+    "role": "user"
+  }
+]
+}

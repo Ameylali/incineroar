@@ -1,28 +1,19 @@
+import data from '@/data/users.json';
 import DBConnection from '@/src/db/DBConnection';
 import UserRepository, { UserAlreadyExistsError } from '@/src/db/models/user';
 import { SignUpData, User } from '@/src/types/api';
 
 const baseUsersPasswords: Record<string, string | undefined> = JSON.parse(
-  process.env.BASE_USERS_PASSWORDS_MAP ?? '{}',
+  process.env.BASE_USER_PASSWORDS_MAP ?? '{}',
 ) as Record<string, string | undefined>;
 
-const BaseUsers: (SignUpData & { role: User['role'] })[] = [
-  {
-    username: 'arceus',
-    password: baseUsersPasswords['arceus'] ?? '',
-    role: 'admin',
-  },
-  {
-    username: 'mew',
-    password: baseUsersPasswords['mew'] ?? '',
-    role: 'admin',
-  },
-  {
-    username: 'mewtwo',
-    password: baseUsersPasswords['mewtwo'] ?? '',
-    role: 'user',
-  },
-];
+const BaseUsers: (SignUpData & { role: User['role'] })[] = data.users.map(
+  ({ username, role }) => ({
+    username,
+    role: role as User['role'],
+    password: baseUsersPasswords[username] ?? '',
+  }),
+);
 
 const main = async () => {
   await DBConnection.connect();
