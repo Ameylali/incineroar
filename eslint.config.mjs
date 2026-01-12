@@ -64,4 +64,7 @@ export default defineConfig([
       ],
     },
   }),
+  {
+    ignores: ['e2e/'],
+  },
 ]);
