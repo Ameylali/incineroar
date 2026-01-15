@@ -16,7 +16,7 @@ class TestTeams:
     user: User
 
     @pytest.fixture(autouse=True, scope="class")
-    def setup_data(self, get_user: GetUser, make_team: MakeTeam, request: Request):
+    def setup_data(self, get_user: GetUser, make_team: MakeTeam):
         self.__class__.user = get_user(self.username)
         self.__class__.teams = [
             make_team(self.user, Team("team 1", 2025, "reg f", "regirock")),

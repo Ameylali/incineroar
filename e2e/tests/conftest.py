@@ -4,6 +4,7 @@ from typing import Any, Callable, Generator
 import pytest
 
 from src.models.team import Team
+from src.models.tournament import Tournament
 from src.models.user import User
 from src.util.api import IncineroarAPI, create_authenticated_api
 from src.util.data import load_users
@@ -56,3 +57,23 @@ def make_team() -> Generator[MakeTeam, Any, None]:
     for api, team in teams:
         if team.id is not None:
             api.delete_team(team.id)
+
+
+MakeTournament = Callable[[User, Tournament], Tournament]
+
+
+@pytest.fixture(scope="class")
+def make_tournament() -> Generator[MakeTournament, Any, None]:
+    tournaments: list[tuple[IncineroarAPI, Tournament]] = []
+
+    def _make_tournament(user: User, tournament: Tournament):
+        api = create_authenticated_api(user.username, user.password)
+        created_tournament = api.create_tournament_from_model(tournament)
+        tournaments.append((api, created_tournament))
+        return created_tournament
+
+    yield _make_tournament
+
+    for api, tournament in tournaments:
+        if tournament.id is not None:
+            api.delete_tournament(tournament.id)

@@ -188,7 +188,7 @@ class IncineroarAPI:
             name=data["name"],
             season=data["season"],
             format=data["format"],
-            data=data["data"],
+            data=data.get("data", ""),
             id=data.get("id"),
             teams=teams,
         )
@@ -645,7 +645,7 @@ class IncineroarAPI:
         ]
 
     def create_tournament(
-        self, name: str, season: int, format: str, teams: List[Dict[str, Any]]
+        self, name: str, season: int, format: str, source: str, data: str
     ) -> Tournament:
         """
         Create a new tournament (admin only).
@@ -654,12 +654,22 @@ class IncineroarAPI:
             name: Tournament name
             season: Season number
             format: Format string
-            teams: List of tournament teams
+            source: Data source type ('pokedata' or 'pokedata_url')
+            data: Tournament data (JSON string if source='pokedata', URL if source='pokedata_url')
 
         Returns:
             Created Tournament instance
         """
-        payload = {"name": name, "season": season, "format": format, "teams": teams}
+        if source not in ["pokedata", "pokedata_url"]:
+            raise ValueError("source must be either 'pokedata' or 'pokedata_url'")
+
+        payload = {
+            "name": name,
+            "season": season,
+            "format": format,
+            "source": source,
+            "data": data,
+        }
 
         response = self._make_request("POST", "tournament", data=payload)
         return self._dict_to_tournament(response["tournament"])
@@ -674,12 +684,12 @@ class IncineroarAPI:
         Returns:
             Created Tournament instance with ID
         """
-        teams_dict = [self._tournament_team_to_dict(team) for team in tournament.teams]
         return self.create_tournament(
             name=tournament.name,
             season=tournament.season,
             format=tournament.format,
-            teams=teams_dict,
+            source=tournament.source or "pokedata",
+            data=tournament.data,
         )
 
     def get_tournament_by_id(self, tournament_id: str) -> Tournament:
