@@ -432,9 +432,14 @@ class IncineroarAPI:
         Returns:
             Created Team instance with ID
         """
-        payload = self._team_to_dict(team)
-        response = self._make_request("POST", "user/team", data=payload)
-        return self._dict_to_team(response["team"])
+        return self.create_team(
+            data=team.data,
+            name=team.name,
+            description=team.description,
+            season=team.season,
+            format=team.format,
+            tags=team.tags,
+        )
 
     def get_team_by_id(self, team_id: str) -> Team:
         """
@@ -500,9 +505,8 @@ class IncineroarAPI:
         Returns:
             Created Training instance with ID
         """
-        payload = self._training_to_dict(training)
-        response = self._make_request("POST", "user/training", data=payload)
-        return self._dict_to_training(response["training"])
+        training_dict = self._training_to_dict(training)
+        return self.create_training(**training_dict)
 
     def get_training_by_id(self, training_id: str) -> Training:
         """
@@ -590,11 +594,8 @@ class IncineroarAPI:
         Returns:
             Created Battle instance with ID
         """
-        payload = self._battle_to_dict(battle)
-        response = self._make_request(
-            "POST", f"user/training/{training_id}/battle", data=payload
-        )
-        return self._dict_to_battle(response["battle"])
+        battle_dict = self._battle_to_dict(battle)
+        return self.create_training_battle(training_id, **battle_dict)
 
     def get_battle_by_id(self, training_id: str, battle_id: str) -> Battle:
         """
@@ -673,9 +674,13 @@ class IncineroarAPI:
         Returns:
             Created Tournament instance with ID
         """
-        payload = self._tournament_to_dict(tournament)
-        response = self._make_request("POST", "tournament", data=payload)
-        return self._dict_to_tournament(response["tournament"])
+        teams_dict = [self._tournament_team_to_dict(team) for team in tournament.teams]
+        return self.create_tournament(
+            name=tournament.name,
+            season=tournament.season,
+            format=tournament.format,
+            teams=teams_dict,
+        )
 
     def get_tournament_by_id(self, tournament_id: str) -> Tournament:
         """

@@ -23,14 +23,15 @@ export const createTeam = async (
   formData: FormData,
 ): Promise<CreateTeamActionState> => {
   const rawData = decode(formData) as unknown as CreateTeamData;
-  rawData.season = Number(rawData.season);
+  rawData.tags = rawData.tags ?? [];
+  rawData.season = Number(rawData.season ?? 0);
 
   const validatedFields = validateCreateTeamData(rawData);
 
   if (!validatedFields.success) {
     return {
       success: false,
-      data: rawData,
+      data: JSON.parse(JSON.stringify(rawData)) as CreateTeamData,
       errors: z.treeifyError(validatedFields.error).properties,
     };
   }
@@ -64,14 +65,15 @@ export const updateTeam = async (
   formData: FormData,
 ): Promise<UpdateTeamActionState> => {
   const rawData = decode(formData) as unknown as UpdateTeamData;
-  rawData.season = Number(rawData.season);
+  rawData.tags = rawData.tags ?? [];
+  rawData.season = Number(rawData.season ?? 0);
 
   const validatedFields = updateTeamDataSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
     return {
       success: false,
-      data: rawData,
+      data: JSON.parse(JSON.stringify(rawData)) as UpdateTeamData,
       errors: z.treeifyError(validatedFields.error).properties,
     };
   }
