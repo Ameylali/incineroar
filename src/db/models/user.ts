@@ -235,7 +235,7 @@ export default class UserRepository implements BaseRepository<User> {
     userId: string,
     trainingId: string,
     battleId: string,
-    data: Partial<Battle>,
+    data: Partial<Battle | { team: null }>,
   ) {
     const user = await this.model.findById(userId);
     if (!user) throw new UserNotFoundError(userId);

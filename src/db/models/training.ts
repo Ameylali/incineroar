@@ -108,7 +108,10 @@ export class BattleRepository implements CRUDRepository<Battle> {
       DBConnection.getConnection().model(BattleModelName, BattleSchema);
   }
 
-  async updateById(id: string, updateData: Partial<Battle>): Promise<Battle> {
+  async updateById(
+    id: string,
+    updateData: Partial<Battle | { team: null }>,
+  ): Promise<Battle> {
     const battle = await this.model.findByIdAndUpdate(id, updateData, {
       new: true,
     });
@@ -235,7 +238,7 @@ export default class TrainingRepository implements CRUDRepository<Training> {
   async updateBattle(
     trainingId: string,
     battleId: string,
-    data: Partial<Battle>,
+    data: Partial<Battle | { team: null }>,
   ) {
     const training = await this.model.findById(trainingId);
     if (!training) throw new TrainingNotFoundError(trainingId);

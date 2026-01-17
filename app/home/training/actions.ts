@@ -206,11 +206,7 @@ const battleFormDataSchema = z.object({
     .min(2008)
     .max(new Date().getFullYear() + 1)
     .optional(),
-  format: z
-    .string()
-    .min(1, 'Format must be at least 1 characters')
-    .max(50, 'Format must be at most 50 characters')
-    .optional(),
+  format: z.string().max(50, 'Format must be at most 50 characters').optional(),
   notes: z.string().max(1000, 'At most 1000 characters'),
   turns: z.array(turnFormDataSchema),
 }) satisfies ZodType<EditBattleFormData>;
@@ -238,7 +234,7 @@ export const editBattle = async (
   if (!validatedFields.success) {
     return {
       success: false,
-      data: rawData,
+      data: JSON.parse(JSON.stringify(rawData)) as EditBattleFormData,
       errors: z.treeifyError(validatedFields.error).properties,
     };
   }
@@ -254,7 +250,7 @@ export const editBattle = async (
       teamId,
       ...updateData
     } = validatedFields.data;
-    let team: Team | undefined = undefined;
+    let team: Team | null = null;
     if (teamId) {
       team = await userRepo.getTeamById(userId, teamId);
     }

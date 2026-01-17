@@ -24,9 +24,10 @@ const FormatInput = ({
         <Select
           placeholder="Season"
           options={[...(additionalYearOptions ?? []), ...yearValues]}
+          aria-label="season select"
         />
       </SelectWrapper>
-      <Input placeholder="Format" {...inputProps} />
+      <Input placeholder="Format" {...inputProps} aria-label="format input" />
     </Compact>
   );
 };

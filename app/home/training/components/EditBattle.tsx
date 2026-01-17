@@ -7,6 +7,7 @@ import {
 import {
   Alert,
   AutoComplete,
+  AutoCompleteProps,
   Button,
   Card,
   Flex,
@@ -72,7 +73,8 @@ interface IEditBattleFormContext {
 
 const EditBattleFormContext = createContext<IEditBattleFormContext>({});
 
-interface PokemonInputProps {
+interface PokemonInputProps
+  extends Omit<AutoCompleteProps, 'value' | 'onChange'> {
   player?: Action['player'] | null;
   value?: string;
   onChange?: (value: string) => void;
@@ -189,12 +191,17 @@ const getOptions = ({
   return Array.from(new Set(list));
 };
 
-interface PokemonMultiSelectProps {
+interface PokemonMultiSelectProps
+  extends Omit<SelectProps, 'value' | 'onChange'> {
   value?: string[];
   onChange?: (value: string[]) => void;
 }
 
-const PokemonMultiSelect = ({ value, onChange }: PokemonMultiSelectProps) => {
+const PokemonMultiSelect = ({
+  value,
+  onChange,
+  ...props
+}: PokemonMultiSelectProps) => {
   const {
     setOptions,
     startTransition,
@@ -223,6 +230,7 @@ const PokemonMultiSelect = ({ value, onChange }: PokemonMultiSelectProps) => {
 
   return (
     <Select
+      {...props}
       mode="tags"
       placeholder="Enter targets"
       className="w-[200px]"
@@ -235,7 +243,12 @@ const PokemonMultiSelect = ({ value, onChange }: PokemonMultiSelectProps) => {
   );
 };
 
-const PokemonInput = ({ player, value, onChange }: PokemonInputProps) => {
+const PokemonInput = ({
+  player,
+  value,
+  onChange,
+  ...props
+}: PokemonInputProps) => {
   const {
     setOptions,
     startTransition,
@@ -259,8 +272,9 @@ const PokemonInput = ({ player, value, onChange }: PokemonInputProps) => {
 
   return (
     <AutoComplete
+      {...props}
       value={value}
-      onChange={(val) => withTagOnChange(val, value, onChange)}
+      onChange={(val) => withTagOnChange(val as string, value, onChange)}
       options={toOptions(options.length > 0 ? options : baseOptions)}
       onSearch={onSearch}
       className="min-w-[200px]"
@@ -270,7 +284,8 @@ const PokemonInput = ({ player, value, onChange }: PokemonInputProps) => {
   );
 };
 
-interface ActionNameAutocomplteteProps {
+interface ActionNameAutocomplteteProps
+  extends Omit<AutoCompleteProps, 'value' | 'onChange'> {
   value?: string;
   onChange?: (value: string) => void;
   type?: Action['type'];
@@ -280,6 +295,7 @@ const ActionNameAutocomplete = ({
   value,
   onChange,
   type,
+  ...props
 }: ActionNameAutocomplteteProps) => {
   const { actionNameAutocomplete, moveAutocomplete, abilityAutocomplete } =
     useContext(EditBattleFormContext);
@@ -308,6 +324,7 @@ const ActionNameAutocomplete = ({
 
   return (
     <AutoComplete
+      {...props}
       value={value}
       onChange={onChange}
       options={toOptions(options)}
@@ -374,19 +391,23 @@ const ActionFormFields = ({
         <Input />
       </ActionFormItem>
       <ActionFormItem name={[baseName, 'player']} label="Player">
-        <Select className="min-w-[80px]" options={playerOptions} />
+        <Select
+          className="min-w-[80px]"
+          options={playerOptions}
+          aria-label="player input"
+        />
       </ActionFormItem>
       <ActionFormItem name={[baseName, 'user']} label="User">
-        <PokemonInput player={player} />
+        <PokemonInput player={player} aria-label="user input" />
       </ActionFormItem>
       <ActionFormItem name={[baseName, 'type']}>
-        <Select options={typeOptions} />
+        <Select options={typeOptions} aria-label="type input" />
       </ActionFormItem>
       <ActionFormItem name={[baseName, 'name']} label="Name">
-        <ActionNameAutocomplete type={type} />
+        <ActionNameAutocomplete type={type} aria-label="name input" />
       </ActionFormItem>
       <ActionFormItem name={[baseName, 'targets']} label="Targets">
-        <PokemonMultiSelect />
+        <PokemonMultiSelect aria-label="targets input" />
       </ActionFormItem>
       <FormItem>
         <Flex gap={2}>
@@ -790,7 +811,11 @@ const EditBattle = ({
           name="result"
           validateStatus={getValidateStatus(state, 'result', isPending)}
         >
-          <Select placeholder="Result" options={resultOptions} />
+          <Select
+            placeholder="Result"
+            options={resultOptions}
+            aria-label="result input"
+          />
         </BattleFormItem>
         <Flex justify="space-between">
           <BattleFormItem
@@ -804,6 +829,7 @@ const EditBattle = ({
               placeholder="Team"
               className="min-w-[200px]"
               options={[{ value: null }, ...teamsItems]}
+              aria-label="teams select"
             />
           </BattleFormItem>
         </Flex>
