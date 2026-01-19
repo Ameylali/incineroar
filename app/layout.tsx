@@ -12,6 +12,7 @@ import ConfigProvider from 'antd/es/config-provider';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ReactNode } from 'react';
 
+import useTitle from '@/src/hooks/useTitle';
 import { queryClient } from '@/src/utils/query-clients';
 
 const geistSans = Geist({
@@ -40,6 +41,8 @@ const RootLayout = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+  useTitle();
+
   return (
     <html lang="en">
       <body
