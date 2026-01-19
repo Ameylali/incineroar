@@ -18,6 +18,7 @@ import foLabsLogo from '@/public/fo-labs.svg';
 import pokeballIcon from '@/public/pokeball.svg';
 import useBreadcrumbs from '@/src/hooks/useBreadcrumbs';
 import useUserQuery from '@/src/hooks/useUserQuery';
+import { queryClient } from '@/src/utils/query-clients';
 
 import { signOut } from '../actions';
 
@@ -85,7 +86,10 @@ const AppLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
       label: 'Sign out',
       key: 'signout',
       icon: <LogoutOutlined />,
-      onClick: () => void signOut(),
+      onClick: void (async () => {
+        queryClient.clear();
+        await signOut();
+      }),
     },
   ];
 
