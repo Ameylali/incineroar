@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Incineroar
 
-## Getting Started
+A Next.js application for Pokémon competitive battle analysis, team building, and training management.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Team Management**: Create and manage Pokémon competitive teams
+- **Battle Analysis**: Analyze Pokémon battles and performance
+- **Tournament Tracking**: Track tournament participation and results
+- **Training Management**: Manage training sessions and progress
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Prerequisites
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Before running this project, make sure you have the following installed:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Node.js** (version 18 or higher) - [Download Node.js](https://nodejs.org/)
+- **npm** or **yarn** - Comes with Node.js
+- **Docker** - [Install Docker](https://docs.docker.com/get-docker/)
+- **MongoDB** - Either local installation or Docker container
 
-## Learn More
+## Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. **Set up environment variables**
+   ```bash
+   cp example.env .env
+   ```
+   
+   Edit the `.env` file and configure the following variables:
+   - `APP_URL`: Your application URL (default: http://localhost:3000)
+   - `MONGO_DB_URL`: MongoDB connection string
+   - `JWT_PRIVATE_KEY`: RSA private key for JWT signing
+   - `JWT_PUBLIC_KEY`: RSA public key for JWT verification
+   - `BASE_USER_PASSWORDS_MAP`: JSON map of default user passwords
+   - `ALLOWED_ORIGINS`: Comma-separated list of allowed origins for server actions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Set up the database**
+   
+   Build and run the MongoDB Docker container:
+   ```bash
+   npm run db:build
+   npm run db:run
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Seed the database** (optional)
+   ```bash
+   npm run seed
+   ```
 
-## Deploy on Vercel
+## Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Available Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **`npm run dev`** - Start the development server
+- **`npm run build`** - Build the application for production
+- **`npm run start`** - Start the production server
+- **`npm run lint`** - Run ESLint
+- **`npm run test`** - Run Jest unit tests
+- **`npm run test:e2e`** - Run end-to-end tests
+- **`npm run compile`** - Type check with TypeScript
+- **`npm run genmocks`** - Generate Ant Design mocks for testing
+
+### Database Management
+
+- **`npm run db:build`** - Build the MongoDB Docker image
+- **`npm run db:run`** - Start the MongoDB container
