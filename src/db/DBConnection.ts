@@ -24,9 +24,9 @@ export default class DBConnection {
   protected static connection?: Mongoose;
 
   static async connect() {
-    const uri = process.env.MONGO_DB_URI;
+    const uri = process.env.MONGODB_URI;
     if (!uri) {
-      throw new MissingConfigError('MONGO_DB_URI');
+      throw new MissingConfigError('MONGODB_URI');
     }
     return (DBConnection.connection = await connect(uri));
   }

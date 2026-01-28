@@ -27,7 +27,7 @@ Before running this project, make sure you have the following installed:
    
    Edit the `.env` file and configure the following variables:
    - `APP_URL`: Your application URL (default: http://localhost:3000)
-   - `MONGO_DB_URI`: MongoDB connection string
+   - `MONGODB_URI`: MongoDB connection string
    - `JWT_PRIVATE_KEY`: RSA private key for JWT signing
    - `JWT_PUBLIC_KEY`: RSA public key for JWT verification
    - `BASE_USER_PASSWORDS_MAP`: JSON map of default user passwords
