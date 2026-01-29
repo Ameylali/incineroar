@@ -2,7 +2,7 @@ from typing import Union
 
 from playwright.sync_api import Page
 
-from src.util.constants import APP_URL
+from src.util.constants import NEXT_PUBLIC_APP_URL
 
 
 class TrainingsPage:
@@ -29,7 +29,7 @@ class TrainingsPage:
         }
 
     def navigate(self):
-        return self.page.goto(f"{APP_URL}/home/training")
+        return self.page.goto(f"{NEXT_PUBLIC_APP_URL}/home/training")
 
     def training_link(self, name: str):
         return self.page.get_by_role("link", name=name)
@@ -83,7 +83,7 @@ class DetailedTrainingPage:
         }
 
     def navigate(self, training_id: str):
-        self.page.goto(f"{APP_URL}/home/training/{training_id}")
+        self.page.goto(f"{NEXT_PUBLIC_APP_URL}/home/training/{training_id}")
 
     def battle_link(self, name: str):
         return self.page.get_by_role("link", name=name)
@@ -113,7 +113,7 @@ class AnalyzeTrainingPage:
         )
 
     def navigate(self, training_id: str):
-        self.page.goto(f"{APP_URL}/home/training/{training_id}/analyze")
+        self.page.goto(f"{NEXT_PUBLIC_APP_URL}/home/training/{training_id}/analyze")
 
     def expand_row(self, name: str):
         return self.page.get_by_role("row", name=name).get_by_label("Expand row")
@@ -140,7 +140,7 @@ class BattlePage:
         self.add_action_button = self.page.get_by_role("button", name="plus Add action")
 
     def navigate(self, training_id: str, battle_id: str):
-        self.page.goto(f"{APP_URL}/home/training/{training_id}/{battle_id}")
+        self.page.goto(f"{NEXT_PUBLIC_APP_URL}/home/training/{training_id}/{battle_id}")
 
     def select_option(self, title: str, nth: Union[int, None] = None):
         selector = self.page.get_by_title(title)

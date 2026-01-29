@@ -18,7 +18,7 @@ from src.models.team import Team
 from src.models.tournament import Tournament, TournamentTeam
 from src.models.training import Action, Battle, Training, Turn
 from src.models.user import User
-from src.util.constants import APP_URL
+from src.util.constants import NEXT_PUBLIC_APP_URL
 
 
 class APIError(Exception):
@@ -43,12 +43,12 @@ class IncineroarAPI:
     including authentication, user management, teams, trainings, and tournaments.
     """
 
-    def __init__(self, base_url: str = APP_URL, timeout: int = 30):
+    def __init__(self, base_url: str = NEXT_PUBLIC_APP_URL, timeout: int = 30):
         """
         Initialize the API client.
 
         Args:
-            base_url: The base URL of the API (defaults to APP_URL from constants)
+            base_url: The base URL of the API (defaults to NEXT_PUBLIC_APP_URL from constants)
             timeout: Request timeout in seconds
         """
         self.base_url = base_url.rstrip("/")
@@ -726,7 +726,7 @@ class IncineroarAPI:
 
 
 def create_authenticated_api(
-    username: str, password: str, base_url: str = APP_URL
+    username: str, password: str, base_url: str = NEXT_PUBLIC_APP_URL
 ) -> IncineroarAPI:
     """
     Create and authenticate an API client in one step.
@@ -744,7 +744,7 @@ def create_authenticated_api(
     return api
 
 
-def create_api_with_token(token: str, base_url: str = APP_URL) -> IncineroarAPI:
+def create_api_with_token(token: str, base_url: str = NEXT_PUBLIC_APP_URL) -> IncineroarAPI:
     """
     Create an API client with a pre-existing JWT token.
 

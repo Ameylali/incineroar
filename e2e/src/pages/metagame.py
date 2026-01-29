@@ -2,7 +2,7 @@ from datetime import datetime
 
 from playwright.sync_api import Page
 
-from src.util.constants import APP_URL
+from src.util.constants import NEXT_PUBLIC_APP_URL
 
 
 class MetagamePage:
@@ -25,10 +25,10 @@ class MetagamePage:
         }
 
     def navigate(self):
-        self.page.goto(f"{APP_URL}/home/metagame")
+        self.page.goto(f"{NEXT_PUBLIC_APP_URL}/home/metagame")
 
     def navigate_admin(self):
-        self.page.goto(f"{APP_URL}/home/metagame/admin")
+        self.page.goto(f"{NEXT_PUBLIC_APP_URL}/home/metagame/admin")
 
     def tournament_link(self, name: str):
         return self.page.get_by_role("link", name=name)

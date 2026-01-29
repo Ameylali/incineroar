@@ -2,7 +2,7 @@ from datetime import datetime
 
 from playwright.sync_api import Page
 
-from src.util.constants import APP_URL
+from src.util.constants import NEXT_PUBLIC_APP_URL
 
 
 class TeamsPage:
@@ -29,7 +29,7 @@ class TeamsPage:
         }
 
     def navigate(self):
-        self.page.goto(f"{APP_URL}/home/teams")
+        self.page.goto(f"{NEXT_PUBLIC_APP_URL}/home/teams")
 
     def row_actions_button(self, name: str):
         return self.page.get_by_role("row", name=name).get_by_role("button")

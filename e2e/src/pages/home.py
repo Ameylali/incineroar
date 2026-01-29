@@ -1,6 +1,6 @@
 from playwright.sync_api import Page
 
-from src.util.constants import APP_URL
+from src.util.constants import NEXT_PUBLIC_APP_URL
 
 
 class HomePage:
@@ -22,4 +22,4 @@ class HomePage:
         )
 
     def navigate(self):
-        self.page.goto(f"{APP_URL}/home")
+        self.page.goto(f"{NEXT_PUBLIC_APP_URL}/home")

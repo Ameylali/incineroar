@@ -1,7 +1,7 @@
 from playwright.sync_api import Page
 
 from src.models.user import User
-from src.util.constants import APP_URL
+from src.util.constants import NEXT_PUBLIC_APP_URL
 
 
 class LoginPage:
@@ -21,7 +21,7 @@ class LoginPage:
         self.username_input = self.page.get_by_role("textbox", name="Username")
 
     def navigate(self):
-        self.page.goto(f"{APP_URL}/auth")
+        self.page.goto(f"{NEXT_PUBLIC_APP_URL}/auth")
 
     def login(self, user: User):
         self.navigate()

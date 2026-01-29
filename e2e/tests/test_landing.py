@@ -6,7 +6,7 @@ from playwright.sync_api import Page, expect
 from src.models.user import User
 from src.pages.landing import LandingPage
 from src.pages.login import LoginPage
-from src.util.constants import APP_URL, ENVIRONMENT
+from src.util.constants import NEXT_PUBLIC_APP_URL, ENVIRONMENT
 
 disabled_routes_map: dict[str, list[str]] = {
     "dev": [],
@@ -46,19 +46,19 @@ class TestLanding:
 
     @pytest.mark.parametrize("route", [("/home")])
     def test_protected_routes(self, page: Page, route: str):
-        page.goto(f"{APP_URL}{route}")
+        page.goto(f"{NEXT_PUBLIC_APP_URL}{route}")
 
         expect(page).to_have_url(re.compile("/auth"))
 
     @pytest.mark.parametrize("route", [("/auth")])
     def test_public_routes(self, page: Page, route: str):
-        page.goto(f"{APP_URL}{route}")
+        page.goto(f"{NEXT_PUBLIC_APP_URL}{route}")
 
         expect(page).to_have_url(re.compile(route))
 
     @pytest.mark.parametrize("route", disabled_routes_map[ENVIRONMENT])
     def test_dev_routes(self, page: Page, route: str):
-        response = page.goto(f"{APP_URL}{route}")
+        response = page.goto(f"{NEXT_PUBLIC_APP_URL}{route}")
 
         assert response is not None
         assert response.status == 404

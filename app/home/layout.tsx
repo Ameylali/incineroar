@@ -17,7 +17,7 @@ import { PropsWithChildren, ReactNode, useState } from 'react';
 import foLabsLogo from '@/public/fo-labs.svg';
 import pokeballIcon from '@/public/pokeball.svg';
 import useBreadcrumbs from '@/src/hooks/useBreadcrumbs';
-import useUserQuery from '@/src/hooks/useUserQuery';
+import { useClientUserQuery } from '@/src/hooks/useUserQuery';
 import { queryClient } from '@/src/utils/query-clients';
 
 import { signOut } from '../actions';
@@ -44,7 +44,18 @@ const ContentLayout = ({ children }: PropsWithChildren) => {
 const AppLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   const [collapsed, setCollapsed] = useState(false);
   const router = useRouter();
-  const { data: user } = useUserQuery();
+  const { data: user, isLoading, isError } = useClientUserQuery();
+
+  // Handle loading and error states
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError || !user) {
+    // Redirect to auth if user query fails
+    router.push('/auth');
+    return <div>Redirecting...</div>;
+  }
 
   const UpperMenuItems: MenuProps['items'] = [
     {
