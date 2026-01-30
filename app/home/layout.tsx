@@ -6,7 +6,16 @@ import {
   LogoutOutlined,
   ReconciliationOutlined,
 } from '@ant-design/icons';
-import { Breadcrumb, Col, Flex, Layout, Menu, MenuProps, Row } from 'antd';
+import {
+  Breadcrumb,
+  Col,
+  Flex,
+  Layout,
+  Menu,
+  MenuProps,
+  Row,
+  Skeleton,
+} from 'antd';
 import { Content } from 'antd/es/layout/layout';
 import Sider from 'antd/es/layout/Sider';
 import Title from 'antd/es/typography/Title';
@@ -48,7 +57,7 @@ const AppLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
 
   // Handle loading and error states
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Skeleton active />;
   }
 
   if (isError || !user) {
