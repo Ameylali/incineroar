@@ -1,8 +1,8 @@
-import { findTournamentData } from '@/src/actions/scrap';
+import { importTournamentData } from '@/src/actions/scrap';
 import DBConnection from '@/src/db/DBConnection';
 
 const main = async () => {
-  await findTournamentData();
+  await importTournamentData();
 };
 
 main()
