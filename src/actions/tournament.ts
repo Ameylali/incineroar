@@ -1,4 +1,3 @@
-import axios from 'axios';
 import z, { ZodType } from 'zod';
 
 import DBConnection from '@/src/db/DBConnection';
@@ -8,6 +7,8 @@ import TournamentParserFactory, {
 } from '@/src/services/pokemon/tournament';
 import { TupleUnion } from '@/src/types';
 import { AddTournamentFormData } from '@/src/types/form';
+
+import { fetchRawData } from '../utils/fetch';
 
 const tournamentDataSources: TupleUnion<AddTournamentFormData['source']> = [
   'pokedata',
@@ -49,11 +50,9 @@ export const createTournamentWithAuth = async (
 
   if (tournamentData.source === 'pokedata_url') {
     // Fetch pokedata from URL
-    const response = await axios.get<unknown[]>(tournamentData.data);
-    if (response.status !== 200) {
-      throw new Error('Failed to fetch pokedata from URL');
-    }
-    processedData.data = JSON.stringify(response.data);
+    const response = await fetchRawData(tournamentData.data);
+
+    processedData.data = JSON.stringify(response);
     processedData.source = 'pokedata';
   }
 

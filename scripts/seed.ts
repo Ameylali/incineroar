@@ -37,9 +37,9 @@ const main = async () => {
     }
   }
   console.log('Created users');
-  await DBConnection.close();
 };
 
 main()
   .then(() => console.log('Done'))
-  .catch((err) => console.error('Failed', err));
+  .catch((err) => console.error('Failed', err))
+  .finally(async () => await DBConnection.close());
