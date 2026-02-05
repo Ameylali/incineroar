@@ -30,6 +30,10 @@ jobs:
       working-directory: ./e2e
       run: uv sync
 
+    - name: Install Playwrigth
+      working-directory: ./e2e
+      run:  uv run playwright install
+
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
