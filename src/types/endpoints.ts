@@ -13,6 +13,10 @@ export interface GET_TOURNAMENT {
   analysis?: AnalyticsResponse;
 }
 
+export interface GET_IMPORT_TOURNAMENT {
+  message: string;
+}
+
 export interface DELETE_TOURNAMENT {
   success: true;
 }

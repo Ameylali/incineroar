@@ -77,6 +77,12 @@ export default class TournamentRepository
     const tournaments = await this.model.find();
     return tournaments.map((t) => t.toObject());
   }
+
+  async findByName(name: string): Promise<Tournament | null> {
+    const tournament = await this.model.findOne({ name });
+    if (!tournament) return null;
+    return tournament.toObject();
+  }
 }
 
 export class TournamentNotFoundError extends Error {
