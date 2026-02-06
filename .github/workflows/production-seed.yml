@@ -33,7 +33,7 @@ jobs:
         NEXT_PUBLIC_APP_URL: ${{ github.event.client_payload.url }}
         NEXT_PUBLIC_ENVIRONMENT: prod
         MONGODB_URI: ${{ secrets.PROD_MONGODB_URI }}
-        JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
-        JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
-        BASE_USER_PASSWORDS_MAP: ${{ secrets.BASE_USER_PASSWORDS_MAP }}
+        JWT_PRIVATE_KEY: ${{ secrets.PROD_JWT_PRIVATE_KEY }}
+        JWT_PUBLIC_KEY: ${{ secrets.PROD_JWT_PUBLIC_KEY }}
+        BASE_USER_PASSWORDS_MAP: ${{ secrets.PROD_BASE_USER_PASSWORDS_MAP }}
       run: npm run seed

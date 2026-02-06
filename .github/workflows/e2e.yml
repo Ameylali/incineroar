@@ -49,7 +49,6 @@ jobs:
     - name: Run seed script
       env:
         NEXT_PUBLIC_APP_URL: ${{ github.event.client_payload.url }}
-        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         NEXT_PUBLIC_ENVIRONMENT: qa
         MONGODB_URI: ${{ secrets.QA_MONGODB_URI }}
         JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
@@ -60,6 +59,7 @@ jobs:
     - name: Run e2e tests
       env:
         NEXT_PUBLIC_APP_URL: ${{ github.event.client_payload.url }}
+        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         NEXT_PUBLIC_ENVIRONMENT: qa
         BASE_USER_PASSWORDS_MAP: ${{ secrets.BASE_USER_PASSWORDS_MAP }}
         MONGODB_URI: ${{ secrets.QA_MONGODB_URI }}
