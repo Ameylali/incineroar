@@ -18,7 +18,7 @@ from src.models.team import Team
 from src.models.tournament import Tournament, TournamentTeam
 from src.models.training import Action, Battle, Training, Turn
 from src.models.user import User
-from src.util.constants import NEXT_PUBLIC_APP_URL
+from src.util.constants import NEXT_PUBLIC_APP_URL, VERCEL_AUTOMATION_BYPASS_SECRET
 
 
 class APIError(Exception):
@@ -71,6 +71,7 @@ class IncineroarAPI:
             {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
+                "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
             }
         )
 
@@ -744,7 +745,9 @@ def create_authenticated_api(
     return api
 
 
-def create_api_with_token(token: str, base_url: str = NEXT_PUBLIC_APP_URL) -> IncineroarAPI:
+def create_api_with_token(
+    token: str, base_url: str = NEXT_PUBLIC_APP_URL
+) -> IncineroarAPI:
     """
     Create an API client with a pre-existing JWT token.
 

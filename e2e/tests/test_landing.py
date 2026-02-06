@@ -6,7 +6,7 @@ from playwright.sync_api import Page, expect
 from src.models.user import User
 from src.pages.landing import LandingPage
 from src.pages.login import LoginPage
-from src.util.constants import NEXT_PUBLIC_APP_URL, ENVIRONMENT
+from src.util.constants import ENVIRONMENT, NEXT_PUBLIC_APP_URL
 
 disabled_routes_map: dict[str, list[str]] = {
     "dev": [],
