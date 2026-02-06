@@ -1,4 +1,3 @@
-from ast import Tuple
 from typing import Any, Callable, Generator
 
 import pytest
@@ -8,11 +7,22 @@ from src.models.tournament import Tournament
 from src.models.training import Battle, Training
 from src.models.user import User
 from src.util.api import IncineroarAPI, create_authenticated_api
+from src.util.constants import VERCEL_AUTOMATION_BYPASS_SECRET
 from src.util.data import load_users
 
 
 def pytest_configure(config: pytest.Config):
     config.addinivalue_line("markers", "user: existing test user")
+
+
+@pytest.fixture(scope="session")
+def browser_context_args(browser_context_args):
+    return {
+        **browser_context_args,
+        "extra_http_headers": {
+            "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
+        },
+    }
 
 
 @pytest.fixture
