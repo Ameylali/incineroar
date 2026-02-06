@@ -33,21 +33,22 @@ const tryImportTournament = async (index: number): Promise<Tournament[]> => {
 
   await DBConnection.connect();
   const tournamentRepo = new TournamentRepository();
-  const existingTournament = await tournamentRepo.findByName(title);
-
-  if (existingTournament) {
-    console.log(`${title} tournament already exists`);
-    return [];
-  }
 
   const createdTournaments = [];
 
   for (const category of ['juniors', 'seniors', 'masters']) {
     const url = `${POKEDATA_URL}/${id}/${category}/${id}_${capitalize(category)}.json`;
+    const name = `${title} - ${capitalize(category)}`;
+    const existingTournament = await tournamentRepo.findByName(name);
+
+    if (existingTournament) {
+      console.log(`${name} tournament already exists`);
+      continue;
+    }
 
     try {
       const tournament = await createTournamentWithAuth({
-        name: `${title} - ${capitalize(category)}`,
+        name,
         season: year ? Number(year) : new Date().getFullYear(),
         format: 'unknown',
         source: 'pokedata_url',
