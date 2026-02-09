@@ -855,8 +855,10 @@ const EditBattle = ({
         </FormList>
         <FormItem>
           <Flex gap={3}>
-            <Button onClick={onCancel}>Cancel</Button>
-            <Button type="primary" htmlType="submit">
+            <Button onClick={onCancel} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button type="primary" htmlType="submit" loading={isPending}>
               Save
             </Button>
           </Flex>

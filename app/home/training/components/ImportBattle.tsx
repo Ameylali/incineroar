@@ -128,10 +128,15 @@ export const ImportBattlesModal = ({
       open={isOpen}
       onCancel={closeModal}
       footer={[
-        <Button key="back" onClick={closeModal}>
+        <Button key="back" onClick={closeModal} disabled={isPending}>
           Cancel
         </Button>,
-        <Button key="submit" type="primary" onClick={() => form.submit()}>
+        <Button
+          key="submit"
+          type="primary"
+          onClick={() => form.submit()}
+          loading={isPending}
+        >
           Import
         </Button>,
       ]}
