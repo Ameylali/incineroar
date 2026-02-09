@@ -3,6 +3,7 @@
 import {
   DotChartOutlined,
   FileDoneOutlined,
+  LinkOutlined,
   LogoutOutlined,
   ReconciliationOutlined,
 } from '@ant-design/icons';
@@ -84,6 +85,12 @@ const AppLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
       key: 'training',
       icon: <ReconciliationOutlined />,
       onClick: () => router.push('/home/training'),
+    },
+    {
+      label: 'Other Tools',
+      key: 'tools',
+      icon: <LinkOutlined />,
+      onClick: () => router.push('/home/tools'),
     },
     user.role === 'admin'
       ? {
