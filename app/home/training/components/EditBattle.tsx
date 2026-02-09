@@ -91,7 +91,12 @@ const filterPokemonByPlayer = (
     )
     .map((action) => action.user.replace(`${player}:`, ''));
   const targets = actions
-    .flatMap((action) => action.targets)
+    .flatMap((action) => {
+      if (action.player === player && action.type === 'switch') {
+        return action.targets.map((target) => `${player}:${target}`);
+      }
+      return action.targets;
+    })
     .filter((target) => target.startsWith(`${player}:`))
     .map((target) => target.replace(`${player}:`, ''));
   return Array.from(new Set([...users, ...targets]));
@@ -386,7 +391,7 @@ const ActionFormFields = ({
   ) as Action['type'];
 
   return (
-    <Flex justify="space-between">
+    <Flex justify="space-between" wrap="wrap">
       <ActionFormItem name={[baseName, 'index']} hidden>
         <Input />
       </ActionFormItem>
