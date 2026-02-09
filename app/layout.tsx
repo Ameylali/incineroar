@@ -7,6 +7,8 @@ import { StyleProvider } from '@ant-design/cssinjs';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import ConfigProvider from 'antd/es/config-provider';
 import { ReactNode } from 'react';
 
@@ -38,6 +40,8 @@ const RootLayout = ({
         <AntdRegistry>
           <ProvidersWrapper>{children}</ProvidersWrapper>
         </AntdRegistry>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

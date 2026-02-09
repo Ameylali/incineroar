@@ -15,7 +15,8 @@ export const PokemonKeys = {
 };
 
 export const MetagameKeys = {
-  tournaments: (params?: PaginationParams) => params ? ['tournaments', params] as const : ['tournaments'] as const,
+  tournaments: (params?: PaginationParams) =>
+    params ? (['tournaments', params] as const) : (['tournaments'] as const),
   tournament: (id: string) => ['tournament', id] as const,
 };
 
