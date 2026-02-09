@@ -1,7 +1,9 @@
 import { LinkOutlined } from '@ant-design/icons';
-import { Card, Col, Row, Typography } from 'antd';
-
-const { Title, Text, Link } = Typography;
+import { Card, Col, Flex, Row } from 'antd';
+import Meta from 'antd/es/card/Meta';
+import Link from 'antd/es/typography/Link';
+import Text from 'antd/es/typography/Text';
+import Title from 'antd/es/typography/Title';
 
 interface ToolItem {
   name: string;
@@ -61,29 +63,30 @@ const Page = () => {
         </Col>
       </Row>
 
-      <Row gutter={[24, 24]}>
-        {tools.map((tool) => (
-          <Col xs={24} sm={12} lg={8} key={tool.url}>
+      <Row>
+        <Flex wrap justify="center">
+          {tools.map((tool) => (
             <Card
+              key={tool.url}
               hoverable
-              className="h-full"
+              className="m-2 w-[100%]"
               actions={[
                 <Link
                   key="visit"
                   href={tool.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2"
+                  className="flex items-center justify-center"
                 >
                   <LinkOutlined />
                   Visit Site
                 </Link>,
               ]}
             >
-              <Card.Meta title={tool.name} description={tool.description} />
+              <Meta title={tool.name} description={tool.description} />
             </Card>
-          </Col>
-        ))}
+          ))}
+        </Flex>
       </Row>
     </>
   );
