@@ -6,6 +6,7 @@ import {
   Tournament,
   TournamentTeam,
 } from '@/src/types/api';
+import { PaginationParams } from '@/src/types/endpoints';
 
 import DBConnection from '../DBConnection';
 import { BaseRepository } from '../repository';
@@ -73,9 +74,27 @@ export default class TournamentRepository
     await this.model.findByIdAndDelete(id);
   }
 
-  async getAll(): Promise<Tournament[]> {
-    const tournaments = await this.model.find();
-    return tournaments.map((t) => t.toObject());
+  async getAll(
+    params?: PaginationParams,
+  ): Promise<{ tournaments: Tournament[]; totalItems: number }> {
+    const limit = params?.limit;
+    const offset = params?.offset ?? 0;
+
+    let query = this.model.find().sort({ createdAt: -1 });
+
+    if (limit !== undefined) {
+      query = query.skip(offset).limit(limit);
+    }
+
+    const [tournaments, totalItems] = await Promise.all([
+      query,
+      this.model.countDocuments(),
+    ]);
+
+    return {
+      tournaments: tournaments.map((t) => t.toObject()),
+      totalItems,
+    };
   }
 
   async findByName(name: string): Promise<Tournament | null> {

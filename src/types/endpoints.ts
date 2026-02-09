@@ -8,6 +8,11 @@ import {
   TrainingAnalytics,
 } from './api';
 
+export interface PaginationParams {
+  limit?: number;
+  offset?: number;
+}
+
 export interface GET_TOURNAMENT {
   tournament: Tournament;
   analysis?: AnalyticsResponse;
@@ -23,6 +28,7 @@ export interface DELETE_TOURNAMENT {
 
 export interface GET_TOURNAMENTS {
   tournaments: Tournament[];
+  totalItems: number;
 }
 
 export interface POST_TOURNAMENT {

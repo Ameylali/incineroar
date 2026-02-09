@@ -8,6 +8,7 @@ import {
   useDeleteTournamentMutation,
   useTournamentsQuery,
 } from '@/src/hooks/tournament-queries';
+import { usePagination } from '@/src/hooks/usePagination';
 import useUserQuery from '@/src/hooks/useUserQuery';
 import { Tournament } from '@/src/types/api';
 import { withKeys } from '@/src/utils/antd-adapters';
@@ -38,7 +39,9 @@ const COLUMNS: TableProps<Tournament>['columns'] = [
 ];
 
 const Page = () => {
-  const { isLoading, data } = useTournamentsQuery();
+  const { paginationParams, handleTableChange, paginationProps } =
+    usePagination<Tournament>();
+  const { isLoading, data } = useTournamentsQuery(paginationParams);
   const { data: user } = useUserQuery();
 
   if (user.role !== 'admin') {
@@ -57,11 +60,12 @@ const Page = () => {
           <TournamentsTable
             loading={isLoading}
             columns={COLUMNS}
-            dataSource={withKeys(
-              data.tournaments.sort((a, b) =>
-                b.createdAt.localeCompare(a.createdAt),
-              ),
-            )}
+            dataSource={data ? withKeys(data.tournaments) : []}
+            pagination={{
+              ...paginationProps,
+              total: data?.totalItems || 0,
+            }}
+            onChange={handleTableChange}
           />
         </Col>
       </Row>

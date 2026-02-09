@@ -1,12 +1,22 @@
-import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { MetagameKeys } from '../constants/query-keys';
-import { GET_TOURNAMENT, GET_TOURNAMENTS } from '../types/endpoints';
+import {
+  GET_TOURNAMENT,
+  GET_TOURNAMENTS,
+  PaginationParams,
+} from '../types/endpoints';
 import { queryClient } from '../utils/query-clients';
 
-const getAllTournaments = async () => {
-  const result = await axios.get<GET_TOURNAMENTS>('/api/tournament');
+const getAllTournaments = async (params?: PaginationParams) => {
+  const searchParams = new URLSearchParams();
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  if (params?.offset) searchParams.append('offset', params.offset.toString());
+
+  const result = await axios.get<GET_TOURNAMENTS>(
+    `/api/tournament?${searchParams.toString()}`,
+  );
   return result.data;
 };
 
@@ -41,9 +51,9 @@ export const useDeleteTournamentMutation = (id: string) => {
   });
 };
 
-export const useTournamentsQuery = () => {
-  return useSuspenseQuery({
-    queryKey: MetagameKeys.tournaments(),
-    queryFn: getAllTournaments,
+export const useTournamentsQuery = (params?: PaginationParams) => {
+  return useQuery({
+    queryKey: MetagameKeys.tournaments(params),
+    queryFn: () => getAllTournaments(params),
   });
 };

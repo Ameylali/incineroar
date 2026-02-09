@@ -18,10 +18,18 @@ export const GET = async (
     await DBConnection.connect();
     await verifyUserAuth(req);
 
-    const tournamentRepo = new TournamentRepository();
-    const tournaments = await tournamentRepo.getAll();
+    const { searchParams } = req.nextUrl;
+    const limit = searchParams.has('limit')
+      ? parseInt(searchParams.get('limit')!)
+      : undefined;
+    const offset = searchParams.has('offset')
+      ? parseInt(searchParams.get('offset')!)
+      : undefined;
 
-    return NextResponse.json({ tournaments });
+    const tournamentRepo = new TournamentRepository();
+    const result = await tournamentRepo.getAll({ limit, offset });
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Failed to get tournaments', error);
     return baseErrorHandler(error, req);

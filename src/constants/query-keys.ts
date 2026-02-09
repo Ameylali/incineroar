@@ -1,3 +1,5 @@
+import { PaginationParams } from '../types/endpoints';
+
 export const UserKeys = {
   me: () => ['me'] as const,
   team: (id: string) => ['team', id] as const,
@@ -13,7 +15,7 @@ export const PokemonKeys = {
 };
 
 export const MetagameKeys = {
-  tournaments: () => ['tournaments'] as const,
+  tournaments: (params?: PaginationParams) => params ? ['tournaments', params] as const : ['tournaments'] as const,
   tournament: (id: string) => ['tournament', id] as const,
 };
 
