@@ -819,7 +819,7 @@ class TestBattle(TestBaseTraining):
         self.battle_page.battle_form["format"].click()
         self.battle_page.battle_form["format"].fill("reg f")
         self.battle_page.battle_form["teams"].click()
-        self.battle_page.select_option("sample 1").click()
+        self.battle_page.select_option("team 1").click()
         self.battle_page.battle_form["notes"].click()
         self.battle_page.battle_form["notes"].fill("updated notes")
 

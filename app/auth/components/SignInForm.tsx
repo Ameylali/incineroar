@@ -73,7 +73,7 @@ const SignInForm = ({ onSignUp, hasCreatedAccount }: SignInFormProps) => {
           />
         </SignInFormItem>
         <FormItem>
-          <Button block type="primary" htmlType="submit">
+          <Button block type="primary" htmlType="submit" loading={isPending}>
             Sign in
           </Button>
         </FormItem>

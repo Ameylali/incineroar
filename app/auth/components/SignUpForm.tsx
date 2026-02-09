@@ -94,7 +94,7 @@ const SignUpForm = ({ onSignIn }: SignUpFormProps) => {
           />
         </FormItem>
         <FormItem>
-          <Button block type="primary" htmlType="submit">
+          <Button block type="primary" htmlType="submit" loading={isPending}>
             Sign up
           </Button>
         </FormItem>

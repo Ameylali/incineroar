@@ -100,10 +100,15 @@ export const AddOrEditTrainingModal = (props: AddOrEditTrainingModalProps) => {
       onCancel={closeModal}
       loading={isLoading}
       footer={[
-        <Button key="back" onClick={closeModal}>
+        <Button key="back" onClick={closeModal} disabled={isPending}>
           Cancel
         </Button>,
-        <Button key="submit" type="primary" onClick={() => form.submit()}>
+        <Button
+          key="submit"
+          type="primary"
+          onClick={() => form.submit()}
+          loading={isPending}
+        >
           {isEdit ? 'Update' : 'Submit'}
         </Button>,
       ]}
