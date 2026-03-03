@@ -1,8 +1,11 @@
 'use client';
 
-import { Alert, Col, Flex, Row } from 'antd';
+import { Alert, Button, Col, Flex, Row } from 'antd';
+import { useRouter } from 'next/navigation';
+import { Key } from 'react';
 import { useMemo, useState } from 'react';
 
+import { MAX_BULK_ANALYSIS_BATTLES } from '@/src/constants/training-limits';
 import { useTrainigsQuery } from '@/src/hooks/training-queries';
 import { Training } from '@/src/types/api';
 
@@ -16,6 +19,9 @@ const Page = () => {
   );
   const { isLoading, data } = useTrainigsQuery();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [selectedTrainings, setSelectedTrainings] = useState<Training[]>([]);
+  const router = useRouter();
   const defaultTraining = data?.trainings.find(({ isDefault }) => isDefault);
   const trainingsAndBattles = useMemo(() => {
     const trainings = data?.trainings ?? [];
@@ -41,6 +47,35 @@ const Page = () => {
     description: '',
   };
 
+  const handleSelectionChange = (
+    selectedRowKeys: Key[],
+    selectedRows: Training[],
+  ) => {
+    setSelectedRowKeys(selectedRowKeys);
+    setSelectedTrainings(selectedRows);
+  };
+
+  const totalSelectedBattles = selectedTrainings.reduce(
+    (total, training) => total + training.battles.length,
+    0,
+  );
+
+  const handleBulkAnalyze = () => {
+    if (totalSelectedBattles > MAX_BULK_ANALYSIS_BATTLES) {
+      setErrorMessage(
+        `Cannot analyze more than ${MAX_BULK_ANALYSIS_BATTLES.toLocaleString()} battles. Please reduce your selection.`,
+      );
+      return;
+    }
+    if (selectedTrainings.length === 0) {
+      setErrorMessage('Please select at least one training to analyze.');
+      return;
+    }
+
+    const trainingIds = selectedTrainings.map((t) => t.id).join(',');
+    router.push(`/home/training/analytics?ids=${trainingIds}`);
+  };
+
   return (
     <>
       {errorMessage && (
@@ -49,14 +84,25 @@ const Page = () => {
         </Row>
       )}
       <Row className="mb-3">
-        <Flex gap={3}>
-          <AddTraining />
-          {defaultTraining && (
-            <NewBattle
+        <Flex gap={3} justify="space-between" align="center">
+          <Flex gap={3}>
+            <AddTraining />
+            {defaultTraining && (
+              <NewBattle
+                type="default"
+                trainingId={defaultTraining.id}
+                onError={setErrorMessage}
+              />
+            )}
+          </Flex>
+          {selectedTrainings.length > 0 && (
+            <Button
               type="default"
-              trainingId={defaultTraining.id}
-              onError={setErrorMessage}
-            />
+              onClick={handleBulkAnalyze}
+              disabled={totalSelectedBattles > MAX_BULK_ANALYSIS_BATTLES}
+            >
+              Analyze {selectedTrainings.length} selected
+            </Button>
           )}
         </Flex>
       </Row>
@@ -67,6 +113,9 @@ const Page = () => {
             trainingsAndBattles={trainingsAndBattles}
             onEditTraining={setSelectedTraining}
             training={defaultTraining ?? fallbackDefaultTraining}
+            enableRowSelection={true}
+            selectedRowKeys={selectedRowKeys}
+            onSelectionChange={handleSelectionChange}
           />
         </Col>
       </Row>

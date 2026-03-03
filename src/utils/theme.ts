@@ -162,6 +162,8 @@ export const theme: ThemeConfig = {
       headerColor: '#e6e1ea',
       rowHoverBg: '#1a1024',
       borderColor: '#241833',
+      rowSelectedBg: '#2d1457',
+      rowSelectedHoverBg: '#3d1b67',
     },
 
     /* =========================

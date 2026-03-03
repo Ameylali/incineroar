@@ -45,10 +45,42 @@ const getTrainingAnalysis = async (trainingId: string) => {
   return result.data;
 };
 
+const getBulkTrainingAnalysis = async (trainingIds: string[]) => {
+  if (trainingIds.length === 0) {
+    // Return empty analysis structure for empty selection
+    return {
+      analysis: {
+        matchups: { all: [], openings: [] },
+        pokemon: [],
+        keyActions: {
+          kos: [],
+          faints: [],
+          switches: [],
+          pokemonKeyActions: { byMe: [], byRival: [] },
+        },
+      },
+    };
+  }
+
+  const idsParam = trainingIds.join(',');
+  const result = await axios.get<GET_TRAINING_ANALYSIS>(
+    `/api/user/training/analytics?ids=${idsParam}`,
+  );
+  return result.data;
+};
+
 export const useTrainingAnalysisQuery = (trainingId: string) => {
   return useSuspenseQuery({
     queryKey: TrainingKeys.trainingAnalysis(trainingId),
     queryFn: () => getTrainingAnalysis(trainingId),
+    staleTime: Infinity,
+  });
+};
+
+export const useBulkTrainingAnalysisQuery = (trainingIds: string[]) => {
+  return useSuspenseQuery({
+    queryKey: ['bulk-training-analysis', trainingIds],
+    queryFn: () => getBulkTrainingAnalysis(trainingIds),
     staleTime: Infinity,
   });
 };

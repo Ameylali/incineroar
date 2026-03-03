@@ -1,3 +1,4 @@
+import re
 from typing import Union
 
 from playwright.sync_api import Page
@@ -48,6 +49,28 @@ class TrainingsPage:
 
     def modal_team_item(self, value: str):
         return self.page.get_by_title(value)
+
+    def training_row_checkbox(self, training_name: str):
+        """Get checkbox for a specific training row"""
+        # Look for row that contains the training name and has Type=Training
+        return self.page.locator(
+            f"tr:has-text('{training_name}'):has-text('Training')"
+        ).locator("label")
+
+    def battle_row_checkbox(self, battle_name: str):
+        """Get checkbox for a specific battle row"""
+        # Look for row that contains the battle name and has Type=Battle
+        return self.page.locator(
+            f"tr:has-text('{battle_name}'):has-text('Battle')"
+        ).locator("label")
+
+    def bulk_analyze_button(self, count: int):
+        """Get the bulk analyze button with specific count"""
+        return self.page.get_by_role("button", name=f"Analyze {count} selected")
+
+    def bulk_analyze_button_any(self):
+        """Get any bulk analyze button (for checking visibility)"""
+        return self.page.get_by_role("button", name=re.compile(r"Analyze \d+ selected"))
 
 
 class DetailedTrainingPage:
@@ -117,6 +140,14 @@ class AnalyzeTrainingPage:
 
     def expand_row(self, name: str):
         return self.page.get_by_role("row", name=name).get_by_label("Expand row")
+
+
+class BulkAnalyticsPage(AnalyzeTrainingPage):
+    def navigate(self, training_ids: str):
+        """Navigate to bulk analytics page with multiple training IDs"""
+        self.page.goto(
+            f"{NEXT_PUBLIC_APP_URL}/home/training/analytics?ids={training_ids}"
+        )
 
 
 class BattlePage:
