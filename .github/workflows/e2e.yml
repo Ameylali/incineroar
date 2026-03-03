@@ -5,6 +5,10 @@ on:
     types:
     - 'vercel.deployment.success'
 
+permissions:
+  statuses: write
+  contents: read
+
 jobs:
   e2e:
     if: github.event.client_payload.environment == 'preview'
