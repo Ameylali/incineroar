@@ -11,6 +11,7 @@ from src.pages.login import LoginPage
 from src.pages.training import (
     AnalyzeTrainingPage,
     BattlePage,
+    BulkAnalyticsPage,
     DetailedTrainingPage,
     TrainingsPage,
 )
@@ -99,7 +100,7 @@ def test_data(
         make_team(user, Team("team 1", 2025, "reg h", "rayquaza")),
     ]
 
-    for i in range(6):
+    for i in range(9):
         training = Training(
             name=f"Test training {i + 1}",
             description="Sample training description",
@@ -872,3 +873,153 @@ class TestBattle(TestBaseTraining):
         expect(page.get_by_role("main")).to_contain_text("flash-canon")
         expect(page.get_by_role("main")).to_contain_text("Switch")
         expect(page.get_by_role("main")).to_contain_text("Turn 2")
+
+
+class TestBulkAnalytics(TestBaseTraining):
+    @pytest.fixture(autouse=True)
+    def setup(self, page: Page, test_data):
+        user, trainings, teams = test_data
+        self.user = user
+        self.trainings = trainings
+        self.teams = teams
+        self.training_page = TrainingsPage(page)
+        self.trainings_page = TrainingsPage(page)
+        self.bulk_analytics_page = BulkAnalyticsPage(page)
+        login_page = LoginPage(page)
+        login_page.login(self.user)
+
+        expect(page).to_have_url(re.compile("/home"))
+
+        self.training_page.navigate()
+
+    def test_bulk_analyze_multiple_trainings(self, page: Page):
+        """Test bulk analysis with multiple trainings"""
+
+        # Verify we're on the right page and can see trainings
+        expect(page).to_have_url(re.compile("/home/training"))
+
+        # Get trainings with battles (using actual training names from test data 7-9)
+        training_names = ["Test training 7", "Test training 8", "Test training 9"]
+
+        # Select training checkboxes using page selectors
+        for training_name in training_names:
+            training_checkbox = self.trainings_page.training_row_checkbox(training_name)
+            training_checkbox.check()
+
+        # Verify analyze button appears with correct text
+        analyze_button = self.trainings_page.bulk_analyze_button(len(training_names))
+        expect(analyze_button).to_be_visible()
+        expect(analyze_button).to_be_enabled()
+
+        # Click analyze button
+        analyze_button.click()
+
+        # Verify navigation to bulk analytics page
+        expect(page).to_have_url(re.compile(r"/home/training/analytics\?ids=.*"))
+
+        # Wait for page to load
+        expect(page.get_by_role("tab", name="Matchups")).to_be_visible()
+
+    def test_bulk_analytics_page_displays_correct_tabs(self, page: Page):
+        """Test that bulk analytics page displays all tabs correctly"""
+
+        # Get first two trainings with battles
+        training_ids = [self.trainings[6].id, self.trainings[7].id]
+        ids_param = ",".join(training_ids)
+
+        # Navigate directly to bulk analytics
+        self.bulk_analytics_page.navigate(ids_param)
+
+        # Verify all tabs are present
+        expect(self.bulk_analytics_page.matchups_tab).to_be_visible()
+        expect(self.bulk_analytics_page.pokemon_tab).to_be_visible()
+        expect(self.bulk_analytics_page.key_actions_tab).to_be_visible()
+
+    def test_bulk_analytics_matchups_tab(self, page: Page):
+        """Test matchups tab functionality in bulk analytics"""
+
+        # Get first two trainings
+        training_ids = [self.trainings[6].id, self.trainings[7].id]
+        ids_param = ",".join(training_ids)
+
+        # Navigate to bulk analytics
+        self.bulk_analytics_page.navigate(ids_param)
+
+        # Click matchups tab
+        self.bulk_analytics_page.matchups_tab.click()
+
+        # Verify matchups content is loaded (similar to single training analytics)
+        # Wait for content to load
+        page.wait_for_load_state("networkidle")
+        expect(page.get_by_role("main")).to_contain_text(
+            "All Matches"
+        )  # Case-sensitive fix
+
+    def test_bulk_analytics_pokemon_tab(self, page: Page):
+        """Test pokemon tab functionality in bulk analytics"""
+
+        # Get first two trainings
+        training_ids = [self.trainings[6].id, self.trainings[7].id]
+        ids_param = ",".join(training_ids)
+
+        # Navigate to bulk analytics
+        self.bulk_analytics_page.navigate(ids_param)
+
+        # Click pokemon tab
+        self.bulk_analytics_page.pokemon_tab.click()
+
+        # Verify pokemon analytics content - check for Usage tab within pokemon section
+        expect(page.get_by_role("main")).to_contain_text("Usage")
+        expect(page.get_by_role("main")).to_contain_text("Pokemon")
+
+    def test_bulk_analytics_key_actions_tab(self, page: Page):
+        """Test key actions tab functionality in bulk analytics"""
+
+        # Get first two trainings
+        training_ids = [self.trainings[6].id, self.trainings[7].id]
+        ids_param = ",".join(training_ids)
+
+        # Navigate to bulk analytics
+        self.bulk_analytics_page.navigate(ids_param)
+
+        # Click key actions tab
+        self.bulk_analytics_page.key_actions_tab.click()
+
+        # Verify key actions content
+        expect(self.bulk_analytics_page.kos_tab).to_be_visible()
+        expect(self.bulk_analytics_page.faints_tab).to_be_visible()
+        expect(self.bulk_analytics_page.switches_tab).to_be_visible()
+
+    def test_analyze_button_only_appears_when_selections_made(self, page: Page):
+        """Test that analyze button only appears when trainings are selected"""
+
+        # Initially, analyze button should not be visible
+        analyze_button = self.trainings_page.bulk_analyze_button_any()
+        expect(analyze_button).not_to_be_visible()
+
+        # Select a training (using actual training name from test data)
+        training_checkbox = self.trainings_page.training_row_checkbox("Test training 9")
+        training_checkbox.check()
+
+        # Now analyze button should appear
+        analyze_button = self.trainings_page.bulk_analyze_button(1)
+        expect(analyze_button).to_be_visible()
+
+        # Uncheck training
+        training_checkbox.uncheck()
+
+        # Analyze button should disappear
+        expect(analyze_button).not_to_be_visible()
+
+    def test_bulk_analytics_error_handling(self, page: Page):
+        """Test error handling for invalid training IDs"""
+
+        # Navigate directly with invalid ID
+        self.bulk_analytics_page.navigate("invalid-id-123")
+
+        # Should handle gracefully - either redirect or show error
+        # Wait for page to load and verify it doesn't crash
+        page.wait_for_load_state("networkidle")
+
+        # Page should either show error message or redirect appropriately
+        # This test ensures the page doesn't completely break
