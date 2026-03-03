@@ -3,6 +3,7 @@ import { Button, Dropdown, MenuProps, Table, TableProps } from 'antd';
 import { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Key } from 'react';
 
 import {
   useDeleteBattleMutation,
@@ -77,6 +78,12 @@ interface TrainingsOrBattlesTableProps {
   trainingsAndBattles: (Training | Battle)[];
   isLoading?: boolean;
   training: Training;
+  enableRowSelection?: boolean;
+  selectedRowKeys?: Key[];
+  onSelectionChange?: (
+    selectedRowKeys: Key[],
+    selectedRows: Training[],
+  ) => void;
 }
 
 const TrainingsOrBattlesTable = ({
@@ -84,6 +91,9 @@ const TrainingsOrBattlesTable = ({
   training,
   trainingsAndBattles,
   isLoading,
+  enableRowSelection = false,
+  selectedRowKeys = [],
+  onSelectionChange,
 }: TrainingsOrBattlesTableProps) => {
   const getTrainingOrBattlePath = (
     trainingOrBattle: Training | Battle,
@@ -134,11 +144,32 @@ const TrainingsOrBattlesTable = ({
     },
   ];
 
+  const rowSelection: TableProps<Training | Battle>['rowSelection'] =
+    enableRowSelection
+      ? {
+          type: 'checkbox',
+          selectedRowKeys,
+          onChange: (selectedRowKeys, selectedRows) => {
+            // Filter only trainings (not battles) and exclude default trainings
+            const trainingRows = selectedRows.filter(
+              (row): row is Training => !('turns' in row) && !row.isDefault,
+            );
+            onSelectionChange?.(selectedRowKeys, trainingRows);
+          },
+          getCheckboxProps: (record) => ({
+            // Disable selection for battles and default trainings
+            disabled: 'turns' in record || record.isDefault,
+            name: record.name,
+          }),
+        }
+      : undefined;
+
   return (
     <TableComponent
       loading={isLoading}
       columns={COLUMNS}
       dataSource={withKeys(trainingsAndBattles)}
+      rowSelection={rowSelection}
     />
   );
 };
