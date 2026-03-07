@@ -18,11 +18,13 @@ import {
   SelectProps,
   Tabs,
 } from 'antd';
+import ErrorList from 'antd/es/form/ErrorList';
 import { useWatch } from 'antd/es/form/Form';
 import FormItem from 'antd/es/form/FormItem';
 import FormList from 'antd/es/form/FormList';
 import Text from 'antd/es/typography/Text';
 import { FormInstance } from 'antd/lib';
+import { FormListProps } from 'antd/lib/form';
 import {
   createContext,
   useContext,
@@ -79,6 +81,14 @@ interface PokemonInputProps
   value?: string;
   onChange?: (value: string) => void;
 }
+
+const noEmptyListRule: Exclude<FormListProps['rules'], undefined>[0] = {
+  validator: async (_, value: unknown[]) => {
+    if (!value || value.length === 0) {
+      return Promise.reject(new Error('At least one item is required'));
+    }
+  },
+};
 
 const filterPokemonByPlayer = (
   actions: Action[],
@@ -543,8 +553,8 @@ const TurnFormFields = ({
       <FormItem name={[baseName, 'index']} hidden>
         <Input />
       </FormItem>
-      <FormList name={[baseName, 'actions']}>
-        {(fields, { add, remove, move }) => (
+      <FormList name={[baseName, 'actions']} rules={[noEmptyListRule]}>
+        {(fields, { add, remove, move }, { errors }) => (
           <>
             {fields.map(({ key, name }, index) => (
               <ActionFormFields
@@ -566,6 +576,7 @@ const TurnFormFields = ({
                 Add action
               </Button>
             </FormItem>
+            <ErrorList errors={errors} />
           </>
         )}
       </FormList>
@@ -737,13 +748,26 @@ const EditBattle = ({
       .map(({ species }) => species)
       .filter((p) => p !== undefined) ?? [];
 
-  const interceptOnFinish = (data: EditBattleFormData) => {
+  const interceptOnFinish = async (data: EditBattleFormData) => {
+    // Validate the form to enforce noEmptyListRule before submission
+    await form.validateFields();
+
+    for (let i = 0; i < data.turns.length; i++) {
+      const turn = data.turns[i];
+      if (!turn.actions || turn.actions.length === 0) {
+        setActiveTabKey(i.toString()); // Switch to the problematic turn
+        return;
+      }
+    }
+
+    // Set proper indices before submission
     data.turns.forEach((turn, index) => {
       turn.index = index;
       turn.actions.forEach((action, actionIndex) => {
         action.index = actionIndex;
       });
     });
+
     return onFinish(data);
   };
 
@@ -792,7 +816,7 @@ const EditBattle = ({
         form={form}
         scrollToFirstError
         initialValues={initialData}
-        onFinish={interceptOnFinish}
+        onFinish={(values) => void interceptOnFinish(values)}
       >
         {'error' in state && (
           <FormItem>
@@ -844,8 +868,8 @@ const EditBattle = ({
         >
           <Input.TextArea placeholder="Notes" rows={4} />
         </BattleFormItem>
-        <FormList name="turns">
-          {(fields, { add, remove, move }) => (
+        <FormList name="turns" rules={[noEmptyListRule]}>
+          {(fields, { add, remove, move }, { errors }) => (
             <FormItem>
               <TurnsTabs
                 fields={fields}
@@ -855,6 +879,7 @@ const EditBattle = ({
                 activeTabKey={activeTabKey}
                 setActiveTabKey={setActiveTabKey}
               />
+              <ErrorList errors={errors} />
             </FormItem>
           )}
         </FormList>
