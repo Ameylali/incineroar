@@ -251,7 +251,7 @@ const PokemonMultiSelect = ({
       className="w-[200px]"
       value={value}
       onChange={onChange}
-      options={toOptions(options.length > 1 ? options : baseOptions)}
+      options={toOptions(options.length > 0 ? options : baseOptions)}
       onSearch={onSearch}
       virtual
     />
