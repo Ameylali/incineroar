@@ -1,5 +1,19 @@
 import type { ThemeConfig } from 'antd';
 
+// Extend the theme token interface to include our custom colors
+declare module 'antd/es/theme/interface' {
+  interface AliasToken {
+    colorChartWin: string;
+    colorChartLose: string;
+    colorChartTie: string;
+    colorChartNeutral: string;
+    colorPlayerP1: string;
+    colorPlayerP2: string;
+    colorKeyword: string;
+    colorWhite: string;
+  }
+}
+
 export const theme: ThemeConfig = {
   token: {
     /* =========================
@@ -44,6 +58,22 @@ export const theme: ThemeConfig = {
     colorWarning: '#d7ac61',
     colorError: '#d94a4a',
     colorInfo: '#4077d1',
+
+    /* =========================
+       Chart & Results
+    ========================= */
+    colorChartWin: '#52c41a',
+    colorChartLose: '#ff4d4f',
+    colorChartTie: '#faad14',
+    colorChartNeutral: '#d9d9d9',
+
+    /* =========================
+       Other Elements
+    ========================= */
+    colorPlayerP1: '#1890ff',
+    colorPlayerP2: '#f5222d',
+    colorKeyword: '#d4b106',
+    colorWhite: '#ffffff',
 
     /* =========================
        Motion
@@ -171,7 +201,7 @@ export const theme: ThemeConfig = {
     ========================= */
     Modal: {
       colorBgElevated: '#1a1a24',
-      headerBg: '#1a1a24',
+      headerBg: '#12121a',
       contentBg: '#12121a',
     },
 
