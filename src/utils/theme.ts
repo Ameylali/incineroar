@@ -14,7 +14,7 @@ declare module 'antd/es/theme/interface' {
   }
 }
 
-export const theme: ThemeConfig = {
+export const theme = {
   token: {
     /* =========================
        Base
@@ -217,4 +217,4 @@ export const theme: ThemeConfig = {
       colorTextLightSolid: '#ffffff',
     },
   },
-};
+} satisfies ThemeConfig;

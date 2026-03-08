@@ -8,6 +8,7 @@ import Title from 'antd/es/typography/Title';
 import { usePathname, useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
 
+import MarkdownText from '@/src/components/MarkdownText';
 import TeamPreview from '@/src/components/TeamPreview';
 import { useBattleQuery } from '@/src/hooks/training-queries';
 import useUserQuery from '@/src/hooks/useUserQuery';
@@ -123,7 +124,9 @@ const Page = ({
         <TeamPreview team={teamP2} />
       </Flex>
       <Flex vertical gap="small">
-        <Card title="Notes">{battle.notes}</Card>
+        <Card title="Notes">
+          <MarkdownText>{battle.notes}</MarkdownText>
+        </Card>
         {battle.turns.map((turn, index) => (
           <Turn key={index} turn={turn} />
         ))}

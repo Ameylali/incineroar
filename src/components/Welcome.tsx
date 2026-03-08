@@ -1,16 +1,18 @@
-import { Flex, theme, Typography } from 'antd';
+import { Flex, Typography } from 'antd';
 import Title from 'antd/es/typography/Title';
 import Image from 'next/image';
 import Link from 'next/link';
 
 import foLabsLogo from '@/public/fo-labs.svg';
 
+import { theme } from '../utils/theme';
+
 interface WelcomeProps {
   showEnter?: boolean;
 }
 
 const Welcome = ({ showEnter }: WelcomeProps) => {
-  const { token } = theme.useToken();
+  const { token } = theme;
 
   return (
     <Flex vertical justify="center" align="center" className="h-full">

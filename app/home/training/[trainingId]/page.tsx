@@ -7,6 +7,7 @@ import { TabsProps } from 'antd/lib';
 import { useRouter } from 'next/navigation';
 import { use, useState } from 'react';
 
+import MarkdownText from '@/src/components/MarkdownText';
 import TeamPreview from '@/src/components/TeamPreview';
 import { useTrainingQuery } from '@/src/hooks/training-queries';
 import { Training } from '@/src/types/api';
@@ -29,7 +30,7 @@ const TrainingTab = ({ training }: TrainingTabProps) => {
         )}
         {training.team && <TeamPreview team={training.team.parsedTeam} />}
       </Flex>
-      <Text style={{ whiteSpace: 'pre-wrap' }}>{training.description}</Text>
+      <MarkdownText>{training.description}</MarkdownText>
     </>
   );
 };
