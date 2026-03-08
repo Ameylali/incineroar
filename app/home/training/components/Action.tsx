@@ -20,7 +20,7 @@ const PokemonName = ({ player: playerProp, pokemon }: PokemonNameProps) => {
   };
 
   const player =
-    playerProp ?? (pokemon.includes(':') ? pokemon.split(':')[0] : undefined);
+    (pokemon.includes(':') ? pokemon.split(':')[0] : undefined) ?? playerProp;
 
   if (pokemon === '') return <Text>-</Text>;
 

@@ -234,7 +234,7 @@ export class ShowdownSimProtocolParser
       this.pushAction(
         {
           type: reason.type === 'ability' ? 'ability' : 'effect',
-          name: `${ActionKeyWords.CANT} not ${move} due to ${reason.name}`,
+          name: `${ActionKeyWords.CANT} not ${move ?? 'perform previous action'} due to ${reason.name}`,
           targets: [],
           user: taggedPokemon ?? ActionKeyWords.UNKNOWN,
         },
@@ -436,6 +436,7 @@ export class ShowdownSimProtocolParser
           name: `${ActionKeyWords.CRIT} hit`,
           targets: [taggedPokemon ?? ActionKeyWords.UNKNOWN],
           user: lastMove?.user ?? ActionKeyWords.UNKNOWN,
+          player: lastMove?.player,
         },
         ctx,
       );
