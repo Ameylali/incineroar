@@ -87,7 +87,8 @@ class DetailedTrainingPage:
         )
         self.edit_button = self.page.get_by_role("button", name="edit Edit")
         self.training_tab = self.page.get_by_role("tab", name="Training")
-        self.edit_action_button = self.page.get_by_role("menuitem", name="Edit")
+        self.edit_action_button = self.page.get_by_role("menuitem", name="Edit", exact=True)
+        self.quick_edit_action_button = self.page.get_by_role("menuitem", name="Quick edit", exact=True)
         self.delete_action_button = self.page.get_by_role("menuitem", name="Delete")
         self.training_modal = {
             "name": self.page.get_by_role("textbox", name="Name"),
