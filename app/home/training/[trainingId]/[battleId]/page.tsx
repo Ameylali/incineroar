@@ -67,8 +67,9 @@ const Page = ({
   searchParams,
 }: PageProps<'/home/training/[trainingId]/[battleId]'>) => {
   const { trainingId, battleId } = use(params);
-  const { edit } = use(searchParams);
+  const { edit, quick } = use(searchParams);
   const [isEdit, setIsEdit] = useState(edit === 'true');
+  const [isQuickEdit] = useState(quick === 'true');
   const { data } = useBattleQuery(trainingId, battleId);
   const { data: userData } = useUserQuery();
   const pathname = usePathname();
@@ -76,11 +77,14 @@ const Page = ({
   const { battle } = data;
 
   useEffect(() => {
-    const params = new URLSearchParams([['edit', isEdit ? 'true' : 'false']]);
+    const params = new URLSearchParams([
+      ['edit', isEdit ? 'true' : 'false'],
+      ['quick', isQuickEdit ? 'true' : 'false'],
+    ]);
     router.replace(
       `/home/training/${trainingId}/${battleId}?${params.toString()}`,
     );
-  }, [isEdit, pathname, router, trainingId, battleId]);
+  }, [isEdit, pathname, router, trainingId, battleId, isQuickEdit]);
   const { teamP1, teamP2 } = extractTeams(battle);
 
   if (isEdit) {
@@ -91,6 +95,7 @@ const Page = ({
         teams={userData.teams}
         onCancel={() => setIsEdit(false)}
         onSuccess={() => setIsEdit(false)}
+        isQuickEdit={isQuickEdit}
       />
     );
   }

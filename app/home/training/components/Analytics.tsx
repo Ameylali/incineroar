@@ -71,7 +71,7 @@ const ResultsBarChart = ({ results }: ResultsBarChartProps) => {
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '10px',
-            color: getContrastYIQ(color),
+            color: getContrastYIQ(color as `#${string}`),
           }}
           title={`${result.result}: ${result.count}`}
         >

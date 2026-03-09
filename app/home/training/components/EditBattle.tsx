@@ -27,6 +27,7 @@ import { FormInstance } from 'antd/lib';
 import { FormListProps } from 'antd/lib/form';
 import {
   createContext,
+  ReactNode,
   useContext,
   useEffect,
   useMemo,
@@ -584,14 +585,6 @@ const TurnFormFields = ({
   );
 };
 
-interface EditBattleProps {
-  trainingId: string;
-  battle: Battle;
-  teams: Team[];
-  onCancel: () => void;
-  onSuccess?: () => void;
-}
-
 const resultOptions = [
   {
     value: null,
@@ -704,17 +697,124 @@ const useActionNameAutocomplete = (): AutocompleteService => {
   return actionNameAutocomplete;
 };
 
+interface QuickActionFormFieldsProps
+  extends Pick<ActionFormFieldsProps, 'name' | 'namePrefix' | 'index'> {
+  player?: Action['player'];
+}
+
+const QuickActionFormFields = ({
+  name: baseName,
+  player,
+}: QuickActionFormFieldsProps) => {
+  return (
+    <Flex justify="space-between" wrap="wrap">
+      <ActionFormItem name={[baseName, 'index']} hidden>
+        <Input />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'player']} label="Player">
+        <Select
+          className="min-w-[80px]"
+          options={playerOptions}
+          aria-label="player input"
+        />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'user']} label="User" hidden>
+        <PokemonInput player={player} aria-label="user input" />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'type']}>
+        <Select options={typeOptions} aria-label="type input" />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'name']} label="Name" hidden>
+        <ActionNameAutocomplete aria-label="name input" />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'targets']} label="Targets">
+        <PokemonMultiSelect aria-label="targets input" />
+      </ActionFormItem>
+    </Flex>
+  );
+};
+type QuickTurnFormFieldsProps = Pick<
+  TurnFormFieldsProps,
+  'name' | 'namePrefix'
+>;
+
+const QuickTurnFormFields = ({
+  name: baseName,
+  namePrefix,
+}: QuickTurnFormFieldsProps) => {
+  const ActionLabel: Record<number, ReactNode | undefined> = {
+    0: <Text>My opening</Text>,
+    2: <Text>Rival&apos;s opening</Text>,
+    4: <Text>My back</Text>,
+    6: <Text>Rival&apos;s back</Text>,
+  };
+  return (
+    <Card>
+      <Flex className="mb-3" justify="space-between">
+        <Text>Quick battle</Text>
+      </Flex>
+      <FormItem name={[baseName, 'index']} hidden>
+        <Input />
+      </FormItem>
+      <FormList name={[baseName, 'actions']} rules={[noEmptyListRule]}>
+        {(fields, {}, { errors }) => (
+          <>
+            {fields.map(({ key, name }, index) => (
+              <>
+                {ActionLabel[index]}
+                <QuickActionFormFields
+                  key={key}
+                  namePrefix={[...(namePrefix ?? []), baseName, 'actions']}
+                  name={name}
+                  index={index}
+                />
+              </>
+            ))}
+            <ErrorList errors={errors} />
+          </>
+        )}
+      </FormList>
+    </Card>
+  );
+};
+
+interface EditBattleProps {
+  trainingId: string;
+  battle: Battle;
+  teams: Team[];
+  onCancel: () => void;
+  onSuccess?: () => void;
+  isQuickEdit?: boolean;
+}
+
 const EditBattle = ({
   battle,
   teams,
   onCancel,
   trainingId,
   onSuccess,
+  isQuickEdit = false,
 }: EditBattleProps) => {
   const [activeTabKey, setActiveTabKey] = useState('0');
   const { team: _, ...battleData } = battle;
-  const initialData: EditBattleFormData = {
+  const quickEditBattleData = {
     ...battleData,
+    turns: [
+      {
+        index: 0,
+        actions: [0, 1, 2, 3, 4, 5, 6, 7].map((index) => ({
+          index,
+          user: '',
+          name: '',
+          type: index < 4 ? ('switch' as const) : ('effect' as const),
+          targets: battleData.turns?.[0]?.actions?.[index]?.targets ?? [],
+          player: index % 4 < 2 ? ('p1' as const) : ('p2' as const),
+        })),
+      },
+    ],
+  };
+  const initialData: EditBattleFormData = {
+    ...(isQuickEdit ? quickEditBattleData : battleData),
     teamId: battle.team?.id,
     trainingId,
   };
@@ -868,21 +968,30 @@ const EditBattle = ({
         >
           <Input.TextArea placeholder="Notes" rows={4} />
         </BattleFormItem>
-        <FormList name="turns" rules={[noEmptyListRule]}>
-          {(fields, { add, remove, move }, { errors }) => (
-            <FormItem>
-              <TurnsTabs
-                fields={fields}
-                add={add}
-                remove={remove}
-                move={move}
-                activeTabKey={activeTabKey}
-                setActiveTabKey={setActiveTabKey}
-              />
-              <ErrorList errors={errors} />
-            </FormItem>
-          )}
-        </FormList>
+        {
+          <FormList name="turns" rules={[noEmptyListRule]}>
+            {(fields, { add, remove, move }, { errors }) => (
+              <FormItem>
+                isQuickEdit ? (
+                {fields.map(({ key, name }) => (
+                  <QuickTurnFormFields key={key} name={name} />
+                ))}
+                ) : (
+                <TurnsTabs
+                  fields={fields}
+                  add={add}
+                  remove={remove}
+                  move={move}
+                  activeTabKey={activeTabKey}
+                  setActiveTabKey={setActiveTabKey}
+                />
+                )
+                <ErrorList errors={errors} />
+              </FormItem>
+            )}
+          </FormList>
+        }
+
         <FormItem>
           <Flex gap={3}>
             <Button onClick={onCancel} disabled={isPending}>
