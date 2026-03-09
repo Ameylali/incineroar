@@ -278,18 +278,10 @@ class TestTrainings(TestBaseTraining):
     def test_add_quick_battle(self, page: Page):
         """
         1. click on the new battle button
-        2. check that user is redirected to /home/training/[trainingId]/[battleId]
-        3. navigate to training page
-        4. verify the list shows a new battle with title "Battel on mm/dd/yyyy" replace the date placeholder with the current date
+        2. verify the list shows a new battle with title "Battel on mm/dd/yyyy" replace the date placeholder with the current date
         """
         # Click on the new battle button
         self.training_page.new_battle_button.click()
-
-        # Check that user is redirected to training/battle URL
-        expect(page).to_have_url(re.compile(r"/home/training/.+/.+"))
-
-        # Navigate back to training page
-        self.training_page.navigate()
 
         # Get current date for verification
         current_date = datetime.now().strftime("%-m/%-d/%Y")
@@ -361,22 +353,14 @@ class TestDetailedTraining(TestBaseTraining):
     def test_add_battle(self, page: Page):
         """
         1. click on new battle
-        2. verify url is now /home/training/[trainingId]/[battleId]
-        3. go back to /home/training/[trainingId] with trainingId of trainings[2].id
-        4. verify a battle with name "Battle on dd/mm/yyyy" is present in the table,
+        2. verify a battle with name "Battle on dd/mm/yyyy" is present in the table,
            replace the date with the current date without leading zeros.
-        5. delete the created battle
+        3. delete the created battle
         """
         training_id = self.trainings[2].id
 
         # Click on new battle
         self.detailed_training_page.add_battle_button.click()
-
-        # Verify URL redirected to battle page
-        expect(page).to_have_url(re.compile(rf"/home/training/{training_id}/.+"))
-
-        # Go back to training page
-        self.detailed_training_page.navigate(training_id or "")
 
         # Get current date for verification
         current_date = datetime.now().strftime("%-m/%-d/%Y")
@@ -440,6 +424,28 @@ class TestDetailedTraining(TestBaseTraining):
         # Verify URL contains edit=true
         expect(page).to_have_url(
             re.compile(rf"/home/training/{training_id}/{test_battle.id}\?edit=true")
+        )
+
+    def test_quick_edit_battle(self, page: Page):
+        """
+        1. use test_battle as trainings[2].battles[0]
+        2. click on the row actions button for test_battle's row
+        3. select "Quick edit" option
+        4. verify url is now /home/training/[trainingId]/[battleId]?edit=true&quick=true
+        """
+        training = self.trainings[2]
+        test_battle = training.battles[0]
+        training_id = training.id
+
+        # Click on row actions button for the battle
+        self.detailed_training_page.row_actions_button(test_battle.name).click()
+
+        # Select Quick edit option
+        self.detailed_training_page.quick_edit_action_button.click()
+
+        # Verify URL contains edit=true&quick=true
+        expect(page).to_have_url(
+            re.compile(rf"/home/training/{training_id}/{test_battle.id}\?edit=true&quick=true")
         )
 
     def test_delete_battle(self, page: Page):
@@ -603,7 +609,7 @@ class TestAnalyzeTraining(TestBaseTraining):
         5. verify column headers with these names are visible:
             - Move
             - Average Usage
-            - Average Usage By Match
+            - Expected Usage By Match
         """
         # Click on pokemon tab
         self.analyze_training_page.pokemon_tab.click()
@@ -626,7 +632,7 @@ class TestAnalyzeTraining(TestBaseTraining):
             page.get_by_role("columnheader", name="Average Usage", exact=True)
         ).to_be_visible()
         expect(
-            page.get_by_role("columnheader", name="Average Usage By Match", exact=True)
+            page.get_by_role("columnheader", name="Expected Usage By Match", exact=True)
         ).to_be_visible()
 
     def test_kos(self, page: Page):

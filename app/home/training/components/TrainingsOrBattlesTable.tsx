@@ -30,6 +30,14 @@ const BattleActionsMenu = ({ training, battle }: BattleActionsMenuProps) => {
         router.push(`/home/training/${training.id}/${battle.id}?edit=true`),
     },
     {
+      label: 'Quick edit',
+      key: 'quick-edit',
+      onClick: () =>
+        router.push(
+          `/home/training/${training.id}/${battle.id}?edit=true&quick=true`,
+        ),
+    },
+    {
       label: 'Delete',
       key: 'delete',
       onClick: () => mutate(),

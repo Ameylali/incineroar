@@ -1,6 +1,5 @@
 import { PlusCircleOutlined } from '@ant-design/icons';
 import { Button, ButtonProps } from 'antd';
-import { useRouter } from 'next/navigation';
 
 import { TrainingKeys } from '@/src/constants/query-keys';
 import { queryClient } from '@/src/utils/query-clients';
@@ -14,7 +13,6 @@ interface NewBattleProps {
 }
 
 const NewBattle = ({ trainingId, onError, ...props }: NewBattleProps) => {
-  const router = useRouter();
   const onNewBattle = async () => {
     if (!trainingId) return;
     const { battle, message } = await createBattle(trainingId);
@@ -28,7 +26,6 @@ const NewBattle = ({ trainingId, onError, ...props }: NewBattleProps) => {
     await queryClient.invalidateQueries({
       queryKey: TrainingKeys.trainings(),
     });
-    router.push(`/home/training/${trainingId}/${battle?.id}?edit=true`);
   };
 
   if (!trainingId) {

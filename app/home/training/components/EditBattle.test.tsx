@@ -40,7 +40,7 @@ const battle: Battle = {
   createdAt: '',
 };
 
-const Component = () => {
+const Component = ({ isQuickEdit = false }: { isQuickEdit?: boolean }) => {
   return (
     <QueryClientWrap>
       <EditBattle
@@ -49,6 +49,7 @@ const Component = () => {
         onCancel={() => {}}
         trainingId=""
         onSuccess={() => {}}
+        isQuickEdit={isQuickEdit}
       />
     </QueryClientWrap>
   );
@@ -104,5 +105,11 @@ describe('EditBattle', () => {
     formData,
     formName: 'editBattle',
     component: <Component />,
+  });
+
+  itShouldContainFormItems({
+    formData,
+    formName: 'editBattle',
+    component: <Component isQuickEdit={true} />,
   });
 });

@@ -1,4 +1,4 @@
-import { Col, Row } from 'antd';
+import { Col, Row, theme } from 'antd';
 import Text from 'antd/es/typography/Text';
 import React from 'react';
 
@@ -11,14 +11,16 @@ interface PokemonNameProps {
   pokemon: string;
 }
 
-const PLAYER_COLOR_MAP: Record<string, string> = {
-  p1: '#1890ff',
-  p2: '#f5222d',
-};
-
 const PokemonName = ({ player: playerProp, pokemon }: PokemonNameProps) => {
+  const { token } = theme.useToken();
+
+  const PLAYER_COLOR_MAP: Record<string, string> = {
+    p1: token.colorPlayerP1,
+    p2: token.colorPlayerP2,
+  };
+
   const player =
-    playerProp ?? (pokemon.includes(':') ? pokemon.split(':')[0] : undefined);
+    (pokemon.includes(':') ? pokemon.split(':')[0] : undefined) ?? playerProp;
 
   if (pokemon === '') return <Text>-</Text>;
 
@@ -27,7 +29,7 @@ const PokemonName = ({ player: playerProp, pokemon }: PokemonNameProps) => {
   }
 
   return (
-    <Text style={{ color: PLAYER_COLOR_MAP[player] ?? 'white' }} code>
+    <Text style={{ color: PLAYER_COLOR_MAP[player] ?? token.colorWhite }} code>
       {pokemon}
     </Text>
   );
@@ -36,6 +38,7 @@ const PokemonName = ({ player: playerProp, pokemon }: PokemonNameProps) => {
 const KEYWORDS = Object.values(ActionKeyWords);
 
 const formatText = (text: string) => {
+  const { token } = theme.useToken();
   const tokenized = text.split(' ');
   const formatted: React.ReactNode[] = [];
   let flags: {
@@ -44,11 +47,11 @@ const formatText = (text: string) => {
     prevTokenWasAbility?: boolean;
   } = {};
 
-  for (const token of tokenized) {
-    if (KEYWORDS.includes(token)) {
+  for (const textToken of tokenized) {
+    if (KEYWORDS.includes(textToken)) {
       formatted.push(
-        <Text strong style={{ color: '#d4b106' }}>
-          {token}
+        <Text strong style={{ color: token.colorKeyword }}>
+          {textToken}
         </Text>,
       );
     } else {
@@ -57,19 +60,19 @@ const formatText = (text: string) => {
         flags.prevTokenWasMove ||
         flags.prevTokenWasAbility
       ) {
-        formatted.push(<Text code>{token}</Text>);
+        formatted.push(<Text code>{textToken}</Text>);
       } else {
-        formatted.push(token);
+        formatted.push(textToken);
       }
     }
     flags = {};
-    if (token.startsWith('item:')) {
+    if (textToken.startsWith('item:')) {
       flags.prevTokenWasItem = true;
     }
-    if (token.startsWith('move:')) {
+    if (textToken.startsWith('move:')) {
       flags.prevTokenWasMove = true;
     }
-    if (token.startsWith('ability:')) {
+    if (textToken.startsWith('ability:')) {
       flags.prevTokenWasAbility = true;
     }
     formatted.push(<span> </span>);

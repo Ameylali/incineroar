@@ -1,4 +1,5 @@
-import { Button, List, Popover, Table, TableProps, Tag } from 'antd';
+import { Button, List, Popover, Table, TableProps, theme } from 'antd';
+import { useMemo } from 'react';
 
 import PokemonSprite from '@/src/components/PokemonSprite';
 import TeamPreview from '@/src/components/TeamPreview';
@@ -6,12 +7,90 @@ import TeamService from '@/src/services/pokemon/team';
 import {
   BattleMovesAnalytics,
   BattlePokemonAnalytics,
+  BattleResultAnalytics,
   MatchupAnalytics,
   PokemonKeyActionAnalytics,
   PokemonKoOrFaintAnalytics,
   TurnMap,
 } from '@/src/types/api';
 import { withKeys } from '@/src/utils/antd-adapters';
+import { getContrastYIQ } from '@/src/utils/style';
+
+interface ResultsBarChartProps {
+  results: BattleResultAnalytics[];
+}
+
+const ResultsBarChart = ({ results }: ResultsBarChartProps) => {
+  const { token } = theme.useToken();
+  const totalCount = results.reduce((sum, result) => sum + result.count, 0);
+
+  const order = { win: 0, tie: 1, loose: 2, unknown: 3 };
+
+  // Sort results to ensure consistent ordering (wins first, losses last)
+  const sortedResults = results.sort((a, b) => {
+    return (
+      (order[a.result as keyof typeof order] ?? 4) -
+      (order[b.result as keyof typeof order] ?? 4)
+    );
+  });
+
+  const segments = useMemo(() => {
+    return sortedResults.map((result, index) => {
+      const percentage = (result.count / totalCount) * 100;
+      const cumulativePercent = sortedResults.reduce((sum, r, i) => {
+        if (i < index) {
+          return sum + (r.count / totalCount) * 100;
+        }
+        return sum;
+      }, 0);
+      const color =
+        result.result === 'win'
+          ? token.colorChartWin
+          : result.result === 'loose'
+            ? token.colorChartLose
+            : result.result === 'tie'
+              ? token.colorChartTie
+              : token.colorChartNeutral;
+
+      const segment = (
+        <div
+          key={result.result}
+          style={{
+            position: 'absolute',
+            left: `${cumulativePercent}%`,
+            width: `${percentage}%`,
+            height: '100%',
+            backgroundColor: color,
+            borderRadius:
+              index === 0
+                ? '4px 0 0 4px'
+                : index === sortedResults.length - 1
+                  ? '0 4px 4px 0'
+                  : '0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '10px',
+            color: getContrastYIQ(color as `#${string}`),
+          }}
+          title={`${result.result}: ${result.count}`}
+        >
+          {percentage > 15 ? `${percentage.toFixed(0)}%` : ''}
+        </div>
+      );
+
+      return segment;
+    });
+  }, [sortedResults, totalCount, token]);
+
+  if (totalCount === 0) return null;
+
+  return (
+    <div style={{ position: 'relative', width: '100px', height: '20px' }}>
+      {segments}
+    </div>
+  );
+};
 
 const MatchupTable = Table<MatchupAnalytics>;
 const teamService = new TeamService();
@@ -44,13 +123,9 @@ export const TrainingMatchupAnalyticsTable = ({
       title: 'Results',
       dataIndex: 'results',
       key: 'results',
-      render: (results: MatchupAnalytics['results']) => {
-        return results.map((result) => (
-          <Tag key={result.result}>
-            {result.result}: {result.count}
-          </Tag>
-        ));
-      },
+      render: (results: MatchupAnalytics['results']) => (
+        <ResultsBarChart results={results} />
+      ),
     },
   ];
   return (
@@ -120,13 +195,15 @@ const MovesAnalyticsTable = ({ moves }: MovesAnalyticsTableProps) => {
       key: 'averageUsage',
       defaultSortOrder: 'descend',
       sorter: (a, b) => a.averageUsage - b.averageUsage,
+      render: (value: number) => `${(100 * value).toFixed(2)}%`,
     },
     {
-      title: 'Average Usage By Match',
+      title: 'Expected Usage By Match',
       dataIndex: 'averageUsageByMatch',
       key: 'averageUsageByMatch',
       defaultSortOrder: 'ascend',
       sorter: (a, b) => a.averageUsageByMatch - b.averageUsageByMatch,
+      render: (value: number) => value.toFixed(2),
     },
   ];
   return <Table dataSource={withKeys(moves)} columns={COLUMNS} />;
@@ -284,6 +361,7 @@ const PokemonOrActionUsageList = ({
 }: PokemonOrActionUsagePopoverListProps) => {
   const content = (
     <UsageList
+      className="max-h-[50vh] overflow-y-auto"
       dataSource={usage}
       renderItem={(item) => (
         <List.Item>

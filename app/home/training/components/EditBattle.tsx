@@ -18,13 +18,16 @@ import {
   SelectProps,
   Tabs,
 } from 'antd';
+import ErrorList from 'antd/es/form/ErrorList';
 import { useWatch } from 'antd/es/form/Form';
 import FormItem from 'antd/es/form/FormItem';
 import FormList from 'antd/es/form/FormList';
 import Text from 'antd/es/typography/Text';
 import { FormInstance } from 'antd/lib';
+import { FormListProps } from 'antd/lib/form';
 import {
   createContext,
+  ReactNode,
   useContext,
   useEffect,
   useMemo,
@@ -79,6 +82,14 @@ interface PokemonInputProps
   value?: string;
   onChange?: (value: string) => void;
 }
+
+const noEmptyListRule: Exclude<FormListProps['rules'], undefined>[0] = {
+  validator: async (_, value: unknown[]) => {
+    if (!value || value.length === 0) {
+      return Promise.reject(new Error('At least one item is required'));
+    }
+  },
+};
 
 const filterPokemonByPlayer = (
   actions: Action[],
@@ -241,7 +252,7 @@ const PokemonMultiSelect = ({
       className="w-[200px]"
       value={value}
       onChange={onChange}
-      options={toOptions(options.length > 1 ? options : baseOptions)}
+      options={toOptions(options.length > 0 ? options : baseOptions)}
       onSearch={onSearch}
       virtual
     />
@@ -543,8 +554,8 @@ const TurnFormFields = ({
       <FormItem name={[baseName, 'index']} hidden>
         <Input />
       </FormItem>
-      <FormList name={[baseName, 'actions']}>
-        {(fields, { add, remove, move }) => (
+      <FormList name={[baseName, 'actions']} rules={[noEmptyListRule]}>
+        {(fields, { add, remove, move }, { errors }) => (
           <>
             {fields.map(({ key, name }, index) => (
               <ActionFormFields
@@ -566,20 +577,13 @@ const TurnFormFields = ({
                 Add action
               </Button>
             </FormItem>
+            <ErrorList errors={errors} />
           </>
         )}
       </FormList>
     </Card>
   );
 };
-
-interface EditBattleProps {
-  trainingId: string;
-  battle: Battle;
-  teams: Team[];
-  onCancel: () => void;
-  onSuccess?: () => void;
-}
 
 const resultOptions = [
   {
@@ -693,17 +697,124 @@ const useActionNameAutocomplete = (): AutocompleteService => {
   return actionNameAutocomplete;
 };
 
+interface QuickActionFormFieldsProps
+  extends Pick<ActionFormFieldsProps, 'name' | 'namePrefix' | 'index'> {
+  player?: Action['player'];
+}
+
+const QuickActionFormFields = ({
+  name: baseName,
+  player,
+}: QuickActionFormFieldsProps) => {
+  return (
+    <Flex justify="space-between" wrap="wrap">
+      <ActionFormItem name={[baseName, 'index']} hidden>
+        <Input />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'player']} label="Player">
+        <Select
+          className="min-w-[80px]"
+          options={playerOptions}
+          aria-label="player input"
+        />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'user']} label="User" hidden>
+        <PokemonInput player={player} aria-label="user input" />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'type']}>
+        <Select options={typeOptions} aria-label="type input" />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'name']} label="Name" hidden>
+        <ActionNameAutocomplete aria-label="name input" />
+      </ActionFormItem>
+      <ActionFormItem name={[baseName, 'targets']} label="Targets">
+        <PokemonMultiSelect aria-label="targets input" />
+      </ActionFormItem>
+    </Flex>
+  );
+};
+type QuickTurnFormFieldsProps = Pick<
+  TurnFormFieldsProps,
+  'name' | 'namePrefix'
+>;
+
+const QuickTurnFormFields = ({
+  name: baseName,
+  namePrefix,
+}: QuickTurnFormFieldsProps) => {
+  const ActionLabel: Record<number, ReactNode | undefined> = {
+    0: <Text>My opening</Text>,
+    2: <Text>Rival&apos;s opening</Text>,
+    4: <Text>My back</Text>,
+    6: <Text>Rival&apos;s back</Text>,
+  };
+  return (
+    <Card>
+      <Flex className="mb-3" justify="space-between">
+        <Text>Quick battle</Text>
+      </Flex>
+      <FormItem name={[baseName, 'index']} hidden>
+        <Input />
+      </FormItem>
+      <FormList name={[baseName, 'actions']} rules={[noEmptyListRule]}>
+        {(fields, {}, { errors }) => (
+          <>
+            {fields.map(({ key, name }, index) => (
+              <>
+                {ActionLabel[index]}
+                <QuickActionFormFields
+                  key={key}
+                  namePrefix={[...(namePrefix ?? []), baseName, 'actions']}
+                  name={name}
+                  index={index}
+                />
+              </>
+            ))}
+            <ErrorList errors={errors} />
+          </>
+        )}
+      </FormList>
+    </Card>
+  );
+};
+
+interface EditBattleProps {
+  trainingId: string;
+  battle: Battle;
+  teams: Team[];
+  onCancel: () => void;
+  onSuccess?: () => void;
+  isQuickEdit?: boolean;
+}
+
 const EditBattle = ({
   battle,
   teams,
   onCancel,
   trainingId,
   onSuccess,
+  isQuickEdit = false,
 }: EditBattleProps) => {
   const [activeTabKey, setActiveTabKey] = useState('0');
   const { team: _, ...battleData } = battle;
-  const initialData: EditBattleFormData = {
+  const quickEditBattleData = {
     ...battleData,
+    turns: [
+      {
+        index: 0,
+        actions: [0, 1, 2, 3, 4, 5, 6, 7].map((index) => ({
+          index,
+          user: '',
+          name: '',
+          type: index < 4 ? ('switch' as const) : ('effect' as const),
+          targets: battleData.turns?.[0]?.actions?.[index]?.targets ?? [],
+          player: index % 4 < 2 ? ('p1' as const) : ('p2' as const),
+        })),
+      },
+    ],
+  };
+  const initialData: EditBattleFormData = {
+    ...(isQuickEdit ? quickEditBattleData : battleData),
     teamId: battle.team?.id,
     trainingId,
   };
@@ -737,13 +848,26 @@ const EditBattle = ({
       .map(({ species }) => species)
       .filter((p) => p !== undefined) ?? [];
 
-  const interceptOnFinish = (data: EditBattleFormData) => {
+  const interceptOnFinish = async (data: EditBattleFormData) => {
+    // Validate the form to enforce noEmptyListRule before submission
+    await form.validateFields();
+
+    for (let i = 0; i < data.turns.length; i++) {
+      const turn = data.turns[i];
+      if (!turn.actions || turn.actions.length === 0) {
+        setActiveTabKey(i.toString()); // Switch to the problematic turn
+        return;
+      }
+    }
+
+    // Set proper indices before submission
     data.turns.forEach((turn, index) => {
       turn.index = index;
       turn.actions.forEach((action, actionIndex) => {
         action.index = actionIndex;
       });
     });
+
     return onFinish(data);
   };
 
@@ -792,7 +916,7 @@ const EditBattle = ({
         form={form}
         scrollToFirstError
         initialValues={initialData}
-        onFinish={interceptOnFinish}
+        onFinish={(values) => void interceptOnFinish(values)}
       >
         {'error' in state && (
           <FormItem>
@@ -844,20 +968,30 @@ const EditBattle = ({
         >
           <Input.TextArea placeholder="Notes" rows={4} />
         </BattleFormItem>
-        <FormList name="turns">
-          {(fields, { add, remove, move }) => (
-            <FormItem>
-              <TurnsTabs
-                fields={fields}
-                add={add}
-                remove={remove}
-                move={move}
-                activeTabKey={activeTabKey}
-                setActiveTabKey={setActiveTabKey}
-              />
-            </FormItem>
-          )}
-        </FormList>
+        {
+          <FormList name="turns" rules={[noEmptyListRule]}>
+            {(fields, { add, remove, move }, { errors }) => (
+              <FormItem>
+                {isQuickEdit ? (
+                  fields.map(({ key, name }) => (
+                    <QuickTurnFormFields key={key} name={name} />
+                  ))
+                ) : (
+                  <TurnsTabs
+                    fields={fields}
+                    add={add}
+                    remove={remove}
+                    move={move}
+                    activeTabKey={activeTabKey}
+                    setActiveTabKey={setActiveTabKey}
+                  />
+                )}
+                <ErrorList errors={errors} />
+              </FormItem>
+            )}
+          </FormList>
+        }
+
         <FormItem>
           <Flex gap={3}>
             <Button onClick={onCancel} disabled={isPending}>

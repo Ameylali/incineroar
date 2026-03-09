@@ -1,11 +1,11 @@
 'use client';
 
 import { Flex, Tag } from 'antd';
-import Paragraph from 'antd/es/typography/Paragraph';
 import Text from 'antd/es/typography/Text';
 import Title from 'antd/es/typography/Title';
 import { use } from 'react';
 
+import MarkdownText from '@/src/components/MarkdownText';
 import PokemonSet from '@/src/components/PokemonSet';
 import { useTeamQuery } from '@/src/hooks/team-queries';
 
@@ -24,7 +24,7 @@ const Page = ({ params }: PageProps<'/home/teams/[id]'>) => {
           ))}
         </Flex>
       </Flex>
-      <Paragraph>{data.description}</Paragraph>
+      <MarkdownText>{data.description}</MarkdownText>
       <Flex wrap>
         {data.parsedTeam.map((pokemon, index) => (
           <div key={pokemon.species || index} className="w-[50%]">
