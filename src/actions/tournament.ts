@@ -7,6 +7,7 @@ import TournamentParserFactory, {
 } from '@/src/services/pokemon/tournament';
 import { TupleUnion } from '@/src/types';
 import { AddTournamentFormData } from '@/src/types/form';
+import { validators } from '@/src/utils/validators';
 
 import { fetchRawData } from '../utils/fetch';
 
@@ -16,24 +17,14 @@ const tournamentDataSources: TupleUnion<AddTournamentFormData['source']> = [
 ];
 
 const addTournamentFormDataSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Name must be at least 1 characters')
-    .max(40, 'Name must be at most 40 characters'),
+  name: validators.tournamentName,
   source: z.union(
     tournamentDataSources.map((val) => z.literal(val)),
     'Invalid data source',
   ),
   data: z.string().min(1, 'Data must be at least 1 characters'),
-  season: z
-    .number()
-    .min(2008)
-    .max(new Date().getFullYear() + 1),
-  format: z
-    .string()
-    .min(1, 'Format must be at least 1 characters')
-    .max(50, 'Format must be at most 50 characters'),
+  season: validators.season,
+  format: validators.format,
 }) satisfies ZodType<AddTournamentFormData>;
 
 export const validateCreateTournamentData = (data: unknown) => {
