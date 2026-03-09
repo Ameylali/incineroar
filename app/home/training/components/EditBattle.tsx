@@ -971,11 +971,11 @@ const EditBattle = ({
         {
           <FormList name="turns" rules={[noEmptyListRule]}>
             {(fields, { add, remove, move }, { errors }) => (
-              <FormItem>
+              <FormItem>{
                 isQuickEdit ? (
-                {fields.map(({ key, name }) => (
+                fields.map(({ key, name }) => (
                   <QuickTurnFormFields key={key} name={name} />
-                ))}
+                ))
                 ) : (
                 <TurnsTabs
                   fields={fields}
@@ -985,7 +985,7 @@ const EditBattle = ({
                   activeTabKey={activeTabKey}
                   setActiveTabKey={setActiveTabKey}
                 />
-                )
+                )}
                 <ErrorList errors={errors} />
               </FormItem>
             )}
