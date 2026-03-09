@@ -505,6 +505,7 @@ class TestDetailedTraining(TestBaseTraining):
             re.compile(rf"/home/training/{training_id}/{test_battle.id}")
         )
 
+
 class TestAnalyzeTraining(TestBaseTraining):
     @pytest.fixture(autouse=True)
     def setup(self, page: Page, test_data):
