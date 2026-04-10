@@ -6,13 +6,12 @@ from playwright.sync_api import Page, expect
 from src.models.user import User
 from src.pages.home import HomePage
 from src.pages.login import LoginPage
-from tests.conftest import GetUser
 
 
 class TestHome:
     @pytest.fixture(autouse=True)
-    def setup(self, page: Page, get_user: GetUser):
-        user = get_user("mewtwo")
+    def setup(self, page: Page, random_user: User):
+        user = random_user
         self.home_page = HomePage(page)
         self.user = user
 
@@ -49,8 +48,8 @@ class TestHome:
 
 class TestAdminHome:
     @pytest.fixture(autouse=True)
-    def setup(self, page: Page, get_user: GetUser):
-        user = get_user("mew")
+    def setup(self, page: Page, random_admin: User):
+        user = random_admin
         self.home_page = HomePage(page)
         self.user = user
 

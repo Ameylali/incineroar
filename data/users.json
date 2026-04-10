@@ -1,16 +1,44 @@
 {
   "users": [
-  {
-    "username": "arceus",
-    "role": "admin"
-  },
-  {
-    "username": "mew",
-    "role": "admin"
-  },
-  {
-    "username": "mewtwo",
-    "role": "user"
-  }
-]
+    {
+      "username": "arceus",
+      "role": "admin"
+    },
+    {
+      "username": "mew",
+      "role": "admin"
+    },
+    {
+      "username": "dialga",
+      "role": "admin"
+    },
+    {
+      "username": "palkia",
+      "role": "admin"
+    },
+    {
+      "username": "giratina",
+      "role": "admin"
+    },
+    {
+      "username": "mewtwo",
+      "role": "user"
+    },
+    {
+      "username": "pikachu",
+      "role": "user"
+    },
+    {
+      "username": "eevee",
+      "role": "user"
+    },
+    {
+      "username": "snorlax",
+      "role": "user"
+    },
+    {
+      "username": "gengar",
+      "role": "user"
+    }
+  ]
 }

@@ -31,10 +31,9 @@ class TestLanding:
 
         expect(page).to_have_url(re.compile("/auth"))
 
-    @pytest.mark.user("mewtwo")
-    def test_enter_app_already_signed_in(self, page: Page, user: User):
+    def test_enter_app_already_signed_in(self, page: Page, random_user: User):
         login_page = LoginPage(page)
-        login_page.login(user)
+        login_page.login(random_user)
 
         expect(page).to_have_url(re.compile("/home"))
 
