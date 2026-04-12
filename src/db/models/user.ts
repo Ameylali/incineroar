@@ -1,4 +1,5 @@
 import { compare, hash } from 'bcrypt';
+import escapeRegExp from 'lodash.escaperegexp';
 import { Model, models, Schema } from 'mongoose';
 
 import { TupleUnion } from '@/src/types';
@@ -76,7 +77,7 @@ export default class UserRepository implements BaseRepository<User> {
 
   async create(user: SignUpData, role?: User['role']) {
     const sameUsernameCount = await this.model.countDocuments({
-      username: new RegExp(user.username, 'i'),
+      username: new RegExp(escapeRegExp(user.username), 'i'),
     });
     if (sameUsernameCount) {
       throw new UserAlreadyExistsError(user);

@@ -5,6 +5,9 @@ on:
     types:
     - 'vercel.deployment.success'
 
+permissions:
+  statuses: write
+
 jobs:
   seed-production:
     runs-on: ubuntu-latest
