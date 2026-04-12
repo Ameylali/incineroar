@@ -109,7 +109,7 @@ export default class UserRepository implements BaseRepository<User> {
     password,
   }: SignInData): Promise<UnsensitiveUserData | undefined> {
     const user = await this.model.findOne({
-      username: new RegExp(username, 'i'),
+      username: new RegExp(escapeRegExp(username), 'i'),
     });
     if (!user) {
       return undefined;
