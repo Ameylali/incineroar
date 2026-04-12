@@ -47,6 +47,8 @@ export const TournamentSchema = new Schema<Tournament>(
 TournamentSchema.path('createdAt').get((val?: Date) => val?.toISOString?.());
 TournamentSchema.path('updatedAt').get((val?: Date) => val?.toISOString?.());
 
+TournamentSchema.index({ createdAt: -1 });
+
 export default class TournamentRepository
   implements BaseRepository<Tournament, CreateTournamentData>
 {

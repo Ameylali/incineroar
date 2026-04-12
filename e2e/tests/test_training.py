@@ -15,6 +15,7 @@ from src.pages.training import (
     DetailedTrainingPage,
     TrainingsPage,
 )
+from src.util.names import prefixed_name
 from tests.conftest import MakeBattle, MakeTeam, MakeTraining
 
 BASE_TURNS = [
@@ -80,29 +81,31 @@ BASE_TURNS = [
 
 
 class TestBaseTraining:
-    username = "mewtwo"
     user: User
     trainings: list[Training]
     teams: list[Team]
+    prefix: str
 
 
 @pytest.fixture(autouse=True, scope="module")
 def test_data(
-    get_user,
+    random_user: User,
+    test_prefix: str,
     make_training: MakeTraining,
     make_battle: MakeBattle,
     make_team: MakeTeam,
 ):
-    user = get_user(TestBaseTraining.username)
+    user = random_user
+    prefix = test_prefix
     trainings = []
 
     teams = [
-        make_team(user, Team("team 1", 2025, "reg h", "rayquaza")),
+        make_team(user, Team(prefixed_name("team 1"), 2025, "reg h", "rayquaza")),
     ]
 
     for i in range(9):
         training = Training(
-            name=f"Test training {i + 1}",
+            name=prefixed_name(f"Test training {i + 1}"),
             description="Sample training description",
             season=2025,
             format="reg j",
@@ -148,30 +151,31 @@ def test_data(
 
             turns.extend(BASE_TURNS)
             battle = Battle(
-                name=f"Battle {j + 1}",
+                name=prefixed_name(f"Battle {j + 1}"),
                 notes=f"Test battle {j + 1} for training {i + 1}",
                 turns=turns,
             )
 
             # Empty battles for training with idx 4
             if i == 4:
-                battle = Battle("empty battle", "")
+                battle = Battle(prefixed_name("empty battle"), "")
 
             created_battle = make_battle(user, created_training.id, battle)
             created_training.battles.append(created_battle)
 
         trainings.append(created_training)
 
-    yield user, trainings, teams
+    yield user, trainings, teams, prefix
 
 
 class TestTrainings(TestBaseTraining):
     @pytest.fixture(autouse=True)
     def setup(self, page: Page, test_data):
-        user, trainings, teams = test_data
+        user, trainings, teams, prefix = test_data
         self.user = user
         self.trainings = trainings
         self.teams = teams
+        self.prefix = prefix
         self.training_page = TrainingsPage(page)
         login_page = LoginPage(page)
         login_page.login(self.user)
@@ -191,11 +195,13 @@ class TestTrainings(TestBaseTraining):
         2. Verify the training appears in the training list with correct details.
         3. Clean up by deleting the created training.
         """
+        create_name = prefixed_name("create training test")
+
         # Click add training button
         self.training_page.add_training_button.click()
 
         # Fill out the training form
-        self.training_page.training_modal["name"].fill("create training test")
+        self.training_page.training_modal["name"].fill(create_name)
         self.training_page.training_modal["description"].fill("This is a test training")
         self.training_page.training_modal["season"].click()
         self.training_page.modal_season_option(2025).click()
@@ -207,15 +213,15 @@ class TestTrainings(TestBaseTraining):
         self.training_page.training_modal["submit"].click()
 
         # Verify the training appears in the list
-        expect(self.training_page.training_link("create training test")).to_be_visible()
+        expect(self.training_page.training_link(create_name)).to_be_visible()
 
         # Clean up by deleting the created training
-        self.training_page.row_actions_button("create training test").click()
+        self.training_page.row_actions_button(create_name).click()
         self.training_page.row_action_delete_button.click()
 
         # Verify it's deleted
         expect(
-            self.training_page.training_link("create training test")
+            self.training_page.training_link(create_name)
         ).not_to_be_visible()
 
     def test_edit_training(self, page: Page):
@@ -228,13 +234,14 @@ class TestTrainings(TestBaseTraining):
         2. Verify the training was updated by opening the edit modal and check the updated values
         """
         training = self.trainings[0]
+        updated_name = prefixed_name("updated test training 1")
 
         # Open edit modal for first training
         self.training_page.row_actions_button(training.name).click()
         self.training_page.row_action_edit_button.click()
 
         # Update training data
-        self.training_page.training_modal["name"].fill("updated test training 1")
+        self.training_page.training_modal["name"].fill(updated_name)
         self.training_page.training_modal["description"].fill("updated description")
         self.training_page.training_modal["format"].fill("updated")
         self.training_page.training_modal["team"].click()
@@ -244,18 +251,18 @@ class TestTrainings(TestBaseTraining):
         self.training_page.training_modal["update"].click()
 
         # Verify the training was updated by opening edit modal again
-        self.training_page.row_actions_button("updated test training 1").click()
+        self.training_page.row_actions_button(updated_name).click()
         self.training_page.row_action_edit_button.click()
 
         # Check the updated values
         expect(self.training_page.training_modal["name"]).to_have_value(
-            "updated test training 1"
+            updated_name
         )
         expect(self.training_page.training_modal["description"]).to_have_value(
             "updated description"
         )
         expect(self.training_page.training_modal["format"]).to_have_value("updated")
-        expect(page.get_by_text("team 1")).to_be_visible()
+        expect(page.get_by_text(self.teams[0].name)).to_be_visible()
 
         # Cancel to close modal
         self.training_page.training_modal["cancel"].click()
@@ -299,10 +306,11 @@ class TestTrainings(TestBaseTraining):
 class TestDetailedTraining(TestBaseTraining):
     @pytest.fixture(autouse=True)
     def setup(self, page: Page, test_data):
-        user, trainings, teams = test_data
+        user, trainings, teams, prefix = test_data
         self.user = user
         self.trainings = trainings
         self.teams = teams
+        self.prefix = prefix
         self.detailed_training_page = DetailedTrainingPage(page)
         login_page = LoginPage(page)
         login_page.login(self.user)
@@ -509,10 +517,11 @@ class TestDetailedTraining(TestBaseTraining):
 class TestAnalyzeTraining(TestBaseTraining):
     @pytest.fixture(autouse=True)
     def setup(self, page: Page, test_data):
-        user, trainings, teams = test_data
+        user, trainings, teams, prefix = test_data
         self.user = user
         self.trainings = trainings
         self.teams = teams
+        self.prefix = prefix
         self.analyze_training_page = AnalyzeTrainingPage(page)
         login_page = LoginPage(page)
         login_page.login(self.user)
@@ -801,10 +810,11 @@ class TestAnalyzeTraining(TestBaseTraining):
 class TestBattle(TestBaseTraining):
     @pytest.fixture(autouse=True)
     def setup(self, page: Page, test_data):
-        user, trainings, teams = test_data
+        user, trainings, teams, prefix = test_data
         self.user = user
         self.trainings = trainings
         self.teams = teams
+        self.prefix = prefix
         self.battle_page = BattlePage(page)
         login_page = LoginPage(page)
         login_page.login(self.user)
@@ -816,9 +826,11 @@ class TestBattle(TestBaseTraining):
         )
 
     def test_edit(self, page: Page):
+        updated_battle_name = prefixed_name("Updated test edit battle")
+        
         self.battle_page.edit_button.click()
 
-        self.battle_page.battle_form["name"].fill("Updated test edit battle")
+        self.battle_page.battle_form["name"].fill(updated_battle_name)
         self.battle_page.battle_form["result"].click()
         self.battle_page.select_option("win").click()
         self.battle_page.battle_form["season"].click()
@@ -826,7 +838,7 @@ class TestBattle(TestBaseTraining):
         self.battle_page.battle_form["format"].click()
         self.battle_page.battle_form["format"].fill("reg f")
         self.battle_page.battle_form["teams"].click()
-        self.battle_page.select_option("team 1").click()
+        self.battle_page.select_option(self.teams[0].name).click()
         self.battle_page.battle_form["notes"].click()
         self.battle_page.battle_form["notes"].fill("updated notes")
 
@@ -867,7 +879,7 @@ class TestBattle(TestBaseTraining):
         self.battle_page.battle_form["save"].click()
 
         # Verify changes
-        expect(page.locator("h2")).to_contain_text("Updated test edit battle")
+        expect(page.locator("h2")).to_contain_text(updated_battle_name)
         expect(page.get_by_role("main")).to_contain_text("win")
         expect(page.get_by_role("main")).to_contain_text("2026 - reg f")
         expect(page.get_by_role("main")).to_contain_text("updated notes")
@@ -884,10 +896,11 @@ class TestBattle(TestBaseTraining):
 class TestBulkAnalytics(TestBaseTraining):
     @pytest.fixture(autouse=True)
     def setup(self, page: Page, test_data):
-        user, trainings, teams = test_data
+        user, trainings, teams, prefix = test_data
         self.user = user
         self.trainings = trainings
         self.teams = teams
+        self.prefix = prefix
         self.training_page = TrainingsPage(page)
         self.trainings_page = TrainingsPage(page)
         self.bulk_analytics_page = BulkAnalyticsPage(page)
@@ -905,15 +918,19 @@ class TestBulkAnalytics(TestBaseTraining):
         expect(page).to_have_url(re.compile("/home/training"))
 
         # Get trainings with battles (using actual training names from test data 7-9)
-        training_names = ["Test training 7", "Test training 8", "Test training 9"]
+        t_names = [
+            self.trainings[6].name,
+            self.trainings[7].name,
+            self.trainings[8].name,
+        ]
 
         # Select training checkboxes using page selectors
-        for training_name in training_names:
-            training_checkbox = self.trainings_page.training_row_checkbox(training_name)
+        for t_name in t_names:
+            training_checkbox = self.trainings_page.training_row_checkbox(t_name)
             training_checkbox.check()
 
         # Verify analyze button appears with correct text
-        analyze_button = self.trainings_page.bulk_analyze_button(len(training_names))
+        analyze_button = self.trainings_page.bulk_analyze_button(len(t_names))
         expect(analyze_button).to_be_visible()
         expect(analyze_button).to_be_enabled()
 
@@ -1004,7 +1021,8 @@ class TestBulkAnalytics(TestBaseTraining):
         expect(analyze_button).not_to_be_visible()
 
         # Select a training (using actual training name from test data)
-        training_checkbox = self.trainings_page.training_row_checkbox("Test training 9")
+        t_name = self.trainings[8].name
+        training_checkbox = self.trainings_page.training_row_checkbox(t_name)
         training_checkbox.check()
 
         # Now analyze button should appear

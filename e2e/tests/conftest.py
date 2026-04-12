@@ -9,6 +9,8 @@ from src.models.user import User
 from src.util.api import IncineroarAPI, create_authenticated_api
 from src.util.constants import VERCEL_AUTOMATION_BYPASS_SECRET
 from src.util.data import load_users
+from src.util.prefix import get_test_prefix
+from src.util.user_pool import get_random_admin, get_random_user
 
 
 def pytest_configure(config: pytest.Config):
@@ -128,3 +130,40 @@ def make_battle() -> Generator[MakeBattle, Any, None]:
     for api, training_id, battle in battles:
         if battle.id is not None:
             api.delete_battle(training_id, battle.id)
+
+
+@pytest.fixture(scope="session")
+def test_prefix() -> str:
+    """
+    Session-scoped unique prefix for entity names.
+    
+    Ensures all entity names in this test run are unique,
+    preventing collisions with concurrent test runs.
+    """
+    prefix = get_test_prefix()
+    print(f"\n[E2E] Test session prefix: {prefix}")
+    return prefix
+
+
+@pytest.fixture(scope="module")
+def random_user() -> User:
+    """
+    Get a random non-admin user from the pool.
+    
+    Module-scoped to ensure consistency within a test module.
+    """
+    user = get_random_user()
+    print(f"\n[E2E] Selected random user: {user.username}")
+    return user
+
+
+@pytest.fixture(scope="module")
+def random_admin() -> User:
+    """
+    Get a random admin user from the pool.
+    
+    Module-scoped to ensure consistency within a test module.
+    """
+    admin = get_random_admin()
+    print(f"\n[E2E] Selected random admin: {admin.username}")
+    return admin

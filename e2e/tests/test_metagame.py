@@ -8,7 +8,8 @@ from src.models.tournament import Tournament
 from src.models.user import User
 from src.pages.login import LoginPage
 from src.pages.metagame import MetagamePage
-from tests.conftest import GetUser, MakeTournament
+from src.util.names import prefixed_name
+from tests.conftest import MakeTournament
 
 TOURNAMENT_RAW_DATA = """
 [
@@ -187,21 +188,22 @@ TOURNAMENT_URL = (
 
 
 class TestBaseMetagame:
-    username = "mewtwo"
     user: User
     admin_user: User
     tournaments: list[Tournament]
+    prefix: str
 
 
 @pytest.fixture(autouse=True, scope="module")
-def test_data(get_user: GetUser, make_tournament: MakeTournament):
-    admin_user = get_user("mew")
-    user = get_user(TestBaseMetagame.username)
+def test_data(random_user: User, random_admin: User, test_prefix: str, make_tournament: MakeTournament):
+    admin_user = random_admin
+    user = random_user
+    prefix = test_prefix
     tournaments = [
         make_tournament(
             admin_user,
             Tournament(
-                "test tournament 1",
+                prefixed_name("test tournament 1"),
                 2025,
                 "reg h",
                 TOURNAMENT_RAW_DATA,
@@ -211,7 +213,7 @@ def test_data(get_user: GetUser, make_tournament: MakeTournament):
         make_tournament(
             admin_user,
             Tournament(
-                "test tournament 2",
+                prefixed_name("test tournament 2"),
                 2025,
                 "reg j",
                 TOURNAMENT_RAW_DATA,
@@ -220,16 +222,17 @@ def test_data(get_user: GetUser, make_tournament: MakeTournament):
         ),
     ]
 
-    yield admin_user, user, tournaments
+    yield admin_user, user, tournaments, prefix
 
 
 class TestMetagame(TestBaseMetagame):
     @pytest.fixture(autouse=True)
     def setup(self, page: Page, test_data):
-        admin_user, user, tournaments = test_data
+        admin_user, user, tournaments, prefix = test_data
         self.admin_user = admin_user
         self.user = user
         self.tournaments = tournaments
+        self.prefix = prefix
         self.metagame_page = MetagamePage(page)
         login_page = LoginPage(page)
         login_page.login(self.user)
@@ -239,15 +242,17 @@ class TestMetagame(TestBaseMetagame):
         self.metagame_page.navigate()
 
     def test_go_to_tournament(self, page: Page):
-        self.metagame_page.tournament_link("test tournament 1").click()
+        t_name = self.tournaments[0].name
+        self.metagame_page.tournament_link(t_name).click()
 
         expect(page).to_have_url(re.compile(f"/home/metagame/{self.tournaments[0].id}"))
-        expect(page.locator("h2")).to_contain_text("test tournament 1")
+        expect(page.locator("h2")).to_contain_text(t_name)
         expect(page.get_by_role("main")).to_contain_text("2025 - reg h")
         expect(page.locator("tbody")).to_contain_text("user 1")
 
     def test_tournament_analytics(self, page: Page):
-        self.metagame_page.tournament_link("test tournament 1").click()
+        t_name = self.tournaments[0].name
+        self.metagame_page.tournament_link(t_name).click()
         expect(page).to_have_url(re.compile(f"/home/metagame/{self.tournaments[0].id}"))
 
         self.metagame_page.analytics_tab.click()
@@ -264,10 +269,11 @@ class TestMetagame(TestBaseMetagame):
 class TestAdminMetagame(TestBaseMetagame):
     @pytest.fixture(autouse=True)
     def setup(self, page: Page, test_data):
-        admin_user, user, tournaments = test_data
+        admin_user, user, tournaments, prefix = test_data
         self.admin_user = admin_user
         self.user = user
         self.tournaments = tournaments
+        self.prefix = prefix
         self.metagame_page = MetagamePage(page)
         login_page = LoginPage(page)
         login_page.login(self.admin_user)
@@ -277,49 +283,51 @@ class TestAdminMetagame(TestBaseMetagame):
         self.metagame_page.navigate_admin()
 
     def test_add_tournament_raw_data(self, page: Page):
+        add_raw_name = prefixed_name("test add raw")
         self.metagame_page.add_tournament_button.click()
-        self.metagame_page.add_tournament_modal["name"].fill("test add raw")
+        self.metagame_page.add_tournament_modal["name"].fill(add_raw_name)
         self.metagame_page.add_tournament_modal["format"].fill("reg h")
         self.metagame_page.add_tournament_modal["data"].fill(TOURNAMENT_RAW_DATA)
         self.metagame_page.add_tournament_modal["submit_button"].click()
 
-        expect(page.locator("tbody")).to_contain_text("test add raw")
+        expect(page.locator("tbody")).to_contain_text(add_raw_name)
 
-        self.metagame_page.tournament_link("test add raw").click()
+        self.metagame_page.tournament_link(add_raw_name).click()
 
-        expect(page.locator("h2")).to_contain_text("test add raw")
+        expect(page.locator("h2")).to_contain_text(add_raw_name)
         expect(page.get_by_role("main")).to_contain_text(
             f"{datetime.now().year} - reg h"
         )
         expect(page.locator("tbody")).to_contain_text("user 1")
 
         self.metagame_page.navigate_admin()
-        self.metagame_page.delete_button("test add raw").click()
+        self.metagame_page.delete_button(add_raw_name).click()
 
-        expect(page.locator("tbody")).not_to_contain_text("test add raw")
+        expect(page.locator("tbody")).not_to_contain_text(add_raw_name)
 
     def test_add_tournament_link(self, page: Page):
+        add_url_name = prefixed_name("test add url")
         self.metagame_page.add_tournament_button.click()
-        self.metagame_page.add_tournament_modal["name"].fill("test add url")
+        self.metagame_page.add_tournament_modal["name"].fill(add_url_name)
         self.metagame_page.add_tournament_modal["format"].fill("reg h")
         self.metagame_page.add_tournament_modal["source"].click()
         self.metagame_page.modal_source_option("Pokedata URL").click()
         self.metagame_page.add_tournament_modal["data"].fill(TOURNAMENT_URL)
         self.metagame_page.add_tournament_modal["submit_button"].click()
 
-        expect(page.locator("tbody")).to_contain_text("test add url", timeout=15000)
+        expect(page.locator("tbody")).to_contain_text(add_url_name, timeout=15000)
 
-        self.metagame_page.tournament_link("test add url").click()
+        self.metagame_page.tournament_link(add_url_name).click()
 
-        expect(page.locator("h2")).to_contain_text("test add url")
+        expect(page.locator("h2")).to_contain_text(add_url_name)
         expect(page.get_by_role("main")).to_contain_text(
             f"{datetime.now().year} - reg h"
         )
 
         self.metagame_page.navigate_admin()
-        self.metagame_page.delete_button("test add url").click()
+        self.metagame_page.delete_button(add_url_name).click()
 
-        expect(page.locator("tbody")).not_to_contain_text("test add url")
+        expect(page.locator("tbody")).not_to_contain_text(add_url_name)
 
     def test_delete_tournament(self, page: Page):
         expect(page.locator("tbody")).to_contain_text(self.tournaments[1].name)
