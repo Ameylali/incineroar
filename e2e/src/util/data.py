@@ -12,6 +12,9 @@ def load_users():
         data = json.load(file)
         passwords = json.loads(USER_PASSWORDS)
         for user in data["users"]:
+            if user["username"] not in passwords:
+                print(f"Password for user {user['username']} not found in environment variable. Skipping user.")
+                continue
             users[user["username"]] = {
                 "role": user["role"],
                 "password": passwords[user["username"]],
