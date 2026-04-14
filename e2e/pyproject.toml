@@ -5,7 +5,7 @@ description = "E2E testing for incineroar"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "pytest>=9.0.2",
+    "pytest>=9.0.3",
     "pytest-playwright>=0.7.2",
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
