@@ -47,4 +47,18 @@ export interface ParsingProgress {
   phase: 'sampling' | 'processing' | 'done';
   current: number;
   total: number;
+  /** Data URL of the original frame being processed (only during 'processing' phase) */
+  frameImageUrl?: string;
+  /** Data URL of the preprocessed frame being processed (only during 'processing' phase) */
+  processedFrameImageUrl?: string;
+}
+
+/**
+ * Controller for pausing/resuming execution.
+ * The checkPause callback is called after each frame is processed.
+ * It should return a Promise that resolves when execution should continue.
+ */
+export interface ExecutionController {
+  /** Called after each frame. Returns a Promise that resolves when execution should continue. */
+  checkPause: () => Promise<void>;
 }

@@ -19,10 +19,13 @@ export class FrameSampler {
     file: File,
     onProgress?: (progress: ParsingProgress) => void,
   ): Promise<FrameData[]> {
+    console.log('[FrameSampler] Loading video...');
     const video = await this.createVideoElement(file);
+    console.log(`[FrameSampler] Video loaded: ${video.videoWidth}x${video.videoHeight}, duration: ${video.duration}s`);
     this.validateDuration(video.duration);
     const timestamps = this.computeTimestamps(video.duration);
     const total = timestamps.length;
+    console.log(`[FrameSampler] Will sample ${total} frames`);
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -63,23 +66,76 @@ export class FrameSampler {
   }
 
   private createVideoElement(file: File): Promise<HTMLVideoElement> {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.preload = 'auto';
-      video.muted = true;
+    const url = URL.createObjectURL(file);
+    console.log(
+      `[FrameSampler] Video blob URL created, file size: ${(file.size / 1024 / 1024).toFixed(1)}MB, type: ${file.type}`,
+    );
 
-      const url = URL.createObjectURL(file);
-      video.src = url;
+    // Defer to a clean macrotask so any WASM background work
+    // on the event loop drains before the browser starts loading the video.
+    return new Promise<HTMLVideoElement>((resolve, reject) => {
+      setTimeout(() => {
+        const video = document.createElement('video');
+        video.preload = 'auto';
+        video.muted = true;
+        video.playsInline = true;
+        video.style.display = 'none';
 
-      video.onloadedmetadata = () => resolve(video);
-      video.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(
-          new FrameSamplerError(
-            'Failed to load video. The file may be corrupted or in an unsupported format.',
-          ),
+        const timeout = setTimeout(() => {
+          console.error(
+            `[FrameSampler] Timeout. readyState: ${video.readyState}, networkState: ${video.networkState}`,
+          );
+          URL.revokeObjectURL(url);
+          video.remove();
+          reject(
+            new FrameSamplerError(
+              'Timed out loading video metadata (30s).',
+            ),
+          );
+        }, 30_000);
+
+        video.addEventListener('loadstart', () =>
+          console.log('[FrameSampler] Video event: loadstart'),
         );
-      };
+        video.addEventListener('progress', () =>
+          console.log('[FrameSampler] Video event: progress'),
+        );
+        video.addEventListener('stalled', () =>
+          console.log('[FrameSampler] Video event: stalled'),
+        );
+
+        video.addEventListener('loadedmetadata', () => {
+          clearTimeout(timeout);
+          console.log(
+            `[FrameSampler] Metadata loaded: ${video.videoWidth}x${video.videoHeight}, duration: ${video.duration}s`,
+          );
+          resolve(video);
+        });
+
+        video.addEventListener('error', () => {
+          clearTimeout(timeout);
+          URL.revokeObjectURL(url);
+          video.remove();
+          const err = video.error;
+          console.error(
+            '[FrameSampler] Video error:',
+            err?.code,
+            err?.message,
+          );
+          reject(
+            new FrameSamplerError(
+              `Failed to load video: ${err?.message ?? 'unknown error'}`,
+            ),
+          );
+        });
+
+        document.body.appendChild(video);
+        video.src = url;
+        video.load();
+        console.log(
+          `[FrameSampler] video.load() called, readyState: ${video.readyState}, networkState: ${video.networkState}`,
+        );
+      }, 0);
     });
   }
 

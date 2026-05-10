@@ -3,7 +3,6 @@
 This feature parses a video gameplay recording into a structured battle log using image processing and optical character recognition (OCR).
 
 ## Tech stack
-- OpenCV.js for image processing
 - Tesseract.js for OCR
 
 ## Feature flow

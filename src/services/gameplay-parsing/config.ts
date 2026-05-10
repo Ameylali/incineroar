@@ -27,6 +27,9 @@ const SWITCH_MASKS: Mask[] = [
     height: 0.1052631578947368,
     label: 'my-left-box',
   },
+  // {
+    // x: 0, y: 0, width: 1, height: 1, label: 'full-frame', // For debugging
+  // }
 ];
 
 export const DEVICE_MASKS: Record<DeviceProfile, Mask[]> = {
@@ -58,11 +61,11 @@ export const DEFAULT_CONFIG: GameplayParsingConfig = {
   DEVICE_PROFILE: 'switch',
   PREPROCESS: {
     GRAYSCALE: true,
-    CONTRAST: 1.5,
+    CONTRAST: 3,
     BLUR_RADIUS: 1,
   },
   SELECTION: {
     MIN_LINE_CONFIDENCE: 0.9,
-    MIN_WORD_CONFIDENCE: 0.85,
+    MIN_WORD_CONFIDENCE: 0.9,
   },
 };
