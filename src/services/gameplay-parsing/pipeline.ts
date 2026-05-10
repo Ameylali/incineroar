@@ -1,10 +1,8 @@
 import type { GameplayParsingConfig } from './config';
 import { DEFAULT_CONFIG } from './config';
-import { FramePreprocessor } from './frame-preprocessor';
 import { FrameSampler } from './frame-sampler';
-import { loadCV } from './opencv';
 import { TextExtractor } from './text-extractor';
-import type { ExtractedParagraph, ParsingProgress } from './types';
+import type { ExecutionController, ExtractedParagraph, ParsingProgress } from './types';
 
 export class GameplayParsingPipelineError extends Error {
   constructor(message: string) {
@@ -16,57 +14,54 @@ export class GameplayParsingPipelineError extends Error {
 export class GameplayParsingPipeline {
   private config: GameplayParsingConfig;
   private frameSampler: FrameSampler;
-  private preprocessor: FramePreprocessor;
   private textExtractor: TextExtractor;
 
   constructor(config: Partial<GameplayParsingConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.frameSampler = new FrameSampler(this.config);
-    this.preprocessor = new FramePreprocessor(this.config);
     this.textExtractor = new TextExtractor(this.config);
   }
 
   async run(
     file: File,
     onProgress?: (progress: ParsingProgress) => void,
+    controller?: ExecutionController,
   ): Promise<ExtractedParagraph[]> {
-    await loadCV();
-    await this.textExtractor.initialize();
+    console.log('[GameplayParsing] Starting pipeline with config:', this.config);
 
-    try {
-      // Step 1: Sample frames from video
-      const frames = await this.frameSampler.sample(file, onProgress);
+    // Step 1: Sample frames from video
+    console.log('[GameplayParsing] Step 1: Sampling frames...');
+    const frames = await this.frameSampler.sample(file, onProgress);
+    console.log(`[GameplayParsing] Sampled ${frames.length} frames`);
 
-      if (frames.length === 0) {
-        throw new GameplayParsingPipelineError(
-          'No frames could be extracted from the video.',
-        );
-      }
-
-      // Step 2: Preprocess frames
-      const preprocessedFrames = frames.map((frame) =>
-        this.preprocessor.process(frame),
+    if (frames.length === 0) {
+      throw new GameplayParsingPipelineError(
+        'No frames could be extracted from the video.',
       );
-
-      // Step 3: Extract text via OCR
-      const paragraphs = await this.textExtractor.extractAll(
-        preprocessedFrames,
-        onProgress,
-      );
-
-      // Step 4: Deduplicate consecutive identical paragraphs
-      const deduplicated = this.deduplicate(paragraphs);
-
-      onProgress?.({
-        phase: 'done',
-        current: deduplicated.length,
-        total: deduplicated.length,
-      });
-
-      return deduplicated;
-    } finally {
-      await this.textExtractor.terminate();
     }
+
+    // Step 2: Extract text via OCR
+    console.log('[GameplayParsing] Step 2: Extracting text via OCR...');
+    const paragraphs = await this.textExtractor.extractAll(
+      frames,
+      onProgress,
+      controller,
+    );
+    console.log(`[GameplayParsing] Extracted ${paragraphs.length} paragraphs`);
+
+    // Step 3: Deduplicate consecutive identical paragraphs
+    console.log('[GameplayParsing] Step 3: Deduplicating...');
+    const deduplicated = this.deduplicate(paragraphs);
+    console.log(`[GameplayParsing] ${paragraphs.length} → ${deduplicated.length} paragraphs after dedup`);
+
+    onProgress?.({
+      phase: 'done',
+      current: deduplicated.length,
+      total: deduplicated.length,
+    });
+
+    console.log('[GameplayParsing] Pipeline complete');
+    return deduplicated;
   }
 
   private deduplicate(paragraphs: ExtractedParagraph[]): ExtractedParagraph[] {

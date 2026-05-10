@@ -1,6 +1,5 @@
 export type { DeviceProfile, GameplayParsingConfig } from './config';
 export { DEFAULT_CONFIG, DEVICE_MASKS } from './config';
-export { FramePreprocessor } from './frame-preprocessor';
 export { FrameSampler, FrameSamplerError } from './frame-sampler';
 export {
   GameplayParsingPipeline,
@@ -8,6 +7,7 @@ export {
 } from './pipeline';
 export { TextExtractor, TextExtractorError } from './text-extractor';
 export type {
+  ExecutionController,
   ExtractedParagraph,
   FrameData,
   Mask,
