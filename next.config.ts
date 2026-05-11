@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  turbopack: {
+    rules: {
+      '*.md': { type: 'raw' },
+      '*.txt': { type: 'raw' },
+    },
+  },
 };
 
 export default nextConfig;

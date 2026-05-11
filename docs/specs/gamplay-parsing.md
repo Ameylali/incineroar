@@ -19,34 +19,27 @@ This is a high-level overview of the video gameplay parsing algorithm. The algor
 
     Frame extraction uses a `<video>` + `<canvas>` approach: seek the video to each sample timestamp, draw the frame onto a canvas, and read the pixel data. Frames are processed in batches of `CONFIG.BATCH_SIZE` (default: 50) to avoid exhausting browser memory on long videos.
 
-2. **Preprocess frames for better OCR:** Gameplay frames contain many visual effects that can reduce OCR accuracy. We'll apply preprocessing steps to reduce image noise. To start, we can:
-    - Transform to grayscale, since text is always white.
-    - Increase contrast to make text stand out more from the background.
-    - Apply blur, since text is always displayed over a semi-transparent box — blur aims to smooth the box into a more even surface.
-
-    All preprocessing steps should be configurable via `CONFIG.PREPROCESS.[STEP]`.
-
-3. **Extract text from each frame:** Since text boxes appear in fixed positions on screen, we'll preconfigure a set of masks that specify the areas where a text box may appear. For each mask, we will:
+2. **Extract text from each frame:** Since text boxes appear in fixed positions on screen, we'll preconfigure a set of masks that specify the areas where a text box may appear. For each mask, we will:
     - Crop the frame to the area specified by the mask.
-    - Run OCR on the cropped region.
+    - Preprocess the cropped region (grayscale, contrast, blur) using canvas 2D operations to improve OCR accuracy. All preprocessing steps are configurable via `CONFIG.PREPROCESS.[STEP]`.
+    - Run OCR on the preprocessed region.
 
     Then, for each OCR result, we need to select only results with high confidence. A selection algorithm will run over the results:
     - For each line, select only lines with a confidence greater than or equal to `CONFIG.SELECTION.MIN_LINE_CONFIDENCE` (default: 0.9).
     - For each selected line, extract the longest confident consecutive subsequence — i.e., the longest run of consecutive words where every word has a confidence greater than or equal to `CONFIG.SELECTION.MIN_WORD_CONFIDENCE`.
     - If all lines in a frame fall below the confidence threshold, the frame is skipped silently (no paragraph emitted).
 
-4. **Deduplicate consecutive frames:** Consecutive frames often produce identical extracted text (e.g., the same text box displayed for several seconds). Before exporting, collapse consecutive paragraphs with identical text content into a single entry, keeping the timestamp of the first occurrence.
+3. **Deduplicate consecutive frames:** Consecutive frames often produce identical extracted text (e.g., the same text box displayed for several seconds). Before exporting, collapse consecutive paragraphs with identical text content into a single entry, keeping the timestamp of the first occurrence.
 
-5. **Export results:** The output is a list of extracted paragraphs in chronological order. Each paragraph contains the extracted text from each mask in a given frame.
+4. **Export results:** The output is a list of extracted paragraphs in chronological order. Each paragraph contains the extracted text from each mask in a given frame.
 
-### Structured parsing (TBD)
+## Structured parsing
 
-Once the plain-text battle log is extracted, it must be mapped to the structured `Battle` data model (turns, actions, players, results). Two approaches are under consideration:
+Once the plain-text battle log is extracted, it must be mapped to the structured `Battle` data model (turns, actions, players, results).
 
-- **Lightweight LLM:** Use a small language model to interpret the extracted text lines and produce structured action objects. This approach is more flexible and tolerant of OCR imperfections, but adds a dependency on a model and increases processing time.
-- **Deterministic parsing:** Use pattern matching (regex or a simple grammar) to map known text patterns (e.g., "Incineroar used Flare Blitz!") to `Action` objects. This is faster and more predictable, but requires enumerating all possible text patterns and is brittle to OCR errors.
+1. **WebLLM**: WebLLM will be used to run an LLM model in the browser. The model will be prompted to transform the plain-text battle logs into a structured "showdown sim-protocol" format.
 
-The chosen approach should output data conforming to the existing `CreateBattleData` schema so it can be persisted via `createBattleForTraining()`.
+2. **Parse structured logs**: We'll use the existing showdown sim-protocol to generate the `Battle` data model that will be sent to the API. The output data should conform to the existing `CreateBattleData` schema so it can be persisted via `createBattleForTraining()`.
 
 ### Resolution handling
 

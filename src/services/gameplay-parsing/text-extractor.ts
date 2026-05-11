@@ -53,7 +53,7 @@ export class TextExtractor {
     console.log(`[TextExtractor] Initializing ${workerCount} workers...`);
 
     const workerPromises = Array.from({ length: workerCount }, async () => {
-      const worker = await createWorker('eng', OEM.DEFAULT, {
+      const worker = await createWorker(['eng', 'jpn'], OEM.DEFAULT, {
         workerBlobURL: false,
         workerPath: '/tesseract-worker.min.js',
         logger: (m) =>
@@ -226,7 +226,7 @@ export class TextExtractor {
 
   private applySelection(lines: Line[], mask: Mask): MaskExtraction | null {
     const confidentLines: { text: string; confidence: number }[] = [];
-    
+
     for (const line of lines) {
       if (line.confidence < this.config.SELECTION.MIN_LINE_CONFIDENCE * 100)
         continue;

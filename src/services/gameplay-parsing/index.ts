@@ -1,10 +1,13 @@
 export type { DeviceProfile, GameplayParsingConfig } from './config';
 export { DEFAULT_CONFIG, DEVICE_MASKS } from './config';
 export { FrameSampler, FrameSamplerError } from './frame-sampler';
+export type { LLMProgress } from './llm-engine';
+export { LLMEngine } from './llm-engine';
 export {
   GameplayParsingPipeline,
   GameplayParsingPipelineError,
 } from './pipeline';
+export { StructuredParser, StructuredParserError } from './structured-parser';
 export { TextExtractor, TextExtractorError } from './text-extractor';
 export type {
   ExecutionController,
