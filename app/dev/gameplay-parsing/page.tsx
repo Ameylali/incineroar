@@ -1,7 +1,13 @@
 'use client';
 
-import { FileImageOutlined, PauseOutlined, PlayCircleOutlined, UploadOutlined } from '@ant-design/icons';
-import { Button, Card, Progress, Spin, Tabs, Upload } from 'antd';
+import {
+  FileImageOutlined,
+  PauseOutlined,
+  PlayCircleOutlined,
+  RobotOutlined,
+  UploadOutlined,
+} from '@ant-design/icons';
+import { Button, Card, Input, Progress, Tabs, Upload } from 'antd';
 import Title from 'antd/es/typography/Title';
 import { useCallback, useRef, useState } from 'react';
 
@@ -10,15 +16,21 @@ import {
   DEVICE_MASKS,
   type ExecutionController,
   type ExtractedParagraph,
-  GameplayParsingPipeline,
   type GameplayParsingConfig,
+  GameplayParsingPipeline,
+  LLMEngine,
+  type LLMProgress,
   type ParsingProgress,
+  StructuredParser,
   TextExtractor,
 } from '@/src/services/gameplay-parsing';
+import type { BattleMetadata } from '@/src/services/pokemon/battle';
+import type { CreateBattleData } from '@/src/types/api';
 
 import ConfigForm from './ConfigForm';
 import ExperimentsTab from './ExperimentsTab';
 import ResultsDisplay from './ResultsDisplay';
+import StructuredParserTab from './StructuredParserTab';
 
 const GameplayParsingPage = () => {
   const [config, setConfig] = useState<GameplayParsingConfig>({
@@ -32,11 +44,23 @@ const GameplayParsingPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-  const [imageProcessedUrl, setImageProcessedUrl] = useState<string | null>(null);
+  const [imageProcessedUrl, setImageProcessedUrl] = useState<string | null>(
+    null,
+  );
   const [imageRunning, setImageRunning] = useState(false);
-  const [imageResults, setImageResults] = useState<ExtractedParagraph[] | null>(null);
+  const [imageResults, setImageResults] = useState<ExtractedParagraph[] | null>(
+    null,
+  );
   const [imageError, setImageError] = useState<string | null>(null);
+  const [llmProgress, setLlmProgress] = useState<LLMProgress | null>(null);
+  const [llmLoading, setLlmLoading] = useState(false);
+  const [structuredRunning, setStructuredRunning] = useState(false);
+  const [simProtocol, setSimProtocol] = useState<string | null>(null);
+  const [battleData, setBattleData] = useState<CreateBattleData | null>(null);
+  const [structuredError, setStructuredError] = useState<string | null>(null);
+  const [playerTag, setPlayerTag] = useState('p1');
   const pipelineRef = useRef<GameplayParsingPipeline | null>(null);
+  const llmEngineRef = useRef(new LLMEngine());
   const pauseResolveRef = useRef<(() => void) | null>(null);
   const isPausedRef = useRef(false);
 
@@ -139,7 +163,8 @@ const GameplayParsingPage = () => {
         overlayCtx.strokeRect(mx, my, mw, mh);
         const labelPadding = 4;
         const labelHeight = 18;
-        const labelWidth = overlayCtx.measureText(mask.label).width + labelPadding * 2;
+        const labelWidth =
+          overlayCtx.measureText(mask.label).width + labelPadding * 2;
         overlayCtx.fillStyle = 'rgba(255, 0, 0, 0.7)';
         overlayCtx.fillRect(mx, my - labelHeight, labelWidth, labelHeight);
         overlayCtx.fillStyle = 'white';
@@ -147,7 +172,9 @@ const GameplayParsingPage = () => {
       }
       setImageProcessedUrl(overlayCanvas.toDataURL('image/jpeg', 0.85));
 
-      console.log(`[Page] Image loaded: ${imageData.width}x${imageData.height}`);
+      console.log(
+        `[Page] Image loaded: ${imageData.width}x${imageData.height}`,
+      );
 
       // Run TextExtractor directly on the single image as a frame
       const extractor = new TextExtractor(config);
@@ -166,6 +193,53 @@ const GameplayParsingPage = () => {
       setImageRunning(false);
     }
   }, [imageFile, config]);
+
+  const handleLoadLLM = useCallback(async () => {
+    setLlmLoading(true);
+    try {
+      await llmEngineRef.current.init(setLlmProgress);
+    } catch (err) {
+      setStructuredError(
+        err instanceof Error ? err.message : 'Failed to load LLM model',
+      );
+    } finally {
+      setLlmLoading(false);
+    }
+  }, []);
+
+  const handleStructuredParse = useCallback(async () => {
+    if (!results) return;
+
+    setStructuredRunning(true);
+    setStructuredError(null);
+    setSimProtocol(null);
+    setBattleData(null);
+
+    try {
+      console.log('[Page] Starting structured parsing...');
+      const structuredParser = new StructuredParser(llmEngineRef.current);
+      const protocol = await structuredParser.convertToSimProtocol(results);
+      setSimProtocol(protocol);
+      console.log('[Page] Sim-protocol generated, parsing into battle data...');
+
+      const metadata: BattleMetadata = {
+        name: file?.name ?? 'Parsed Battle',
+        notes: '',
+        playerTag: playerTag as 'p1' | 'p2',
+      };
+      const parsed = structuredParser.parseSimProtocol(protocol, metadata);
+      setBattleData(parsed);
+      console.log(
+        `[Page] Structured parsing complete: ${parsed.turns.length} turns`,
+      );
+    } catch (err) {
+      setStructuredError(
+        err instanceof Error ? err.message : 'Structured parsing failed',
+      );
+    } finally {
+      setStructuredRunning(false);
+    }
+  }, [results, file, playerTag]);
 
   const progressPercent =
     progress && progress.total > 0
@@ -224,7 +298,10 @@ const GameplayParsingPage = () => {
                         setImageResults(null);
                       }}
                     >
-                      <Button icon={<FileImageOutlined />} disabled={imageRunning}>
+                      <Button
+                        icon={<FileImageOutlined />}
+                        disabled={imageRunning}
+                      >
                         Select image
                       </Button>
                     </Upload>
@@ -232,7 +309,9 @@ const GameplayParsingPage = () => {
                       <div className="grid grid-cols-2 gap-4">
                         {imagePreviewUrl && (
                           <div>
-                            <p className="mb-2 text-sm text-gray-500">Original:</p>
+                            <p className="mb-2 text-sm text-gray-500">
+                              Original:
+                            </p>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={imagePreviewUrl}
@@ -243,7 +322,9 @@ const GameplayParsingPage = () => {
                         )}
                         {imageProcessedUrl && (
                           <div>
-                            <p className="mb-2 text-sm text-gray-500">Processed (with masks):</p>
+                            <p className="mb-2 text-sm text-gray-500">
+                              Processed (with masks):
+                            </p>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={imageProcessedUrl}
@@ -258,7 +339,7 @@ const GameplayParsingPage = () => {
                       type="primary"
                       disabled={!imageFile || imageRunning}
                       loading={imageRunning}
-                      onClick={handleImageTest}
+                      onClick={void handleImageTest()}
                     >
                       {imageRunning ? 'Extracting...' : 'Run OCR on Image'}
                     </Button>
@@ -270,7 +351,8 @@ const GameplayParsingPage = () => {
                         </p>
                         {imageResults.length === 0 ? (
                           <p className="text-orange-500">
-                            No text extracted. Check browser console for OCR debug logs.
+                            No text extracted. Check browser console for OCR
+                            debug logs.
                           </p>
                         ) : (
                           <ResultsDisplay paragraphs={imageResults} />
@@ -281,7 +363,11 @@ const GameplayParsingPage = () => {
                 </Card>
 
                 <Card title="Configuration">
-                  <ConfigForm config={config} onChange={setConfig} disabled={running} />
+                  <ConfigForm
+                    config={config}
+                    onChange={setConfig}
+                    disabled={running}
+                  />
                 </Card>
 
                 <div className="flex gap-2">
@@ -290,7 +376,7 @@ const GameplayParsingPage = () => {
                     size="large"
                     disabled={!file || running}
                     loading={running && !paused}
-                    onClick={handleRun}
+                    onClick={void handleRun()}
                   >
                     {running ? 'Processing...' : 'Run Algorithm'}
                   </Button>
@@ -298,7 +384,9 @@ const GameplayParsingPage = () => {
                     <Button
                       size="large"
                       icon={paused ? <PlayCircleOutlined /> : <PauseOutlined />}
-                      onClick={paused ? handleResume : handlePause}
+                      onClick={
+                        paused ? void handleResume() : void handlePause()
+                      }
                     >
                       {paused ? 'Resume' : 'Pause'}
                     </Button>
@@ -310,7 +398,9 @@ const GameplayParsingPage = () => {
                     title={`Phase: ${progress.phase}${paused ? ' (Paused)' : ''}`}
                     extra={
                       paused && (
-                        <span className="text-orange-500">Paused - analyze frame</span>
+                        <span className="text-orange-500">
+                          Paused - analyze frame
+                        </span>
                       )
                     }
                   >
@@ -319,11 +409,14 @@ const GameplayParsingPage = () => {
                       format={() => `${progress.current} / ${progress.total}`}
                       status={paused ? 'exception' : 'active'}
                     />
-                    {(progress.frameImageUrl || progress.processedFrameImageUrl) && (
+                    {(progress.frameImageUrl ||
+                      progress.processedFrameImageUrl) && (
                       <div className="mt-4 grid grid-cols-2 gap-4">
                         {progress.frameImageUrl && (
                           <div>
-                            <p className="mb-2 text-sm text-gray-500">Original frame:</p>
+                            <p className="mb-2 text-sm text-gray-500">
+                              Original frame:
+                            </p>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={progress.frameImageUrl}
@@ -334,7 +427,9 @@ const GameplayParsingPage = () => {
                         )}
                         {progress.processedFrameImageUrl && (
                           <div>
-                            <p className="mb-2 text-sm text-gray-500">Processed frame:</p>
+                            <p className="mb-2 text-sm text-gray-500">
+                              Processed frame:
+                            </p>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={progress.processedFrameImageUrl}
@@ -359,6 +454,89 @@ const GameplayParsingPage = () => {
                     <ResultsDisplay paragraphs={results} />
                   </Card>
                 )}
+
+                {results && results.length > 0 && (
+                  <Card title="Structured Parsing (LLM)">
+                    <div className="flex flex-col gap-4">
+                      {!llmEngineRef.current.isReady() && !llmLoading && (
+                        <div>
+                          <p className="mb-2 text-sm text-gray-500">
+                            Load an LLM model to convert OCR text into
+                            structured battle data.
+                          </p>
+                          <Button
+                            icon={<RobotOutlined />}
+                            onClick={void handleLoadLLM()}
+                          >
+                            Load LLM Model
+                          </Button>
+                        </div>
+                      )}
+
+                      {llmLoading && llmProgress && (
+                        <div>
+                          <p className="mb-2 text-sm">{llmProgress.text}</p>
+                          <Progress
+                            percent={Math.round(llmProgress.progress * 100)}
+                            status="active"
+                          />
+                        </div>
+                      )}
+
+                      {llmEngineRef.current.isReady() && (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">Your player tag:</span>
+                            <Input
+                              value={playerTag}
+                              onChange={(e) => setPlayerTag(e.target.value)}
+                              style={{ width: 80 }}
+                              disabled={structuredRunning}
+                            />
+                          </div>
+                          <Button
+                            type="primary"
+                            icon={<RobotOutlined />}
+                            loading={structuredRunning}
+                            onClick={void handleStructuredParse()}
+                          >
+                            {structuredRunning
+                              ? 'Parsing...'
+                              : 'Convert to Battle Data'}
+                          </Button>
+                        </div>
+                      )}
+
+                      {structuredError && (
+                        <p className="text-red-500">{structuredError}</p>
+                      )}
+
+                      {simProtocol && (
+                        <div>
+                          <p className="mb-2 font-medium">
+                            Generated Sim-Protocol:
+                          </p>
+                          <pre className="max-h-64 overflow-auto rounded bg-gray-100 p-3 text-xs dark:bg-gray-800">
+                            {simProtocol}
+                          </pre>
+                        </div>
+                      )}
+
+                      {battleData && (
+                        <div>
+                          <p className="mb-2 font-medium">
+                            Parsed Battle: {battleData.turns.length} turns
+                            {battleData.result &&
+                              `, result: ${battleData.result}`}
+                          </p>
+                          <pre className="max-h-64 overflow-auto rounded bg-gray-100 p-3 text-xs dark:bg-gray-800">
+                            {JSON.stringify(battleData, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
               </div>
             ),
           },
@@ -366,6 +544,11 @@ const GameplayParsingPage = () => {
             key: 'experiments',
             label: 'Experiments',
             children: <ExperimentsTab />,
+          },
+          {
+            key: 'structured-parser',
+            label: 'Structured Parser',
+            children: <StructuredParserTab />,
           },
         ]}
       />

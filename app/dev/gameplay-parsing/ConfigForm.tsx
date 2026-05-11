@@ -12,15 +12,9 @@ interface ConfigFormProps {
 }
 
 const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
-  const update = (path: string, value: number | boolean) => {
+  const update = (updater: (draft: GameplayParsingConfig) => void) => {
     const next = structuredClone(config);
-    const keys = path.split('.');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let target: any = next;
-    for (let i = 0; i < keys.length - 1; i++) {
-      target = target[keys[i]];
-    }
-    target[keys[keys.length - 1]] = value;
+    updater(next);
     onChange(next);
   };
 
@@ -32,7 +26,13 @@ const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
         max={30}
         step={0.5}
         value={config.SAMPLE_RATE_PER_SECOND}
-        onChange={(v) => update('SAMPLE_RATE_PER_SECOND', v ?? DEFAULT_CONFIG.SAMPLE_RATE_PER_SECOND)}
+        onChange={(v) =>
+          update(
+            (d) =>
+              (d.SAMPLE_RATE_PER_SECOND =
+                v ?? DEFAULT_CONFIG.SAMPLE_RATE_PER_SECOND),
+          )
+        }
         disabled={disabled}
       />
 
@@ -41,7 +41,9 @@ const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
         min={1}
         max={10000}
         value={config.MAX_FRAMES}
-        onChange={(v) => update('MAX_FRAMES', v ?? DEFAULT_CONFIG.MAX_FRAMES)}
+        onChange={(v) =>
+          update((d) => (d.MAX_FRAMES = v ?? DEFAULT_CONFIG.MAX_FRAMES))
+        }
         disabled={disabled}
       />
 
@@ -50,7 +52,9 @@ const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
         min={1}
         max={200}
         value={config.BATCH_SIZE}
-        onChange={(v) => update('BATCH_SIZE', v ?? DEFAULT_CONFIG.BATCH_SIZE)}
+        onChange={(v) =>
+          update((d) => (d.BATCH_SIZE = v ?? DEFAULT_CONFIG.BATCH_SIZE))
+        }
         disabled={disabled}
       />
 
@@ -59,14 +63,16 @@ const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
         min={1}
         max={8}
         value={config.WORKER_COUNT}
-        onChange={(v) => update('WORKER_COUNT', v ?? DEFAULT_CONFIG.WORKER_COUNT)}
+        onChange={(v) =>
+          update((d) => (d.WORKER_COUNT = v ?? DEFAULT_CONFIG.WORKER_COUNT))
+        }
         disabled={disabled}
       />
 
       <label>Grayscale</label>
       <Switch
         checked={config.PREPROCESS.GRAYSCALE}
-        onChange={(v) => update('PREPROCESS.GRAYSCALE', v)}
+        onChange={(v) => update((d) => (d.PREPROCESS.GRAYSCALE = v))}
         disabled={disabled}
       />
 
@@ -76,7 +82,12 @@ const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
         max={5}
         step={0.1}
         value={config.PREPROCESS.CONTRAST}
-        onChange={(v) => update('PREPROCESS.CONTRAST', v ?? DEFAULT_CONFIG.PREPROCESS.CONTRAST)}
+        onChange={(v) =>
+          update(
+            (d) =>
+              (d.PREPROCESS.CONTRAST = v ?? DEFAULT_CONFIG.PREPROCESS.CONTRAST),
+          )
+        }
         disabled={disabled}
       />
 
@@ -85,7 +96,13 @@ const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
         min={0}
         max={10}
         value={config.PREPROCESS.BLUR_RADIUS}
-        onChange={(v) => update('PREPROCESS.BLUR_RADIUS', v ?? DEFAULT_CONFIG.PREPROCESS.BLUR_RADIUS)}
+        onChange={(v) =>
+          update(
+            (d) =>
+              (d.PREPROCESS.BLUR_RADIUS =
+                v ?? DEFAULT_CONFIG.PREPROCESS.BLUR_RADIUS),
+          )
+        }
         disabled={disabled}
       />
 
@@ -95,7 +112,13 @@ const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
         max={1}
         step={0.05}
         value={config.SELECTION.MIN_LINE_CONFIDENCE}
-        onChange={(v) => update('SELECTION.MIN_LINE_CONFIDENCE', v ?? DEFAULT_CONFIG.SELECTION.MIN_LINE_CONFIDENCE)}
+        onChange={(v) =>
+          update(
+            (d) =>
+              (d.SELECTION.MIN_LINE_CONFIDENCE =
+                v ?? DEFAULT_CONFIG.SELECTION.MIN_LINE_CONFIDENCE),
+          )
+        }
         disabled={disabled}
       />
 
@@ -105,7 +128,13 @@ const ConfigForm = ({ config, onChange, disabled }: ConfigFormProps) => {
         max={1}
         step={0.05}
         value={config.SELECTION.MIN_WORD_CONFIDENCE}
-        onChange={(v) => update('SELECTION.MIN_WORD_CONFIDENCE', v ?? DEFAULT_CONFIG.SELECTION.MIN_WORD_CONFIDENCE)}
+        onChange={(v) =>
+          update(
+            (d) =>
+              (d.SELECTION.MIN_WORD_CONFIDENCE =
+                v ?? DEFAULT_CONFIG.SELECTION.MIN_WORD_CONFIDENCE),
+          )
+        }
         disabled={disabled}
       />
     </div>

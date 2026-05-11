@@ -52,37 +52,40 @@ const createExperiment = (
   config: { ...DEFAULT_CONFIG, ...overrides },
 });
 
-const PRESETS: { label: string; overrides: Partial<GameplayParsingConfig> }[] = [
-  { label: 'Default', overrides: {} },
-  {
-    label: 'High contrast',
-    overrides: { PREPROCESS: { ...DEFAULT_CONFIG.PREPROCESS, CONTRAST: 3.0 } },
-  },
-  {
-    label: 'No preprocessing',
-    overrides: {
-      PREPROCESS: { GRAYSCALE: false, CONTRAST: 1, BLUR_RADIUS: 0 },
+const PRESETS: { label: string; overrides: Partial<GameplayParsingConfig> }[] =
+  [
+    { label: 'Default', overrides: {} },
+    {
+      label: 'High contrast',
+      overrides: {
+        PREPROCESS: { ...DEFAULT_CONFIG.PREPROCESS, CONTRAST: 3.0 },
+      },
     },
-  },
-  {
-    label: 'Grayscale only',
-    overrides: {
-      PREPROCESS: { GRAYSCALE: true, CONTRAST: 1, BLUR_RADIUS: 0 },
+    {
+      label: 'No preprocessing',
+      overrides: {
+        PREPROCESS: { GRAYSCALE: false, CONTRAST: 1, BLUR_RADIUS: 0 },
+      },
     },
-  },
-  {
-    label: 'Strict confidence',
-    overrides: {
-      SELECTION: { MIN_LINE_CONFIDENCE: 0.8, MIN_WORD_CONFIDENCE: 0.7 },
+    {
+      label: 'Grayscale only',
+      overrides: {
+        PREPROCESS: { GRAYSCALE: true, CONTRAST: 1, BLUR_RADIUS: 0 },
+      },
     },
-  },
-  {
-    label: 'Loose confidence',
-    overrides: {
-      SELECTION: { MIN_LINE_CONFIDENCE: 0.3, MIN_WORD_CONFIDENCE: 0.2 },
+    {
+      label: 'Strict confidence',
+      overrides: {
+        SELECTION: { MIN_LINE_CONFIDENCE: 0.8, MIN_WORD_CONFIDENCE: 0.7 },
+      },
     },
-  },
-];
+    {
+      label: 'Loose confidence',
+      overrides: {
+        SELECTION: { MIN_LINE_CONFIDENCE: 0.3, MIN_WORD_CONFIDENCE: 0.2 },
+      },
+    },
+  ];
 
 const ExperimentsTab = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -107,18 +110,12 @@ const ExperimentsTab = () => {
   }, []);
 
   const updateExperiment = useCallback(
-    (id: number, path: string, value: number | boolean) => {
+    (id: number, updater: (draft: GameplayParsingConfig) => void) => {
       setExperiments((prev) =>
         prev.map((exp) => {
           if (exp.id !== id) return exp;
           const next = structuredClone(exp);
-          const keys = path.split('.');
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          let target: any = next.config;
-          for (let i = 0; i < keys.length - 1; i++) {
-            target = target[keys[i]];
-          }
-          target[keys[keys.length - 1]] = value;
+          updater(next.config);
           return next;
         }),
       );
@@ -292,9 +289,7 @@ const ExperimentsTab = () => {
             children: (
               <ExperimentConfigForm
                 config={exp.config}
-                onChange={(path, value) =>
-                  updateExperiment(exp.id, path, value)
-                }
+                onChange={(updater) => updateExperiment(exp.id, updater)}
                 disabled={running}
               />
             ),
@@ -309,7 +304,7 @@ const ExperimentsTab = () => {
           icon={<ThunderboltOutlined />}
           disabled={!imageFile || running || experiments.length === 0}
           loading={running}
-          onClick={runExperiments}
+          onClick={void runExperiments()}
         >
           {running
             ? `Running ${currentRun}/${totalRuns}...`
@@ -415,7 +410,9 @@ const ExperimentsTab = () => {
                           {r.avgConfidence.toFixed(1)}%
                         </Tag>
                       </td>
-                      <td className="p-2">{(r.durationMs / 1000).toFixed(2)}s</td>
+                      <td className="p-2">
+                        {(r.durationMs / 1000).toFixed(2)}s
+                      </td>
                       <td className="p-2">
                         {r.error ? (
                           <Tag color="red">Error</Tag>
@@ -440,9 +437,7 @@ const ExperimentsTab = () => {
             key: String(r.id),
             label: (
               <span>
-                <Tag
-                  color={r.error ? 'red' : r.totalText ? 'green' : 'orange'}
-                >
+                <Tag color={r.error ? 'red' : r.totalText ? 'green' : 'orange'}>
                   {r.label}
                 </Tag>
                 {r.error
@@ -465,11 +460,7 @@ const ExperimentsTab = () => {
                           <Tag
                             key={k}
                             color={
-                              c >= 90
-                                ? 'green'
-                                : c >= 70
-                                  ? 'orange'
-                                  : 'red'
+                              c >= 90 ? 'green' : c >= 70 ? 'orange' : 'red'
                             }
                           >
                             {c.toFixed(1)}%
@@ -494,14 +485,14 @@ const ExperimentConfigForm = ({
   disabled,
 }: {
   config: GameplayParsingConfig;
-  onChange: (path: string, value: number | boolean) => void;
+  onChange: (updater: (draft: GameplayParsingConfig) => void) => void;
   disabled?: boolean;
 }) => (
   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
     <label>Grayscale</label>
     <Switch
       checked={config.PREPROCESS.GRAYSCALE}
-      onChange={(v) => onChange('PREPROCESS.GRAYSCALE', v)}
+      onChange={(v) => onChange((d) => (d.PREPROCESS.GRAYSCALE = v))}
       disabled={disabled}
     />
 
@@ -512,7 +503,10 @@ const ExperimentConfigForm = ({
       step={0.1}
       value={config.PREPROCESS.CONTRAST}
       onChange={(v) =>
-        onChange('PREPROCESS.CONTRAST', v ?? DEFAULT_CONFIG.PREPROCESS.CONTRAST)
+        onChange(
+          (d) =>
+            (d.PREPROCESS.CONTRAST = v ?? DEFAULT_CONFIG.PREPROCESS.CONTRAST),
+        )
       }
       disabled={disabled}
     />
@@ -524,8 +518,9 @@ const ExperimentConfigForm = ({
       value={config.PREPROCESS.BLUR_RADIUS}
       onChange={(v) =>
         onChange(
-          'PREPROCESS.BLUR_RADIUS',
-          v ?? DEFAULT_CONFIG.PREPROCESS.BLUR_RADIUS,
+          (d) =>
+            (d.PREPROCESS.BLUR_RADIUS =
+              v ?? DEFAULT_CONFIG.PREPROCESS.BLUR_RADIUS),
         )
       }
       disabled={disabled}
@@ -539,8 +534,9 @@ const ExperimentConfigForm = ({
       value={config.SELECTION.MIN_LINE_CONFIDENCE}
       onChange={(v) =>
         onChange(
-          'SELECTION.MIN_LINE_CONFIDENCE',
-          v ?? DEFAULT_CONFIG.SELECTION.MIN_LINE_CONFIDENCE,
+          (d) =>
+            (d.SELECTION.MIN_LINE_CONFIDENCE =
+              v ?? DEFAULT_CONFIG.SELECTION.MIN_LINE_CONFIDENCE),
         )
       }
       disabled={disabled}
@@ -554,8 +550,9 @@ const ExperimentConfigForm = ({
       value={config.SELECTION.MIN_WORD_CONFIDENCE}
       onChange={(v) =>
         onChange(
-          'SELECTION.MIN_WORD_CONFIDENCE',
-          v ?? DEFAULT_CONFIG.SELECTION.MIN_WORD_CONFIDENCE,
+          (d) =>
+            (d.SELECTION.MIN_WORD_CONFIDENCE =
+              v ?? DEFAULT_CONFIG.SELECTION.MIN_WORD_CONFIDENCE),
         )
       }
       disabled={disabled}
@@ -567,7 +564,7 @@ const ExperimentConfigForm = ({
       max={8}
       value={config.WORKER_COUNT}
       onChange={(v) =>
-        onChange('WORKER_COUNT', v ?? DEFAULT_CONFIG.WORKER_COUNT)
+        onChange((d) => (d.WORKER_COUNT = v ?? DEFAULT_CONFIG.WORKER_COUNT))
       }
       disabled={disabled}
     />

@@ -21,7 +21,9 @@ export class FrameSampler {
   ): Promise<FrameData[]> {
     console.log('[FrameSampler] Loading video...');
     const video = await this.createVideoElement(file);
-    console.log(`[FrameSampler] Video loaded: ${video.videoWidth}x${video.videoHeight}, duration: ${video.duration}s`);
+    console.log(
+      `[FrameSampler] Video loaded: ${video.videoWidth}x${video.videoHeight}, duration: ${video.duration}s`,
+    );
     this.validateDuration(video.duration);
     const timestamps = this.computeTimestamps(video.duration);
     const total = timestamps.length;
@@ -88,9 +90,7 @@ export class FrameSampler {
           URL.revokeObjectURL(url);
           video.remove();
           reject(
-            new FrameSamplerError(
-              'Timed out loading video metadata (30s).',
-            ),
+            new FrameSamplerError('Timed out loading video metadata (30s).'),
           );
         }, 30_000);
 
@@ -117,11 +117,7 @@ export class FrameSampler {
           URL.revokeObjectURL(url);
           video.remove();
           const err = video.error;
-          console.error(
-            '[FrameSampler] Video error:',
-            err?.code,
-            err?.message,
-          );
+          console.error('[FrameSampler] Video error:', err?.code, err?.message);
           reject(
             new FrameSamplerError(
               `Failed to load video: ${err?.message ?? 'unknown error'}`,

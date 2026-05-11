@@ -28,7 +28,7 @@ const SWITCH_MASKS: Mask[] = [
     label: 'my-left-box',
   },
   // {
-    // x: 0, y: 0, width: 1, height: 1, label: 'full-frame', // For debugging
+  // x: 0, y: 0, width: 1, height: 1, label: 'full-frame', // For debugging
   // }
 ];
 

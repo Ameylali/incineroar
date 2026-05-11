@@ -34,7 +34,10 @@ const ResultsDisplay = ({ paragraphs }: ResultsDisplayProps) => {
             <p className="whitespace-pre-wrap">{extraction.text}</p>
             <div className="mt-2 flex gap-1">
               {extraction.lineConfidences.map((c, k) => (
-                <Tag key={k} color={c >= 90 ? 'green' : c >= 70 ? 'orange' : 'red'}>
+                <Tag
+                  key={k}
+                  color={c >= 90 ? 'green' : c >= 70 ? 'orange' : 'red'}
+                >
                   {c.toFixed(1)}%
                 </Tag>
               ))}

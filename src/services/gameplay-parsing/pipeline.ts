@@ -2,7 +2,11 @@ import type { GameplayParsingConfig } from './config';
 import { DEFAULT_CONFIG } from './config';
 import { FrameSampler } from './frame-sampler';
 import { TextExtractor } from './text-extractor';
-import type { ExecutionController, ExtractedParagraph, ParsingProgress } from './types';
+import type {
+  ExecutionController,
+  ExtractedParagraph,
+  ParsingProgress,
+} from './types';
 
 export class GameplayParsingPipelineError extends Error {
   constructor(message: string) {
@@ -27,7 +31,10 @@ export class GameplayParsingPipeline {
     onProgress?: (progress: ParsingProgress) => void,
     controller?: ExecutionController,
   ): Promise<ExtractedParagraph[]> {
-    console.log('[GameplayParsing] Starting pipeline with config:', this.config);
+    console.log(
+      '[GameplayParsing] Starting pipeline with config:',
+      this.config,
+    );
 
     // Step 1: Sample frames from video
     console.log('[GameplayParsing] Step 1: Sampling frames...');
@@ -52,7 +59,9 @@ export class GameplayParsingPipeline {
     // Step 3: Deduplicate consecutive identical paragraphs
     console.log('[GameplayParsing] Step 3: Deduplicating...');
     const deduplicated = this.deduplicate(paragraphs);
-    console.log(`[GameplayParsing] ${paragraphs.length} → ${deduplicated.length} paragraphs after dedup`);
+    console.log(
+      `[GameplayParsing] ${paragraphs.length} → ${deduplicated.length} paragraphs after dedup`,
+    );
 
     onProgress?.({
       phase: 'done',
