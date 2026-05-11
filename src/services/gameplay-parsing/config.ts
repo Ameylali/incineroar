@@ -53,11 +53,16 @@ export interface GameplayParsingConfig {
   };
 }
 
+export const getDefaultWorkerCount = () =>
+  typeof navigator !== 'undefined'
+    ? Math.min(navigator.hardwareConcurrency ?? 2, 4)
+    : 2;
+
 export const DEFAULT_CONFIG: GameplayParsingConfig = {
   SAMPLE_RATE_PER_SECOND: 1,
   MAX_FRAMES: 3600,
   BATCH_SIZE: 50,
-  WORKER_COUNT: Math.min(navigator.hardwareConcurrency ?? 2, 4),
+  WORKER_COUNT: 2,
   DEVICE_PROFILE: 'switch',
   PREPROCESS: {
     GRAYSCALE: true,

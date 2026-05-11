@@ -1,13 +1,16 @@
 'use client';
 
 import { RobotOutlined } from '@ant-design/icons';
-import { Button, Card, Input, Progress } from 'antd';
+import { Button, Card, Input, Progress, Select } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 
 import {
+  LLM_MODELS,
   LLMEngine,
+  type LLMModelSize,
   type LLMProgress,
   StructuredParser,
+  type StructuredParsingProgress,
 } from '@/src/services/gameplay-parsing';
 import type { BattleMetadata } from '@/src/services/pokemon/battle';
 import type { CreateBattleData } from '@/src/types/api';
@@ -29,19 +32,22 @@ const StructuredParserTab = () => {
   const [simProtocol, setSimProtocol] = useState<string | null>(null);
   const [battleData, setBattleData] = useState<CreateBattleData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [structuredProgress, setStructuredProgress] =
+    useState<StructuredParsingProgress | null>(null);
+  const [modelSize, setModelSize] = useState<LLMModelSize>('medium');
   const llmEngineRef = useRef(new LLMEngine());
 
   const handleLoadLLM = useCallback(async () => {
     setLlmLoading(true);
     setError(null);
     try {
-      await llmEngineRef.current.init(setLlmProgress);
+      await llmEngineRef.current.init(setLlmProgress, modelSize);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load LLM model');
     } finally {
       setLlmLoading(false);
     }
-  }, []);
+  }, [modelSize]);
 
   const handleRun = useCallback(async () => {
     if (!input.trim()) return;
@@ -50,6 +56,7 @@ const StructuredParserTab = () => {
     setError(null);
     setSimProtocol(null);
     setBattleData(null);
+    setStructuredProgress(null);
 
     try {
       const paragraphs = input
@@ -86,7 +93,10 @@ const StructuredParserTab = () => {
       );
 
       const structuredParser = new StructuredParser(llmEngineRef.current);
-      const protocol = await structuredParser.convertToSimProtocol(paragraphs);
+      const protocol = await structuredParser.convertToSimProtocol(
+        paragraphs,
+        setStructuredProgress,
+      );
       setSimProtocol(protocol);
 
       const metadata: BattleMetadata = {
@@ -146,9 +156,26 @@ const StructuredParserTab = () => {
 
       <Card title="LLM Engine">
         {!llmEngineRef.current.isReady() && !llmLoading && (
-          <Button icon={<RobotOutlined />} onClick={void handleLoadLLM()}>
-            Load LLM Model
-          </Button>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Model:</span>
+              <Select
+                value={modelSize}
+                onChange={setModelSize}
+                style={{ width: 240 }}
+                options={Object.entries(LLM_MODELS).map(([key, m]) => ({
+                  value: key,
+                  label: `${m.label} \u2014 ${m.description}`,
+                }))}
+              />
+            </div>
+            <Button
+              icon={<RobotOutlined />}
+              onClick={() => void handleLoadLLM()}
+            >
+              Load LLM Model
+            </Button>
+          </div>
         )}
         {llmLoading && llmProgress && (
           <div>
@@ -170,10 +197,22 @@ const StructuredParserTab = () => {
         icon={<RobotOutlined />}
         disabled={!input.trim() || !llmEngineRef.current.isReady() || running}
         loading={running}
-        onClick={void handleRun()}
+        onClick={() => void handleRun()}
       >
         {running ? 'Parsing...' : 'Run Structured Parser'}
       </Button>
+
+      {running && structuredProgress && (
+        <Progress
+          percent={Math.round(
+            (structuredProgress.current / structuredProgress.total) * 100,
+          )}
+          format={() =>
+            `${structuredProgress.current} / ${structuredProgress.total} lines`
+          }
+          status="active"
+        />
+      )}
 
       {error && (
         <Card title="Error">

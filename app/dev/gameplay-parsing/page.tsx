@@ -7,9 +7,9 @@ import {
   RobotOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Input, Progress, Tabs, Upload } from 'antd';
+import { Button, Card, Input, Progress, Select, Tabs, Upload } from 'antd';
 import Title from 'antd/es/typography/Title';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   DEFAULT_CONFIG,
@@ -18,10 +18,14 @@ import {
   type ExtractedParagraph,
   type GameplayParsingConfig,
   GameplayParsingPipeline,
+  getDefaultWorkerCount,
+  LLM_MODELS,
   LLMEngine,
+  type LLMModelSize,
   type LLMProgress,
   type ParsingProgress,
   StructuredParser,
+  type StructuredParsingProgress,
   TextExtractor,
 } from '@/src/services/gameplay-parsing';
 import type { BattleMetadata } from '@/src/services/pokemon/battle';
@@ -36,6 +40,10 @@ const GameplayParsingPage = () => {
   const [config, setConfig] = useState<GameplayParsingConfig>({
     ...DEFAULT_CONFIG,
   });
+
+  useEffect(() => {
+    setConfig((prev) => ({ ...prev, WORKER_COUNT: getDefaultWorkerCount() }));
+  }, []);
   const [file, setFile] = useState<File | null>(null);
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -58,7 +66,10 @@ const GameplayParsingPage = () => {
   const [simProtocol, setSimProtocol] = useState<string | null>(null);
   const [battleData, setBattleData] = useState<CreateBattleData | null>(null);
   const [structuredError, setStructuredError] = useState<string | null>(null);
+  const [structuredProgress, setStructuredProgress] =
+    useState<StructuredParsingProgress | null>(null);
   const [playerTag, setPlayerTag] = useState('p1');
+  const [modelSize, setModelSize] = useState<LLMModelSize>('medium');
   const pipelineRef = useRef<GameplayParsingPipeline | null>(null);
   const llmEngineRef = useRef(new LLMEngine());
   const pauseResolveRef = useRef<(() => void) | null>(null);
@@ -197,7 +208,7 @@ const GameplayParsingPage = () => {
   const handleLoadLLM = useCallback(async () => {
     setLlmLoading(true);
     try {
-      await llmEngineRef.current.init(setLlmProgress);
+      await llmEngineRef.current.init(setLlmProgress, modelSize);
     } catch (err) {
       setStructuredError(
         err instanceof Error ? err.message : 'Failed to load LLM model',
@@ -205,7 +216,7 @@ const GameplayParsingPage = () => {
     } finally {
       setLlmLoading(false);
     }
-  }, []);
+  }, [modelSize]);
 
   const handleStructuredParse = useCallback(async () => {
     if (!results) return;
@@ -214,11 +225,15 @@ const GameplayParsingPage = () => {
     setStructuredError(null);
     setSimProtocol(null);
     setBattleData(null);
+    setStructuredProgress(null);
 
     try {
       console.log('[Page] Starting structured parsing...');
       const structuredParser = new StructuredParser(llmEngineRef.current);
-      const protocol = await structuredParser.convertToSimProtocol(results);
+      const protocol = await structuredParser.convertToSimProtocol(
+        results,
+        setStructuredProgress,
+      );
       setSimProtocol(protocol);
       console.log('[Page] Sim-protocol generated, parsing into battle data...');
 
@@ -339,7 +354,7 @@ const GameplayParsingPage = () => {
                       type="primary"
                       disabled={!imageFile || imageRunning}
                       loading={imageRunning}
-                      onClick={void handleImageTest()}
+                      onClick={() => void handleImageTest()}
                     >
                       {imageRunning ? 'Extracting...' : 'Run OCR on Image'}
                     </Button>
@@ -376,7 +391,7 @@ const GameplayParsingPage = () => {
                     size="large"
                     disabled={!file || running}
                     loading={running && !paused}
-                    onClick={void handleRun()}
+                    onClick={() => void handleRun()}
                   >
                     {running ? 'Processing...' : 'Run Algorithm'}
                   </Button>
@@ -385,7 +400,9 @@ const GameplayParsingPage = () => {
                       size="large"
                       icon={paused ? <PlayCircleOutlined /> : <PauseOutlined />}
                       onClick={
-                        paused ? void handleResume() : void handlePause()
+                        paused
+                          ? () => void handleResume()
+                          : () => void handlePause()
                       }
                     >
                       {paused ? 'Resume' : 'Pause'}
@@ -459,14 +476,28 @@ const GameplayParsingPage = () => {
                   <Card title="Structured Parsing (LLM)">
                     <div className="flex flex-col gap-4">
                       {!llmEngineRef.current.isReady() && !llmLoading && (
-                        <div>
+                        <div className="flex flex-col gap-3">
                           <p className="mb-2 text-sm text-gray-500">
                             Load an LLM model to convert OCR text into
                             structured battle data.
                           </p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">Model:</span>
+                            <Select
+                              value={modelSize}
+                              onChange={setModelSize}
+                              style={{ width: 240 }}
+                              options={Object.entries(LLM_MODELS).map(
+                                ([key, m]) => ({
+                                  value: key,
+                                  label: `${m.label} — ${m.description}`,
+                                }),
+                              )}
+                            />
+                          </div>
                           <Button
                             icon={<RobotOutlined />}
-                            onClick={void handleLoadLLM()}
+                            onClick={() => void handleLoadLLM()}
                           >
                             Load LLM Model
                           </Button>
@@ -498,12 +529,25 @@ const GameplayParsingPage = () => {
                             type="primary"
                             icon={<RobotOutlined />}
                             loading={structuredRunning}
-                            onClick={void handleStructuredParse()}
+                            onClick={() => void handleStructuredParse()}
                           >
                             {structuredRunning
                               ? 'Parsing...'
                               : 'Convert to Battle Data'}
                           </Button>
+                          {structuredRunning && structuredProgress && (
+                            <Progress
+                              percent={Math.round(
+                                (structuredProgress.current /
+                                  structuredProgress.total) *
+                                  100,
+                              )}
+                              format={() =>
+                                `${structuredProgress.current} / ${structuredProgress.total} lines`
+                              }
+                              status="active"
+                            />
+                          )}
                         </div>
                       )}
 

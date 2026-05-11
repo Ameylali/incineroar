@@ -304,7 +304,7 @@ const ExperimentsTab = () => {
           icon={<ThunderboltOutlined />}
           disabled={!imageFile || running || experiments.length === 0}
           loading={running}
-          onClick={void runExperiments()}
+          onClick={() => void runExperiments()}
         >
           {running
             ? `Running ${currentRun}/${totalRuns}...`

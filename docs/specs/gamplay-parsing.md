@@ -37,7 +37,7 @@ This is a high-level overview of the video gameplay parsing algorithm. The algor
 
 Once the plain-text battle log is extracted, it must be mapped to the structured `Battle` data model (turns, actions, players, results).
 
-1. **WebLLM**: WebLLM will be used to run an LLM model in the browser. The model will be prompted to transform the plain-text battle logs into a structured "showdown sim-protocol" format.
+1. **WebLLM**: WebLLM will be used to run an LLM model in the browser. The model will be prompted to transform the plain-text battle logs into a structured "showdown sim-protocol" format. To avoid peaks of high memory usage, the interaction with the LLM is done **line by line**: each extracted paragraph is sent individually, and the model returns the corresponding sim-protocol lines for that paragraph before moving on. A running conversation context is maintained so that earlier lines inform the interpretation of later ones. This process runs automatically until all paragraphs have been parsed — no manual intervention is needed between lines.
 
 2. **Parse structured logs**: We'll use the existing showdown sim-protocol to generate the `Battle` data model that will be sent to the API. The output data should conform to the existing `CreateBattleData` schema so it can be persisted via `createBattleForTraining()`.
 
