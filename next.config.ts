@@ -21,8 +21,14 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     rules: {
-      '*.md': { type: 'raw' },
-      '*.txt': { type: 'raw' },
+      '*.md': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      '*.txt': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
     },
   },
 };
