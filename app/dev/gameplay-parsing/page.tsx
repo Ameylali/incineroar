@@ -13,28 +13,30 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   DEFAULT_CONFIG,
-  DEVICE_MASKS,
   type ExecutionController,
   type ExtractedParagraph,
   type GameplayParsingConfig,
-  GameplayParsingPipeline,
   getDefaultWorkerCount,
   LLM_MODELS,
   LLMEngine,
   type LLMModelSize,
   type LLMProgress,
   type ParsingProgress,
-  StructuredParser,
   type StructuredParsingProgress,
-  TextExtractor,
 } from '@/src/services/gameplay-parsing';
-import type { BattleMetadata } from '@/src/services/pokemon/battle';
 import type { CreateBattleData } from '@/src/types/api';
 
 import ConfigForm from './ConfigForm';
 import ExperimentsTab from './ExperimentsTab';
 import ResultsDisplay from './ResultsDisplay';
 import StructuredParserTab from './StructuredParserTab';
+import {
+  createBattleMetadata,
+  createMaskPreviewUrl,
+  runGameplayPipeline,
+  runImageOcr,
+  runStructuredParsing,
+} from './utils';
 
 const GameplayParsingPage = () => {
   const [config, setConfig] = useState<GameplayParsingConfig>({
@@ -70,7 +72,6 @@ const GameplayParsingPage = () => {
     useState<StructuredParsingProgress | null>(null);
   const [playerTag, setPlayerTag] = useState('p1');
   const [modelSize, setModelSize] = useState<LLMModelSize>('medium');
-  const pipelineRef = useRef<GameplayParsingPipeline | null>(null);
   const llmEngineRef = useRef(new LLMEngine());
   const pauseResolveRef = useRef<(() => void) | null>(null);
   const isPausedRef = useRef(false);
@@ -115,10 +116,10 @@ const GameplayParsingPage = () => {
 
     try {
       console.log('[Page] Starting pipeline...');
-      pipelineRef.current = new GameplayParsingPipeline(config);
       const controller = createController();
-      const paragraphs = await pipelineRef.current.run(
+      const paragraphs = await runGameplayPipeline(
         file,
+        config,
         setProgress,
         controller,
       );
@@ -129,7 +130,6 @@ const GameplayParsingPage = () => {
       );
     } finally {
       setRunning(false);
-      pipelineRef.current = null;
       isPausedRef.current = false;
       pauseResolveRef.current = null;
     }
@@ -146,53 +146,8 @@ const GameplayParsingPage = () => {
     try {
       console.log('[Page] Starting image OCR test...');
 
-      // Load image into ImageData
-      const bitmap = await createImageBitmap(imageFile);
-      const canvas = document.createElement('canvas');
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(bitmap, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      bitmap.close();
-
-      // Generate processed image with mask overlays
-      const masks = DEVICE_MASKS[config.DEVICE_PROFILE];
-      const overlayCanvas = document.createElement('canvas');
-      overlayCanvas.width = imageData.width;
-      overlayCanvas.height = imageData.height;
-      const overlayCtx = overlayCanvas.getContext('2d')!;
-      overlayCtx.putImageData(imageData, 0, 0);
-      overlayCtx.strokeStyle = 'red';
-      overlayCtx.lineWidth = 3;
-      overlayCtx.font = '14px sans-serif';
-      for (const mask of masks) {
-        const mx = Math.round(mask.x * overlayCanvas.width);
-        const my = Math.round(mask.y * overlayCanvas.height);
-        const mw = Math.round(mask.width * overlayCanvas.width);
-        const mh = Math.round(mask.height * overlayCanvas.height);
-        overlayCtx.strokeRect(mx, my, mw, mh);
-        const labelPadding = 4;
-        const labelHeight = 18;
-        const labelWidth =
-          overlayCtx.measureText(mask.label).width + labelPadding * 2;
-        overlayCtx.fillStyle = 'rgba(255, 0, 0, 0.7)';
-        overlayCtx.fillRect(mx, my - labelHeight, labelWidth, labelHeight);
-        overlayCtx.fillStyle = 'white';
-        overlayCtx.fillText(mask.label, mx + labelPadding, my - labelPadding);
-      }
-      setImageProcessedUrl(overlayCanvas.toDataURL('image/jpeg', 0.85));
-
-      console.log(
-        `[Page] Image loaded: ${imageData.width}x${imageData.height}`,
-      );
-
-      // Run TextExtractor directly on the single image as a frame
-      const extractor = new TextExtractor(config);
-      const paragraphs = await extractor.extractAll([
-        { timestamp: 0, imageData },
-      ]);
-      await extractor.terminate();
+      const { imageData, paragraphs } = await runImageOcr(imageFile, config);
+      setImageProcessedUrl(createMaskPreviewUrl(imageData, config));
 
       console.log(`[Page] Image OCR result: ${paragraphs.length} paragraphs`);
       setImageResults(paragraphs);
@@ -229,20 +184,15 @@ const GameplayParsingPage = () => {
 
     try {
       console.log('[Page] Starting structured parsing...');
-      const structuredParser = new StructuredParser(llmEngineRef.current);
-      const protocol = await structuredParser.convertToSimProtocol(
-        results,
-        setStructuredProgress,
-      );
+      const { simProtocol: protocol, battleData: parsed } =
+        await runStructuredParsing(
+          results,
+          llmEngineRef.current,
+          createBattleMetadata(file?.name ?? 'Parsed Battle', playerTag),
+          setStructuredProgress,
+        );
       setSimProtocol(protocol);
       console.log('[Page] Sim-protocol generated, parsing into battle data...');
-
-      const metadata: BattleMetadata = {
-        name: file?.name ?? 'Parsed Battle',
-        notes: '',
-        playerTag: playerTag as 'p1' | 'p2',
-      };
-      const parsed = structuredParser.parseSimProtocol(protocol, metadata);
       setBattleData(parsed);
       console.log(
         `[Page] Structured parsing complete: ${parsed.turns.length} turns`,

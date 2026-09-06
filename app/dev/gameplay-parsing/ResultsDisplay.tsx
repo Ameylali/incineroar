@@ -4,15 +4,11 @@ import { Card, Collapse, Tag } from 'antd';
 
 import type { ExtractedParagraph } from '@/src/services/gameplay-parsing';
 
+import { formatTimestamp } from './utils';
+
 interface ResultsDisplayProps {
   paragraphs: ExtractedParagraph[];
 }
-
-const formatTimestamp = (seconds: number): string => {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-};
 
 const ResultsDisplay = ({ paragraphs }: ResultsDisplayProps) => {
   if (paragraphs.length === 0) {

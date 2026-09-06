@@ -9,11 +9,15 @@ import {
   LLMEngine,
   type LLMModelSize,
   type LLMProgress,
-  StructuredParser,
   type StructuredParsingProgress,
 } from '@/src/services/gameplay-parsing';
-import type { BattleMetadata } from '@/src/services/pokemon/battle';
 import type { CreateBattleData } from '@/src/types/api';
+
+import {
+  createBattleMetadata,
+  parseStructuredInput,
+  runStructuredParsing,
+} from './utils';
 
 const PLACEHOLDER = `[1.0s] Go! Incineroar! | | Intimidate
 [2.0s] The opposing Garchomp's Attack fell! | |
@@ -74,32 +78,7 @@ const StructuredParserTab = () => {
     setStructuredProgress(null);
 
     try {
-      const paragraphs = input
-        .split('\n')
-        .filter((line) => line.trim().length > 0)
-        .map((line) => {
-          const match = line.match(/^\[(\d+(?:\.\d+)?)s\]\s*(.*)$/);
-          const timestamp = match ? parseFloat(match[1]) : 0;
-          const textPart = match ? match[2] : line;
-          const parts = textPart.split(' | ');
-
-          return {
-            timestamp,
-            extractions: parts.map((text, i) => ({
-              mask: {
-                x: 0,
-                y: 0,
-                width: 1,
-                height: 1,
-                label:
-                  ['main-text-box', 'rival-right-box', 'my-left-box'][i] ??
-                  `mask-${i}`,
-              },
-              text: text.trim(),
-              lineConfidences: [1],
-            })),
-          };
-        });
+      const paragraphs = parseStructuredInput(input);
 
       console.log(
         '[StructuredParserTab] Parsed input into',
@@ -107,25 +86,21 @@ const StructuredParserTab = () => {
         'paragraphs',
       );
 
-      const structuredParser = new StructuredParser(llmEngineRef.current);
       console.debug('[StructuredParserTab] Converting paragraphs to protocol', {
         paragraphCount: paragraphs.length,
       });
-      const protocol = await structuredParser.convertToSimProtocol(
-        paragraphs,
-        setStructuredProgress,
-      );
+      const { simProtocol: protocol, battleData: parsed } =
+        await runStructuredParsing(
+          paragraphs,
+          llmEngineRef.current,
+          createBattleMetadata(battleName, playerTag),
+          setStructuredProgress,
+        );
       setSimProtocol(protocol);
       console.debug('[StructuredParserTab] Protocol conversion complete', {
         protocolCharacters: protocol.length,
       });
 
-      const metadata: BattleMetadata = {
-        name: battleName,
-        notes: '',
-        playerTag: playerTag as 'p1' | 'p2',
-      };
-      const parsed = structuredParser.parseSimProtocol(protocol, metadata);
       setBattleData(parsed);
       console.log(`[StructuredParserTab] Done: ${parsed.turns.length} turns`);
     } catch (err) {

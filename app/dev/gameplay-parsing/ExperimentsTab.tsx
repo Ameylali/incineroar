@@ -20,72 +20,19 @@ import { useCallback, useState } from 'react';
 
 import {
   DEFAULT_CONFIG,
-  type ExtractedParagraph,
   type GameplayParsingConfig,
-  TextExtractor,
 } from '@/src/services/gameplay-parsing';
 
-interface ExperimentConfig {
-  id: number;
-  label: string;
-  config: GameplayParsingConfig;
-}
+import {
+  createExperiment,
+  EXPERIMENT_PRESETS,
+  type ExperimentConfig,
+  type ExperimentResult,
+  getExperimentComparison,
+  runExperiments as executeExperiments,
+} from './utils';
 
-interface ExperimentResult {
-  id: number;
-  label: string;
-  config: GameplayParsingConfig;
-  paragraphs: ExtractedParagraph[];
-  totalText: string;
-  avgConfidence: number;
-  durationMs: number;
-  error?: string;
-}
-
-let nextId = 1;
-
-const createExperiment = (
-  overrides?: Partial<GameplayParsingConfig>,
-): ExperimentConfig => ({
-  id: nextId++,
-  label: `Experiment ${nextId - 1}`,
-  config: { ...DEFAULT_CONFIG, ...overrides },
-});
-
-const PRESETS: { label: string; overrides: Partial<GameplayParsingConfig> }[] =
-  [
-    { label: 'Default', overrides: {} },
-    {
-      label: 'High contrast',
-      overrides: {
-        PREPROCESS: { ...DEFAULT_CONFIG.PREPROCESS, CONTRAST: 3.0 },
-      },
-    },
-    {
-      label: 'No preprocessing',
-      overrides: {
-        PREPROCESS: { GRAYSCALE: false, CONTRAST: 1, BLUR_RADIUS: 0 },
-      },
-    },
-    {
-      label: 'Grayscale only',
-      overrides: {
-        PREPROCESS: { GRAYSCALE: true, CONTRAST: 1, BLUR_RADIUS: 0 },
-      },
-    },
-    {
-      label: 'Strict confidence',
-      overrides: {
-        SELECTION: { MIN_LINE_CONFIDENCE: 0.8, MIN_WORD_CONFIDENCE: 0.7 },
-      },
-    },
-    {
-      label: 'Loose confidence',
-      overrides: {
-        SELECTION: { MIN_LINE_CONFIDENCE: 0.3, MIN_WORD_CONFIDENCE: 0.2 },
-      },
-    },
-  ];
+const PRESETS = EXPERIMENT_PRESETS;
 
 const ExperimentsTab = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -137,69 +84,19 @@ const ExperimentsTab = () => {
     setCurrentRun(0);
     setTotalRuns(experiments.length);
 
-    // Load image once
-    const bitmap = await createImageBitmap(imageFile);
-    const canvas = document.createElement('canvas');
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(bitmap, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    bitmap.close();
-
-    const allResults: ExperimentResult[] = [];
-
-    for (let i = 0; i < experiments.length; i++) {
-      const exp = experiments[i];
-      setCurrentRun(i + 1);
-
-      const start = performance.now();
-      try {
-        const extractor = new TextExtractor(exp.config);
-        const paragraphs = await extractor.extractAll([
-          { timestamp: 0, imageData },
-        ]);
-        await extractor.terminate();
-        const durationMs = performance.now() - start;
-
-        const allConfidences = paragraphs.flatMap((p) =>
-          p.extractions.flatMap((e) => e.lineConfidences),
-        );
-        const avgConfidence =
-          allConfidences.length > 0
-            ? allConfidences.reduce((a, b) => a + b, 0) / allConfidences.length
-            : 0;
-
-        const totalText = paragraphs
-          .flatMap((p) => p.extractions.map((e) => e.text))
-          .join('\n');
-
-        allResults.push({
-          id: exp.id,
-          label: exp.label,
-          config: exp.config,
-          paragraphs,
-          totalText,
-          avgConfidence,
-          durationMs,
-        });
-      } catch (err) {
-        allResults.push({
-          id: exp.id,
-          label: exp.label,
-          config: exp.config,
-          paragraphs: [],
-          totalText: '',
-          avgConfidence: 0,
-          durationMs: performance.now() - start,
-          error: err instanceof Error ? err.message : 'Unknown error',
-        });
-      }
-
-      setResults([...allResults]);
+    try {
+      const allResults = await executeExperiments(
+        imageFile,
+        experiments,
+        (current, nextResults) => {
+          setCurrentRun(current);
+          setResults(nextResults);
+        },
+      );
+      setResults(allResults);
+    } finally {
+      setRunning(false);
     }
-
-    setRunning(false);
   }, [imageFile, experiments]);
 
   return (
@@ -339,35 +236,8 @@ const ExperimentsTab = () => {
               </thead>
               <tbody>
                 {results.map((r) => {
-                  const lineCount = r.paragraphs.reduce(
-                    (sum, p) =>
-                      sum +
-                      p.extractions.reduce(
-                        (s, e) => s + e.lineConfidences.length,
-                        0,
-                      ),
-                    0,
-                  );
-                  const bestAvg = Math.max(
-                    ...results
-                      .filter((x) => !x.error)
-                      .map((x) => x.avgConfidence),
-                  );
-                  const mostLines = Math.max(
-                    ...results
-                      .filter((x) => !x.error)
-                      .map((x) =>
-                        x.paragraphs.reduce(
-                          (sum, p) =>
-                            sum +
-                            p.extractions.reduce(
-                              (s, e) => s + e.lineConfidences.length,
-                              0,
-                            ),
-                          0,
-                        ),
-                      ),
-                  );
+                  const { lineCount, bestAvgConfidence, mostLines } =
+                    getExperimentComparison(r, results);
 
                   return (
                     <tr
@@ -400,7 +270,8 @@ const ExperimentsTab = () => {
                       <td className="p-2">
                         <Tag
                           color={
-                            r.avgConfidence === bestAvg && r.avgConfidence > 0
+                            r.avgConfidence === bestAvgConfidence &&
+                            r.avgConfidence > 0
                               ? 'green'
                               : r.avgConfidence >= 70
                                 ? 'orange'
