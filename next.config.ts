@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   typedRoutes: true,
   images: {
     remotePatterns: [
@@ -16,6 +17,18 @@ const nextConfig: NextConfig = {
     serverActions: {
       allowedOrigins: [...(process.env.ALLOWED_ORIGINS || '').split(',')],
       bodySizeLimit: '2mb',
+    },
+  },
+  turbopack: {
+    rules: {
+      '*.md': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      '*.txt': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
     },
   },
 };

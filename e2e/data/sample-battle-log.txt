@@ -1,0 +1,109 @@
+[0.5s] Battle started between Player1 and Player2! | |
+[1.0s] Go! Incineroar! | |
+[1.5s] Go! Rillaboom! | |
+[2.0s] Player2 sent out Flutter Mane! | |
+[2.5s] Player2 sent out Landorus! | |
+[3.0s] | | Intimidate
+[3.5s] The opposing Flutter Mane's Attack fell! | |
+[4.0s] The opposing Landorus's Attack fell! | |
+[4.5s] | | Grassy Surge
+[5.0s] Grassy Terrain started! | |
+[5.5s] | Pressure |
+[6.0s] Turn 1 | |
+[7.0s] Incineroar used Fake Out! | |
+[7.5s] The opposing Flutter Mane flinched and couldn't move! | |
+[8.0s] Rillaboom used Grassy Glide! | |
+[8.5s] It's super effective! | |
+[9.0s] | | Grassy Seed
+[9.5s] The opposing Landorus used Earthquake! | |
+[10.0s] It's not very effective... | |
+[10.5s] Rillaboom lost 35% of its health! | |
+[11.0s] Incineroar lost 22% of its health! | |
+[11.5s] Grassy Terrain restored Incineroar's health! | |
+[12.0s] Grassy Terrain restored Rillaboom's health! | |
+[12.5s] Turn 2 | |
+[13.0s] The opposing Flutter Mane used Moonblast! | |
+[13.5s] Rillaboom lost 68% of its health! | |
+[14.0s] Rillaboom used Wood Hammer! | |
+[14.5s] It's super effective! | |
+[15.0s] The opposing Landorus fainted! | |
+[15.5s] Rillaboom is hit with recoil! | |
+[16.0s] Incineroar used Flare Blitz! | |
+[16.5s] It's super effective! | |
+[17.0s] The opposing Flutter Mane fainted! | |
+[17.5s] Incineroar is hit with recoil! | |
+[18.0s] Grassy Terrain restored Incineroar's health! | |
+[18.5s] Grassy Terrain restored Rillaboom's health! | |
+[19.0s] Player2 sent out Urshifu! | |
+[19.5s] Player2 sent out Raging Bolt! | |
+[20.0s] | Unseen Fist |
+[20.5s] Turn 3 | |
+[21.0s] Player1 withdrew Rillaboom! | |
+[21.5s] Go! Farigiraf! | |
+[22.0s] | | Armor Tail
+[22.5s] Incineroar used Parting Shot! | |
+[23.0s] The opposing Urshifu's Attack fell! | |
+[23.5s] The opposing Urshifu's Sp. Atk fell! | |
+[24.0s] Player1 withdrew Incineroar! | |
+[24.5s] Go! Incineroar! | |
+[25.0s] | | Intimidate
+[25.5s] The opposing Urshifu's Attack fell! | |
+[26.0s] The opposing Raging Bolt's Attack fell! | |
+[26.5s] The opposing Urshifu used Wicked Blow! | |
+[27.0s] A critical hit! | |
+[27.5s] Farigiraf lost 55% of its health! | |
+[28.0s] The opposing Raging Bolt used Thunderclap! | |
+[28.5s] But it failed! | |
+[29.0s] The Grassy Terrain faded. | |
+[29.5s] Turn 4 | |
+[30.0s] Farigiraf used Trick Room! | |
+[30.5s] Trick Room twisted the dimensions! | |
+[31.0s] The opposing Raging Bolt used Thunderbolt! | |
+[31.5s] Incineroar lost 45% of its health! | |
+[32.0s] Incineroar used Knock Off! | |
+[32.5s] | | Leftovers
+[33.0s] The opposing Urshifu's Leftovers was knocked off! | |
+[33.5s] The opposing Urshifu used Close Combat! | |
+[34.0s] Farigiraf lost 45% of its health! | |
+[34.5s] Farigiraf fainted! | |
+[35.0s] The opposing Urshifu's Defense fell! | |
+[35.5s] The opposing Urshifu's Sp. Def fell! | |
+[36.0s] Go! Rillaboom! | |
+[36.5s] | | Grassy Surge
+[37.0s] Grassy Terrain started! | |
+[37.5s] Turn 5 | |
+[38.0s] Rillaboom used Wood Hammer! | |
+[38.5s] It's super effective! | |
+[39.0s] A critical hit! | |
+[39.5s] The opposing Urshifu fainted! | |
+[40.0s] Rillaboom is hit with recoil! | |
+[40.5s] Incineroar used Flare Blitz! | |
+[41.0s] The opposing Raging Bolt lost 72% of its health! | |
+[41.5s] Incineroar is hit with recoil! | |
+[42.0s] | Protosynthesis |
+[42.5s] Grassy Terrain restored Incineroar's health! | |
+[43.0s] Grassy Terrain restored Rillaboom's health! | |
+[43.5s] Player2 sent out Amoonguss! | |
+[44.0s] | Regenerator |
+[44.5s] Turn 6 | |
+[45.0s] Rillaboom used Grassy Glide! | |
+[45.5s] The opposing Amoonguss lost 60% of its health! | |
+[46.0s] | Effect Spore |
+[46.5s] Rillaboom was paralyzed! It may be unable to move! | |
+[47.0s] Incineroar used Flare Blitz! | |
+[47.5s] It's super effective! | |
+[48.0s] The opposing Amoonguss fainted! | |
+[48.5s] Incineroar is hit with recoil! | |
+[49.0s] The opposing Raging Bolt used Thunderbolt! | |
+[49.5s] Incineroar lost 40% of its health! | |
+[50.0s] Incineroar fainted! | |
+[50.5s] Grassy Terrain restored Rillaboom's health! | |
+[51.0s] Go! Incineroar! | |
+[51.5s] | | Intimidate
+[52.0s] The opposing Raging Bolt's Attack fell! | |
+[52.5s] Trick Room ended! | |
+[53.0s] Turn 7 | |
+[53.5s] Rillaboom used Grassy Glide! | |
+[54.0s] The opposing Raging Bolt lost 28% of its health! | |
+[54.5s] The opposing Raging Bolt fainted! | |
+[55.0s] Player1 won the battle! | |
