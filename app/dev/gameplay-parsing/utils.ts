@@ -11,6 +11,7 @@ import {
   type StructuredParsingProgress,
   TextExtractor,
 } from '@/src/services/gameplay-parsing';
+import SYSTEM_PROMPT from '@/src/services/gameplay-parsing/prompts/system.md';
 import type { BattleMetadata } from '@/src/services/pokemon/battle';
 import type { CreateBattleData } from '@/src/types/api';
 
@@ -131,6 +132,14 @@ export const formatExtractedText = (paragraphs: ExtractedParagraph[]): string =>
     })
     .join('\n');
 
+export const formatStructuredLlmPrompt = (input: string): string => {
+  const normalizedInput = input.trim().replace(/\r?\n/g, '\r\n');
+  return `${SYSTEM_PROMPT.trim()}\n\n${normalizedInput}`;
+};
+
+export const normalizeLlmResponse = (response: string): string =>
+  response.trim().replace(/\r?\n/g, '\r\n');
+
 export const createBattleMetadata = (
   name: string,
   playerTag: string,
@@ -150,6 +159,15 @@ export const runStructuredParsing = async (
   const simProtocol = await parser.convertToSimProtocol(paragraphs, onProgress);
   const battleData = parser.parseSimProtocol(simProtocol, metadata);
   return { simProtocol, battleData };
+};
+
+export const parseLlmResponse = (
+  response: string,
+  engine: LLMEngine,
+  metadata: BattleMetadata,
+): CreateBattleData => {
+  const parser = new StructuredParser(engine);
+  return parser.parseSimProtocol(normalizeLlmResponse(response), metadata);
 };
 
 export const runGameplayPipeline = async (
