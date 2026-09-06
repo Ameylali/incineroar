@@ -30,7 +30,7 @@ import {
   type ExperimentResult,
   getExperimentComparison,
   runExperiments as executeExperiments,
-} from './utils';
+} from '../utils';
 
 const PRESETS = EXPERIMENT_PRESETS;
 

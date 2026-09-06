@@ -17,7 +17,7 @@ import {
   createBattleMetadata,
   parseStructuredInput,
   runStructuredParsing,
-} from './utils';
+} from '../utils';
 
 const PLACEHOLDER = `[1.0s] Go! Incineroar! | | Intimidate
 [2.0s] The opposing Garchomp's Attack fell! | |

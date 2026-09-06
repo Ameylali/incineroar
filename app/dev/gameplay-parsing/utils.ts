@@ -112,6 +112,25 @@ export const formatTimestamp = (seconds: number): string => {
   return `${minutes}:${remainder.toString().padStart(2, '0')}`;
 };
 
+export const formatExtractedText = (paragraphs: ExtractedParagraph[]): string =>
+  paragraphs
+    .map((paragraph) => {
+      const textByRegion = new Map(
+        paragraph.extractions.map((extraction) => [
+          extraction.mask.label,
+          extraction.text.trim(),
+        ]),
+      );
+      const regions = [
+        textByRegion.get('main-text-box') ?? '',
+        textByRegion.get('rival-right-box') ?? '',
+        textByRegion.get('my-left-box') ?? '',
+      ];
+
+      return `[${paragraph.timestamp.toFixed(1)}s] ${regions.join(' | ')}`;
+    })
+    .join('\n');
+
 export const createBattleMetadata = (
   name: string,
   playerTag: string,
@@ -204,16 +223,16 @@ export const runImageOcr = async (
   const imageData = await loadImageData(imageFile);
   const extractor = new TextExtractor(config);
   try {
-    const paragraphs = await extractor.extractAll([{ timestamp: 0, imageData }]);
+    const paragraphs = await extractor.extractAll([
+      { timestamp: 0, imageData },
+    ]);
     return { imageData, paragraphs };
   } finally {
     await extractor.terminate();
   }
 };
 
-export const countExtractedLines = (
-  paragraphs: ExtractedParagraph[],
-): number =>
+export const countExtractedLines = (paragraphs: ExtractedParagraph[]): number =>
   paragraphs.reduce(
     (paragraphTotal, paragraph) =>
       paragraphTotal +
@@ -230,7 +249,9 @@ export const summarizeExtraction = (paragraphs: ExtractedParagraph[]) => {
     paragraph.extractions.flatMap((extraction) => extraction.lineConfidences),
   );
   const totalText = paragraphs
-    .flatMap((paragraph) => paragraph.extractions.map((extraction) => extraction.text))
+    .flatMap((paragraph) =>
+      paragraph.extractions.map((extraction) => extraction.text),
+    )
     .join('\n');
 
   return {
