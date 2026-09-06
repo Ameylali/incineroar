@@ -6,8 +6,18 @@ import BattleParserFactory, {
 import type { CreateBattleData } from '@/src/types/api';
 
 import type { LLMEngine } from './llm-engine';
-import SYSTEM_PROMPT from './structured-parser-prompt.md';
+import COMPRESSED_SYSTEM_PROMPT from './prompts/compressed-system.md';
+import SUMMARY_SYSTEM_PROMPT from './prompts/summary-system.md';
+import SUMMARY_USER_PROMPT from './prompts/summary-user.md';
+import SYSTEM_PROMPT from './prompts/system.md';
 import type { ExtractedParagraph } from './types';
+
+type PromptVariables = Record<string, string | number>;
+
+const renderPrompt = (template: string, variables: PromptVariables): string =>
+  template.replace(/{{(\w+)}}/g, (_, key: string) =>
+    String(variables[key] ?? ''),
+  );
 
 export interface StructuredParsingProgress {
   current: number;
@@ -215,11 +225,9 @@ export class StructuredParser {
       );
     }
 
-    return [
-      'You are a Pokemon battle log converter.',
-      'Follow these compressed rules exactly:',
-      rollingSummary,
-    ].join('\n\n');
+    return renderPrompt(COMPRESSED_SYSTEM_PROMPT, {
+      SUMMARY: rollingSummary,
+    });
   }
 
   private async summarizeChunk(
@@ -229,21 +237,16 @@ export class StructuredParser {
     total: number,
     isRolling = false,
   ): Promise<string> {
-    const summarizerSystem =
-      'You compress prompt instructions while preserving all mandatory rules, output formats, and constraints. Keep only actionable instructions and remove duplicates.';
     const taskLabel = isRolling ? 'rolling-reduce' : 'map';
-    const summarizerUser = [
-      `Phase: ${taskLabel}`,
-      `Chunk: ${index}/${total}`,
-      'Summarize this content as concise, lossless instructions for another LLM.',
-      'Preserve all format requirements, protocol details, and behavioral constraints.',
-      'Return plain text only, no markdown fences.',
-      '',
-      chunk,
-    ].join('\n');
+    const summarizerUser = renderPrompt(SUMMARY_USER_PROMPT, {
+      PHASE: taskLabel,
+      INDEX: index,
+      TOTAL: total,
+      CONTENT: chunk,
+    });
 
     const messages: ChatCompletionMessageParam[] = [
-      { role: 'system', content: summarizerSystem },
+      { role: 'system', content: SUMMARY_SYSTEM_PROMPT },
       { role: 'user', content: summarizerUser },
     ];
 

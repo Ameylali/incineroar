@@ -159,7 +159,7 @@ export class LLMEngine {
       options.reserveOutputTokens ?? LLMEngine.OUTPUT_TOKEN_RESERVE;
     const modelInputLimit = Math.max(
       1,
-      this.CONTEXT_WINDOW_SIZE - reserveOutputTokens,
+      LLMEngine.CONTEXT_WINDOW_SIZE - reserveOutputTokens,
     );
     const maxInputTokens =
       options.maxInputTokens ??
