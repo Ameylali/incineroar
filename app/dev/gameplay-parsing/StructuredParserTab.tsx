@@ -38,11 +38,17 @@ const StructuredParserTab = () => {
   const llmEngineRef = useRef(new LLMEngine());
 
   const handleLoadLLM = useCallback(async () => {
+    console.debug('[StructuredParserTab] Loading LLM', { modelSize });
     setLlmLoading(true);
     setError(null);
     try {
       await llmEngineRef.current.init(setLlmProgress, modelSize);
+      console.debug('[StructuredParserTab] LLM loaded', { modelSize });
     } catch (err) {
+      console.error('[StructuredParserTab] Failed to load LLM', {
+        modelSize,
+        error: err,
+      });
       setError(err instanceof Error ? err.message : 'Failed to load LLM model');
     } finally {
       setLlmLoading(false);
@@ -50,8 +56,17 @@ const StructuredParserTab = () => {
   }, [modelSize]);
 
   const handleRun = useCallback(async () => {
-    if (!input.trim()) return;
+    if (!input.trim()) {
+      console.debug('[StructuredParserTab] Run skipped: input is empty');
+      return;
+    }
 
+    console.debug('[StructuredParserTab] Starting structured parse', {
+      inputCharacters: input.length,
+      modelSize,
+      playerTag,
+      battleName,
+    });
     setRunning(true);
     setError(null);
     setSimProtocol(null);
@@ -93,11 +108,17 @@ const StructuredParserTab = () => {
       );
 
       const structuredParser = new StructuredParser(llmEngineRef.current);
+      console.debug('[StructuredParserTab] Converting paragraphs to protocol', {
+        paragraphCount: paragraphs.length,
+      });
       const protocol = await structuredParser.convertToSimProtocol(
         paragraphs,
         setStructuredProgress,
       );
       setSimProtocol(protocol);
+      console.debug('[StructuredParserTab] Protocol conversion complete', {
+        protocolCharacters: protocol.length,
+      });
 
       const metadata: BattleMetadata = {
         name: battleName,
@@ -108,13 +129,17 @@ const StructuredParserTab = () => {
       setBattleData(parsed);
       console.log(`[StructuredParserTab] Done: ${parsed.turns.length} turns`);
     } catch (err) {
+      console.error('[StructuredParserTab] Structured parsing failed', {
+        inputCharacters: input.length,
+        error: err,
+      });
       setError(
         err instanceof Error ? err.message : 'Structured parsing failed',
       );
     } finally {
       setRunning(false);
     }
-  }, [input, playerTag, battleName]);
+  }, [input, playerTag, battleName, modelSize]);
 
   return (
     <div className="flex flex-col gap-6">
