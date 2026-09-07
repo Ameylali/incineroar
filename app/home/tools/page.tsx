@@ -48,6 +48,24 @@ const tools: ToolItem[] = [
     description:
       'Usage statistics and meta analysis for competitive Pokémon, tracking popular sets and trends.',
   },
+  {
+    name: 'PT Ladder',
+    url: 'https://ptladder.bennbuild.io/',
+    description:
+      'Pokémon tournament ladder and player ratings site for tracking competitive standings and match-based rankings.',
+  },
+  {
+    name: 'Pokémon VGC',
+    url: 'https://pokemonvgc.es/',
+    description:
+      'Community-focused VGC site with player rankings, team tracking, and Worlds/event coverage for fans and competitors.',
+  },
+  {
+    name: 'K2Dex',
+    url: 'https://k2dex.kyletunis.com/',
+    description:
+      'VGC teambuilder that learns from real tournament teams to autocomplete rosters, rate synergy, and analyze the metagame.',
+  },
 ];
 
 const Page = () => {
