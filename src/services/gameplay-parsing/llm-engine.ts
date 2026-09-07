@@ -39,7 +39,6 @@ export class LLMEngine {
   private static readonly OUTPUT_TOKEN_RESERVE = 512;
   private static readonly DEFAULT_INPUT_TOKEN_LIMIT = 750;
   public static readonly CONTEXT_WINDOW_SIZE = 1024;
-  private static readonly PREFILL_CHUNK_SIZE = 128;
 
   private engine: MLCEngineInterface | null = null;
   private loadedModel: string | null = null;
@@ -181,7 +180,7 @@ export class LLMEngine {
 
     while (
       totalTokens > maxInputTokens &&
-      pruned.length > protectedMessageCount
+      pruned.length > protectedMessageCount + 1
     ) {
       pruned.splice(protectedMessageCount, 1);
       totalTokens = await this.countMessageTokens(pruned);

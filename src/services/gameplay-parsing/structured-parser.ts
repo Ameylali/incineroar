@@ -34,7 +34,7 @@ export class StructuredParserError extends Error {
 export class StructuredParser {
   private static readonly CHAT_INPUT_TOKEN_BUDGET = 750;
   private static readonly RESPONSE_TOKEN_RESERVE = 512;
-  private static readonly SUMMARY_CHUNK_TOKEN_SIZE = 700;
+  private static readonly SUMMARY_CHUNK_TOKEN_SIZE = 500;
   private static readonly SUMMARY_MAX_TOKENS = 320;
 
   private llmEngine: LLMEngine;
