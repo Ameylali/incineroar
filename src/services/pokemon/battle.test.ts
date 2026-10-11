@@ -105,7 +105,7 @@ describe('BattleParser', () => {
       expect(megaevolutionAction.player).toEqual('p1');
       expect(megaevolutionAction.name).toEqual('changed its forme to');
       expect(megaevolutionAction.user).toEqual('PokemonA');
-      expect(megaevolutionAction.targets).toMatchObject(['NewForme-PokemonA']);
+      expect(megaevolutionAction.targets).toMatchObject(['newforme-pokemona']);
     });
 
     it('should log pokemon forme change from ability', () => {
@@ -118,7 +118,7 @@ describe('BattleParser', () => {
       expect(abilityAction.type).toEqual('ability');
       expect(abilityAction.name).toEqual('Shields Down');
       expect(abilityAction.user).toEqual('Minior');
-      expect(abilityAction.targets).toMatchObject(['Minior-Meteor']);
+      expect(abilityAction.targets).toMatchObject(['minior-meteor']);
     });
 
     it('should log fainted pokemon', () => {
@@ -270,14 +270,27 @@ describe('BattleParser', () => {
       expect(switchAction1.type).toEqual('switch');
       expect(switchAction1.name).toEqual('to');
       expect(switchAction1.user).toEqual('');
-      expect(switchAction1.targets).toMatchObject(['Ursaluna-Bloodmoon']);
+      expect(switchAction1.targets).toMatchObject(['ursaluna-bloodmoon']);
 
       const switchAction2 = battle.turns[0].actions[1];
       expect(switchAction2.player).toEqual('p1');
       expect(switchAction2.type).toEqual('switch');
       expect(switchAction2.name).toEqual('to');
-      expect(switchAction2.user).toEqual('Ursaluna-Bloodmoon');
-      expect(switchAction2.targets).toMatchObject(['Dragonite']);
+      expect(switchAction2.user).toEqual('ursaluna-bloodmoon');
+      expect(switchAction2.targets).toMatchObject(['dragonite']);
+    });
+
+    it('should normalize gendered species suffix and casing', () => {
+      const lines = defaultLines([
+        '|switch|p1a: Indeedee|Indeedee-F, L50, F, 100\/100|',
+        '|switch|p2a: Pikachu|Pikachu-M, L50, M, 100\/100|',
+      ]);
+      const battle = parser.parse(metadata, lines);
+      const switchAction1 = battle.turns[0].actions[0];
+      expect(switchAction1.targets).toMatchObject(['indeedee-female']);
+
+      const switchAction2 = battle.turns[0].actions[1];
+      expect(switchAction2.targets).toMatchObject(['pikachu-male']);
     });
 
     it('should log pokemon switch when sides are inverted', () => {
@@ -291,14 +304,14 @@ describe('BattleParser', () => {
       expect(switchAction1.type).toEqual('switch');
       expect(switchAction1.name).toEqual('to');
       expect(switchAction1.user).toEqual('');
-      expect(switchAction1.targets).toMatchObject(['Ursaluna-Bloodmoon']);
+      expect(switchAction1.targets).toMatchObject(['ursaluna-bloodmoon']);
 
       const switchAction2 = battle.turns[0].actions[1];
       expect(switchAction2.player).toEqual('p2');
       expect(switchAction2.type).toEqual('switch');
       expect(switchAction2.name).toEqual('to');
-      expect(switchAction2.user).toEqual('Ursaluna-Bloodmoon');
-      expect(switchAction2.targets).toMatchObject(['Dragonite']);
+      expect(switchAction2.user).toEqual('ursaluna-bloodmoon');
+      expect(switchAction2.targets).toMatchObject(['dragonite']);
     });
 
     it('should log ability change', () => {
@@ -325,7 +338,7 @@ describe('BattleParser', () => {
       expect(megaevolutionAction.player).toEqual('p1');
       expect(megaevolutionAction.name).toEqual('megaevolved');
       expect(megaevolutionAction.user).toEqual('Lucario');
-      expect(megaevolutionAction.targets).toMatchObject(['Mega-Lucario']);
+      expect(megaevolutionAction.targets).toMatchObject(['mega-lucario']);
     });
 
     it('should log primal', () => {
