@@ -14,3 +14,9 @@ export class MissingDBConnectionError extends Error {
     super('Not connected to DB, did you call DBConnection.connect()?');
   }
 }
+
+export class EmailSendError extends Error {
+  constructor(error: unknown) {
+    super('Failed to send email', { cause: error });
+  }
+}
