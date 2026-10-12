@@ -7,10 +7,14 @@ export default class TeamService {
     const pokes = rawTeam.split(/\r\n\r\n|\n\n|\r\r/);
     return pokes.map((poke) => {
       const set = Sets.importSet(poke);
-      return set ? {
-        ...set,
-        species: set.species ? normalizeSpeciesName(set.species) : set.species,
-      } : set;
+      return set
+        ? {
+            ...set,
+            species: set.species
+              ? normalizeSpeciesName(set.species)
+              : set.species,
+          }
+        : set;
     });
   }
 
