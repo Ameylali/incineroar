@@ -2,6 +2,7 @@ import { JSDOM } from 'jsdom';
 
 import DBConnection from '../db/DBConnection';
 import TournamentRepository from '../db/models/tournament';
+import EmailService from '../services/email';
 import { Tournament } from '../types/api';
 import { fetchRawData } from '../utils/fetch';
 import { capitalize } from '../utils/string';
@@ -9,7 +10,25 @@ import { createTournamentWithAuth } from './tournament';
 
 const POKEDATA_URL = 'https://pokedata.ovh/standingsVGC';
 
-const tryImportTournament = async (index: number): Promise<Tournament[]> => {
+const notifyImportFailure = async (errors: string[]) => {
+  try {
+    const emailService = new EmailService();
+    await emailService.sendEmail({
+      to: process.env.ADMIN_EMAIL!,
+      from: process.env.ADMIN_EMAIL!,
+      subject: '[Ameylali - FakeOutLabs] Tournament import failed',
+      body: errors.join('\n'),
+    });
+  } catch (err) {
+    // notification failures must never mask the original import error
+    console.error('Failed to send import failure notification email', err);
+  }
+};
+
+const tryImportTournament = async (
+  index: number,
+  errors: string[],
+): Promise<Tournament[]> => {
   console.log(`Trying to import tournament with id: ${index}`);
   const id = String(index).padStart(7, '0');
 
@@ -57,6 +76,9 @@ const tryImportTournament = async (index: number): Promise<Tournament[]> => {
       createdTournaments.push(tournament);
     } catch (err) {
       console.error(`Failed to import ${url}`, err);
+      errors.push(
+        `Failed to import ${url}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -66,32 +88,46 @@ const tryImportTournament = async (index: number): Promise<Tournament[]> => {
 export const importTournamentData = async (): Promise<Tournament[]> => {
   console.log('Fetching tournament data...');
 
-  const htmlData = await fetchRawData(POKEDATA_URL);
-  const dom = new JSDOM(htmlData);
-  const [firstButton] = dom.window.document.getElementsByTagName('button');
+  const errors: string[] = [];
+  const createdTournaments: Tournament[] = [];
 
-  if (!firstButton) {
-    console.warn('No tournament buttons found on the page');
-    return [];
-  }
+  try {
+    const htmlData = await fetchRawData(POKEDATA_URL);
+    const dom = new JSDOM(htmlData);
+    const [_, firstButton] = dom.window.document.getElementsByTagName('button');
 
-  const match = firstButton.outerHTML.match(
-    /onclick="location\.href='([^']+)\/'"/,
-  );
-  const lastIndex = match?.[1];
+    if (!firstButton) {
+      console.warn('No tournament buttons found on the page');
+      errors.push('No tournament buttons found on the page');
+      return [];
+    }
 
-  if (!lastIndex) {
-    console.warn('No tournament index found');
-    return [];
-  }
+    const match = firstButton.outerHTML.match(
+      /onclick="location\.href='([^']+)\/'"/,
+    );
+    const lastIndex = match?.[1];
 
-  console.log(`Found latest tournament index: ${lastIndex}`);
+    if (!lastIndex) {
+      console.warn('No tournament index found');
+      errors.push('No tournament index found');
+      return [];
+    }
 
-  const createdTournaments = [];
+    console.log(`Found latest tournament index: ${lastIndex}`);
 
-  for (let i = 1; i <= Number(lastIndex); i++) {
-    const tournaments = await tryImportTournament(i);
-    createdTournaments.push(...tournaments);
+    for (let i = 1; i <= Number(lastIndex); i++) {
+      const tournaments = await tryImportTournament(i, errors);
+      createdTournaments.push(...tournaments);
+    }
+  } catch (err) {
+    errors.push(
+      `Fatal error during tournament import: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    throw err;
+  } finally {
+    if (errors.length > 0) {
+      await notifyImportFailure(errors);
+    }
   }
 
   return createdTournaments;

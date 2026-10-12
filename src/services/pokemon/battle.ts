@@ -12,6 +12,7 @@ import {
 
 import { Action, Battle, CreateBattleData, Turn } from '@/src/types/api';
 import { BattleDataSource } from '@/src/types/form';
+import { normalizeSpeciesName } from '@/src/utils/string';
 
 interface ActionWithContext extends Action {
   flags?: {
@@ -217,7 +218,9 @@ export class ShowdownSimProtocolParser
           player,
           type,
           name: name ?? `changed its ${ActionKeyWords.FORME} to`,
-          targets: [species ?? ActionKeyWords.UNKNOWN],
+          targets: [
+            species ? normalizeSpeciesName(species) : ActionKeyWords.UNKNOWN,
+          ],
           user: pokemon ?? ActionKeyWords.UNKNOWN,
         },
         ctx,
@@ -739,8 +742,9 @@ export class ShowdownSimProtocolParser
       species = speciesForme;
     }
     if (player && nameOrNickname) {
-      ctx.nicknameToPokemonMap[player][nameOrNickname] =
-        species ?? nameOrNickname;
+      ctx.nicknameToPokemonMap[player][nameOrNickname] = species
+        ? normalizeSpeciesName(species)
+        : nameOrNickname;
     } else {
       console.warn('Failed to register pokemon', lineData);
     }
@@ -780,7 +784,7 @@ export class ShowdownSimProtocolParser
         player: options.shouldIncludePlayer ? player : undefined,
         type: 'effect',
         name: reason,
-        targets: [species],
+        targets: [species ? normalizeSpeciesName(species) : species],
         user:
           (options.shouldIncludePlayer ? pokemon : taggedPokemon) ??
           ActionKeyWords.UNKNOWN,

@@ -22,10 +22,10 @@ BASE_TURNS = [
     Turn(
         0,
         [
-            Action(0, "", "switch", "solgaleo", [], "p1"),
-            Action(1, "", "switch", "miraidon", [], "p1"),
-            Action(2, "", "switch", "koraidon", [], "p2"),
-            Action(3, "", "switch", "lunala", [], "p2"),
+            Action(0, "", "switch", "", ["solgaleo"], "p1"),
+            Action(1, "", "switch", "", ["miraidon"], "p1"),
+            Action(2, "", "switch", "", ["koraidon"], "p2"),
+            Action(3, "", "switch", "", ["lunala"], "p2"),
         ],
     ),
     Turn(
@@ -122,7 +122,7 @@ def test_data(
             continue
 
         for j in range(3):
-            turns: list[Turn] = []
+            turns: list[Turn] = list(BASE_TURNS)
             for turn_idx in range(3):
                 actions: list[Action] = []
                 for action_idx in range(3):
@@ -149,7 +149,6 @@ def test_data(
                 turn = Turn(index=turn_idx, actions=actions)
                 turns.append(turn)
 
-            turns.extend(BASE_TURNS)
             battle = Battle(
                 name=prefixed_name(f"Battle {j + 1}"),
                 notes=f"Test battle {j + 1} for training {i + 1}",
